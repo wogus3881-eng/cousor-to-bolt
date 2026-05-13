@@ -4,6 +4,15 @@ export default {
   theme: {
     extend: {
       colors: {
+        /** 토스류 핀테크 UI 톤 (고객용 Lite 등) */
+        toss: {
+          canvas: '#f2f4f6',
+          blue: '#3182f6',
+          bluePress: '#1b64da',
+          ink: '#191f28',
+          sub: '#6b7684',
+          line: '#e5e8eb',
+        },
         navy: {
           50:  '#eef1f8',
           100: '#d5ddf0',

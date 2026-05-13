@@ -30,11 +30,11 @@ export default function LiteFlow() {
 
   if (result) {
     return (
-      <div className="min-h-screen bg-slate-50 select-none flex flex-col">
+      <div className="flex min-h-screen flex-col bg-toss-canvas select-none">
         <LiteResultScreen result={result} onBack={handleBack} />
-        <footer className="py-8 text-center border-t border-slate-100 bg-white mt-auto">
-          <p className="text-[10px] text-slate-400 font-medium">
-            <span className="font-bold text-slate-500">이기적인 은퇴설계</span> · 간편 진단 | ⓒ 2026 All rights reserved.
+        <footer className="mt-auto border-t border-toss-line bg-white py-8 text-center">
+          <p className="text-[10px] font-medium text-toss-sub">
+            <span className="font-bold text-toss-ink">이기적인 은퇴설계</span> · 간편 진단 | ⓒ 2026 All rights reserved.
           </p>
         </footer>
       </div>
@@ -42,11 +42,11 @@ export default function LiteFlow() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 select-none flex flex-col">
+    <div className="flex min-h-screen flex-col bg-toss-canvas select-none">
       <LiteInputScreen onSubmit={handleLiteSubmit} initialValues={savedLite} />
-      <footer className="py-6 text-center border-t border-slate-100 bg-white shrink-0">
-        <p className="text-[10px] text-slate-400 font-medium tracking-tight">
-          Designed by <span className="font-bold text-slate-500">이기적인 은퇴설계</span> · 간편 진단 | ⓒ 2026 All rights reserved.
+      <footer className="shrink-0 border-t border-toss-line bg-white py-6 text-center">
+        <p className="text-[10px] font-medium tracking-tight text-toss-sub">
+          Designed by <span className="font-bold text-toss-ink">이기적인 은퇴설계</span> · 간편 진단 | ⓒ 2026 All rights reserved.
         </p>
       </footer>
     </div>
