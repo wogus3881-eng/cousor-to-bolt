@@ -21,6 +21,9 @@ var SHEET_NAME = 'Sheet1'; // 또는 실제 시트 이름
 // | 접수일시 | 이름 | 생년월일 | 연락처 | 희망시간 | 지역 | 유입경로 | 진단PDF_URL |
 
 function parsePayload(e) {
+  if (!e) {
+    return null;
+  }
   var ct = (e.postData && e.postData.type) ? String(e.postData.type) : '';
   var raw = e.postData && e.postData.contents;
   if (raw && ct.indexOf('json') !== -1) {
@@ -44,7 +47,7 @@ function parsePayload(e) {
 function doPost(e) {
   var data = parsePayload(e);
   if (!data) {
-    return jsonOut({ ok: false, error: 'invalid_json' });
+    return jsonOut({ ok: false, error: 'no_event_or_payload' });
   }
 
   var sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_NAME);
