@@ -89,7 +89,7 @@ export default function ConsultationForm({ inputs, simulationResult }: Props) {
         }
       }
 
-      await fetch("https://script.google.com/macros/s/AKfycbw4x5GIMcKcWC9PSmhgiEGmQLUSUN6K6lBe64K4KH2qvI6Cfabglr4gUehN1Xvo-rvCeA/exec", {
+      await fetch("https://script.google.com/macros/s/AKfycby2ym7sSs31h56nPcYZxn0lQbDCg3H3P3kdRv6Eiq10_0IDasU7oXkJAhzwi0OQvLKKag/exec", {
         method: 'POST',
         mode: 'no-cors',
         body: JSON.stringify({
