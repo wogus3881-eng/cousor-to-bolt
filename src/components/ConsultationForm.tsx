@@ -18,6 +18,47 @@ const TIME_OPTIONS = [
   '오후 5시 ~ 7시',
 ];
 
+/** 웹앱 배포 URL (배포 ID = /macros/s/ 와 /exec 사이) */
+const GOOGLE_SHEET_WEBAPP_EXEC =
+  'https://script.google.com/macros/s/AKfycbyWWLcp84IIMZKT4Ev8uqZ1Z071ZloDuQXiZhoIgvb9LvizwkMjSHT0aPD0pp7C3x37NA/exec';
+
+/**
+ * fetch + no-cors 는 환경에 따라 POST 본문이 누락될 수 있음.
+ * 숨은 iframe + form POST 는 브라우저 기본 제출이라 Apps Script 의 e.parameter 로 안정적으로 들어감.
+ */
+function postConsultationToGoogleScript(fields: Record<string, string>) {
+  const frameName = `gas-embed-${Date.now()}`;
+  const iframe = document.createElement('iframe');
+  iframe.name = frameName;
+  iframe.title = 'google-apps-script-submit';
+  iframe.style.cssText = 'position:fixed;width:0;height:0;border:0;visibility:hidden';
+  iframe.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(iframe);
+
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = GOOGLE_SHEET_WEBAPP_EXEC;
+  form.target = frameName;
+  form.acceptCharset = 'UTF-8';
+  form.style.display = 'none';
+
+  for (const [key, val] of Object.entries(fields)) {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = key;
+    input.value = val;
+    form.appendChild(input);
+  }
+
+  document.body.appendChild(form);
+  form.submit();
+  document.body.removeChild(form);
+
+  window.setTimeout(() => {
+    iframe.remove();
+  }, 30000);
+}
+
 /**
  * @copyright 2026 Designed & Developed by 이기적인 은퇴설계
  */
@@ -89,7 +130,7 @@ export default function ConsultationForm({ inputs, simulationResult }: Props) {
         }
       }
 
-      const googlePayload = new URLSearchParams({
+      postConsultationToGoogleScript({
         name: name.trim(),
         birthDate: birthDate.trim(),
         phone: formattedPhone,
@@ -97,14 +138,6 @@ export default function ConsultationForm({ inputs, simulationResult }: Props) {
         location: location.trim(),
         source: '이기적인 은퇴설계',
         report_url: reportUrl ?? '',
-      });
-
-      // no-cors: Content-Type 을 수동으로 charset 포함해 쓰면 "simple request"가 아니어서 본문이 막힐 수 있음.
-      // URLSearchParams 를 body 로 그대로 넘기면 브라우저가 form-urlencoded 를 설정함.
-      await fetch("https://script.google.com/macros/s/AKfycbyWWLcp84IIMZKT4Ev8uqZ1Z071ZloDuQXiZhoIgvb9LvizwkMjSHT0aPD0pp7C3x37NA/exec", {
-        method: 'POST',
-        mode: 'no-cors',
-        body: googlePayload,
       });
 
       if (supabase) {

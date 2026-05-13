@@ -4,7 +4,7 @@
  * 웹앱 배포 URL(exec)은 프론트 ConsultationForm.tsx 의 fetch 주소와 동일해야 함 (여기서 수정하지 않음).
  * 아래는 스프레드시트 파일 ID만 넣으면 됨 (시트 URL의 d/ 와 /edit 사이).
  *
- * ConsultationForm.tsx: POST body 는 URLSearchParams 객체 그대로 전달 (no-cors 호환).
+ * ConsultationForm.tsx: 숨은 iframe + HTML form POST (fetch no-cors 보다 본문 전달 안정적).
  *   name, birthDate, phone, time, location, source, report_url
  * → Apps Script 에서는 e.parameter.report_url 로 읽으면 됨 (JSON 본문보다 호환 좋음).
  *
