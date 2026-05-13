@@ -11,6 +11,10 @@ export interface ConsultationReportMeta {
   preferredTime: string;
 }
 
+/** Bolt 등에서 `npm install` 없이도 동작하도록 CDN ESM만 사용 (Vite가 로컬 패키지를 해석하지 않음) */
+const HTML2CANVAS_ESM = 'https://esm.sh/html2canvas@1.4.1';
+const JSPDF_ESM = 'https://esm.sh/jspdf@2.5.2';
+
 /** html2canvas + jsPDF — 한글은 시스템 폰트로 캡처 */
 export async function buildConsultationReportPdfBlob(
   result: SimulationResult,
@@ -112,8 +116,17 @@ export async function buildConsultationReportPdfBlob(
 
   document.body.appendChild(wrap);
   try {
-    const html2canvas = (await import('html2canvas')).default;
-    const { jsPDF } = await import('jspdf');
+    const html2canvas = (await import(/* @vite-ignore */ HTML2CANVAS_ESM)).default as (
+      el: HTMLElement,
+      opts?: Record<string, unknown>,
+    ) => Promise<HTMLCanvasElement>;
+    const { jsPDF } = (await import(/* @vite-ignore */ JSPDF_ESM)) as {
+      jsPDF: new (opts?: Record<string, unknown>) => {
+        internal: { pageSize: { getWidth: () => number; getHeight: () => number } };
+        addImage: (d: string, fmt: string, x: number, y: number, w: number, h: number) => void;
+        output: (t: 'blob') => Blob;
+      };
+    };
     const canvas = await html2canvas(wrap, {
       scale: 2,
       backgroundColor: '#ffffff',
