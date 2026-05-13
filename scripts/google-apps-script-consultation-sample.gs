@@ -14,7 +14,7 @@
  * 3) 기존 doPost 가 있으면 appendRow 부분만 합치거나 컬럼 순서를 기존 시트에 맞게 조정
  */
 
-var SPREADSHEET_ID = '여기에_스프레드시트_ID';
+var SPREADSHEET_ID = 'AKfycbzwYcAmTWCFF92i0UStbfQwCOJsyKASK3YKbi93u-g_dCQ-7FtCmLFIa965ravqjqWW';
 var SHEET_NAME = 'Sheet1'; // 또는 실제 시트 이름
 
 /** 1행 헤더 예시 — 실제 시트와 열 순서를 반드시 일치시키세요 */
