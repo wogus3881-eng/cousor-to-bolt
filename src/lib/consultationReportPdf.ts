@@ -12,7 +12,7 @@ export interface ConsultationReportMeta {
 }
 
 /**
- * Bolt 등 `npm install` 없이 동작: CDN ESM만 사용 (`/* @vite-ignore */`).
+ * Bolt 등 npm install 없이 동작: CDN ESM만 사용 (동적 import, Vite는 번들에서 제외).
  * esm.sh 차단 시 jsDelivr 등으로 폴백 (미리보기 CSP·네트워크 이슈 완화).
  */
 const HTML2CANVAS_CDNS = [
