@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, Star } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import type { LiteInputValues } from '../lib/liteToSimulator';
 import { LITE_DEFAULTS } from '../lib/liteToSimulator';
 
@@ -30,10 +30,14 @@ function Field({
 }) {
   const clamped = Math.min(max, Math.max(min, value || 0));
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-sm border border-navy-100">
-      <p className="text-xs font-semibold text-navy-800">{label}</p>
-      {hint && <p className="text-[10px] text-navy-400 mt-0.5 mb-2">{hint}</p>}
-      <div className="flex items-baseline gap-2 mt-2">
+    <div className="rounded-[20px] bg-white p-5 shadow-[0_2px_16px_rgba(0,0,0,0.04)] ring-1 ring-black/[0.03]">
+      <p className="text-[13px] font-semibold text-toss-ink">{label}</p>
+      {hint ? (
+        <p className="mt-1 mb-2 text-[12px] leading-snug text-toss-sub">{hint}</p>
+      ) : (
+        <div className="mb-1" />
+      )}
+      <div className="mt-1 flex items-baseline justify-end gap-1.5">
         <input
           type="number"
           min={min}
@@ -41,9 +45,9 @@ function Field({
           step={step}
           value={Number.isFinite(value) ? value : min}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="flex-1 text-right text-xl font-extrabold text-navy-900 border-b-2 border-gold-500 outline-none bg-transparent min-w-0"
+          className="flex-1 text-right text-[26px] font-bold leading-none tracking-tight text-toss-ink border-0 border-b-2 border-toss-line focus:border-toss-blue outline-none bg-transparent min-w-0 py-1 transition-colors"
         />
-        <span className="text-sm text-navy-400 shrink-0">{suffix}</span>
+        <span className="text-[15px] font-medium text-toss-sub shrink-0 pb-1">{suffix}</span>
       </div>
       <input
         type="range"
@@ -52,7 +56,7 @@ function Field({
         step={step}
         value={clamped}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full mt-3 accent-navy-600"
+        className="w-full mt-4 h-1.5 rounded-full accent-[#3182f6] bg-toss-line"
       />
     </div>
   );
@@ -72,30 +76,25 @@ export default function LiteInputScreen({ onSubmit, initialValues }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col min-h-screen bg-navy-950 pb-32">
-      <div className="bg-gradient-to-b from-navy-900 to-navy-800 px-5 pt-12 pb-8 border-b border-navy-700">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <span className="inline-block text-[10px] font-bold tracking-[0.2em] text-gold-400 uppercase bg-navy-800 border border-gold-700/40 px-3 py-1 rounded-full mb-3">
-              간편 진단
-            </span>
-            <h1 className="text-[24px] font-extrabold text-white leading-tight tracking-tight">
-              내 노후,
-              <br />
-              <span className="text-gold-400">언제쯤 흔들릴까요?</span>
-            </h1>
-            <p className="text-sm text-navy-300 mt-2 leading-relaxed">
-              핵심만 입력하면 대략적인 한계선을 빠르게 확인할 수 있습니다.
-            </p>
-          </div>
-          <Star className="text-gold-400 shrink-0 mt-1 fill-gold-400/30" size={28} />
-        </div>
-        <p className="text-[10px] text-navy-400 mt-4 leading-snug border border-navy-600/50 rounded-xl px-3 py-2 bg-navy-800/40">
-          월 저축 합계는 은행·증권·보험을 합산해 입력해 주세요. 내부적으로 표준 비율로 나누어 계산합니다.
+    <form onSubmit={handleSubmit} className="flex flex-col min-h-screen bg-toss-canvas pb-36">
+      <header className="px-5 pt-10 pb-6 bg-toss-canvas">
+        <span className="inline-flex items-center rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold text-toss-blue shadow-sm ring-1 ring-black/[0.04]">
+          간편 진단
+        </span>
+        <h1 className="mt-4 text-[26px] font-bold leading-[1.35] tracking-tight text-toss-ink">
+          내 노후,
+          <br />
+          <span className="text-toss-blue">지금 얼마나 버틸까요?</span>
+        </h1>
+        <p className="mt-3 text-[15px] leading-relaxed text-toss-sub">
+          핵심만 입력하면 한계선을 빠르게 확인할 수 있어요.
         </p>
-      </div>
+        <div className="mt-5 rounded-2xl bg-white/90 px-4 py-3 text-[12px] leading-relaxed text-toss-sub shadow-sm ring-1 ring-black/[0.04]">
+          월 저축은 은행·증권·보험을 합산해 주세요. 내부적으로 표준 비율로 나누어 계산해요.
+        </div>
+      </header>
 
-      <div className="flex-1 px-4 pt-6 flex flex-col gap-3 bg-slate-50">
+      <div className="flex-1 px-4 flex flex-col gap-3">
         <Field
           label="현재 나이"
           value={v.currentAge}
@@ -160,27 +159,27 @@ export default function LiteInputScreen({ onSubmit, initialValues }: Props) {
         />
 
         {v.retirementAge <= v.currentAge && (
-          <p className="text-xs text-red-500 font-medium px-1">은퇴 나이는 현재 나이보다 커야 합니다.</p>
+          <p className="text-[13px] text-red-500 font-medium px-1">은퇴 나이는 현재 나이보다 커야 해요.</p>
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 px-4 pb-8 pt-3 bg-white/95 backdrop-blur border-t border-navy-100 space-y-2 z-10">
+      <div className="fixed bottom-0 left-0 right-0 z-10 border-t border-toss-line bg-white/95 px-4 pb-8 pt-3 backdrop-blur-md">
         <button
           type="submit"
           disabled={v.retirementAge <= v.currentAge}
-          className="w-full bg-gradient-to-r from-navy-800 to-navy-700 hover:from-navy-700 hover:to-navy-600 disabled:opacity-50 disabled:pointer-events-none text-white font-bold text-base rounded-2xl py-4 flex items-center justify-center gap-2 shadow-xl shadow-navy-900/30 border border-gold-600/30"
+          className="flex w-full items-center justify-center gap-1 rounded-2xl bg-toss-blue py-4 text-[16px] font-semibold text-white shadow-lg shadow-toss-blue/25 transition hover:bg-toss-bluePress active:scale-[0.99] disabled:pointer-events-none disabled:opacity-40"
         >
           간편 진단 결과 보기
-          <ChevronRight size={18} />
+          <ChevronRight size={18} strokeWidth={2.25} />
         </button>
-        <p className="text-[10px] text-center text-navy-400">
-          본 결과는 참고용이며, 세부 비중·세법은 상담 시 안내드립니다.
+        <p className="mt-2.5 text-center text-[11px] text-toss-sub">
+          본 결과는 참고용이에요. 세부 비중·세법은 상담 시 안내드려요.
         </p>
         <Link
           to="/pro"
-          className="block text-center text-[11px] text-navy-400 hover:text-navy-600 underline underline-offset-2"
+          className="mt-2 block text-center text-[12px] font-medium text-toss-sub underline decoration-toss-line underline-offset-4 hover:text-toss-ink"
         >
-          설계사 전용 · 상세 진단 화면
+          설계사 전용 · 상세 진단
         </Link>
       </div>
     </form>
