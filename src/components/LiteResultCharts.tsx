@@ -53,8 +53,10 @@ export default function LiteResultCharts({ result }: Props) {
   return (
     <div className="flex flex-col gap-4">
       <div className="rounded-[20px] bg-white p-4 shadow-[0_2px_16px_rgba(0,0,0,0.04)] ring-1 ring-black/[0.03]">
-        <p className="text-[13px] font-bold text-toss-ink">나이별 예상 자산 (참고)</p>
-        <p className="mt-1 text-[11px] leading-relaxed text-toss-sub">
+        <div className="flex items-center gap-2 border-l-[3px] border-toss-blue pl-2">
+          <p className="text-[13px] font-bold text-toss-ink">나이별 예상 자산 (참고)</p>
+        </div>
+        <p className="mt-1.5 pl-2 text-[11px] leading-relaxed text-toss-sub">
           세전 잔고 기준이며, 단순화된 곡선입니다. 실제와 다를 수 있어요.
         </p>
         <div className="mt-3 h-[200px] w-full min-w-0">
@@ -107,8 +109,10 @@ export default function LiteResultCharts({ result }: Props) {
       </div>
 
       <div className="rounded-[20px] bg-white p-4 shadow-[0_2px_16px_rgba(0,0,0,0.04)] ring-1 ring-black/[0.03]">
-        <p className="text-[13px] font-bold text-toss-ink">은퇴 직후 월 단위 비교 (참고)</p>
-        <p className="mt-1 text-[11px] leading-relaxed text-toss-sub">
+        <div className="flex items-center gap-2 border-l-[3px] border-orange-500 pl-2">
+          <p className="text-[13px] font-bold text-toss-ink">은퇴 직후 월 단위 비교 (참고)</p>
+        </div>
+        <p className="mt-1.5 pl-2 text-[11px] leading-relaxed text-toss-sub">
           국민연금은 세전 추정, 생활비는 물가 반영 추정이에요. 세후·실수령과 다를 수 있어요.
         </p>
         <div className="mt-3 h-[180px] w-full min-w-0">
