@@ -7,6 +7,7 @@ import { stashSimulatorInputsForPro } from '../lib/liteProHandoff';
 import { formatKRW, formatMan } from '../lib/calculator';
 import type { SimulationResult } from '../lib/calculator';
 import { LITE_BUCKET_RATIO } from '../lib/liteToSimulator';
+import { LITE_COLUMN_CLASS } from './liteLayout';
 
 interface Props {
   result: SimulationResult;
@@ -29,7 +30,8 @@ export default function LiteResultScreen({ result, onBack }: Props) {
 
   return (
     <div className="flex min-h-screen flex-col bg-toss-canvas">
-      <header className="sticky top-0 z-20 border-b border-toss-line bg-white/90 px-4 pb-4 pt-10 backdrop-blur-md">
+      <header className="sticky top-0 z-20 border-b border-toss-line bg-white/90 backdrop-blur-md">
+        <div className={`${LITE_COLUMN_CLASS} px-3 pb-4 pt-10`}>
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -55,11 +57,12 @@ export default function LiteResultScreen({ result, onBack }: Props) {
             </div>
           )}
         </div>
+        </div>
       </header>
 
-      <div className="flex flex-1 flex-col gap-4 px-4 py-5">
+      <div className={`${LITE_COLUMN_CLASS} flex flex-1 flex-col gap-4 px-3 py-5`}>
         {!isSafe ? (
-          <div className="rounded-[20px] border border-toss-line border-l-4 border-l-red-500 bg-white p-6 shadow-[0_2px_16px_rgba(0,0,0,0.04)] ring-1 ring-black/[0.02]">
+          <div className="rounded-[20px] border border-toss-line border-l-4 border-l-red-500 bg-white p-5 shadow-[0_2px_16px_rgba(0,0,0,0.04)] ring-1 ring-black/[0.02]">
             <div className="mb-2 flex items-center gap-2">
               <AlertTriangle size={16} className="text-red-500" strokeWidth={2.25} />
               <span className="text-[11px] font-bold uppercase tracking-wide text-red-500">요약</span>
@@ -73,7 +76,7 @@ export default function LiteResultScreen({ result, onBack }: Props) {
             </p>
           </div>
         ) : (
-          <div className="rounded-[20px] border border-toss-line border-l-4 border-l-toss-blue bg-white p-6 shadow-[0_2px_16px_rgba(0,0,0,0.04)] ring-1 ring-black/[0.02]">
+          <div className="rounded-[20px] border border-toss-line border-l-4 border-l-toss-blue bg-white p-5 shadow-[0_2px_16px_rgba(0,0,0,0.04)] ring-1 ring-black/[0.02]">
             <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-toss-blue">요약</p>
             <p className="text-[17px] font-bold leading-snug text-toss-ink">
               현재 입력만으로는 100세까지 크게 부족하지 않아 보여요.

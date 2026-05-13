@@ -5,6 +5,7 @@ import type { LiteInputValues } from '../lib/liteToSimulator';
 import { LITE_DEFAULTS } from '../lib/liteToSimulator';
 import { stashLiteValuesForPro } from '../lib/liteProHandoff';
 import { LiteLegalDisclaimerCompact } from './LiteLegalDisclaimer';
+import { LITE_COLUMN_CLASS } from './liteLayout';
 
 interface Props {
   onSubmit: (values: LiteInputValues) => void;
@@ -32,7 +33,7 @@ function Field({
 }) {
   const clamped = Math.min(max, Math.max(min, value || 0));
   return (
-    <div className="rounded-[20px] bg-white p-5 shadow-[0_2px_16px_rgba(0,0,0,0.04)] ring-1 ring-black/[0.03]">
+    <div className="rounded-[20px] bg-white p-4 shadow-[0_2px_16px_rgba(0,0,0,0.04)] ring-1 ring-black/[0.03]">
       <p className="text-[13px] font-semibold text-toss-ink">{label}</p>
       {hint ? (
         <p className="mt-1 mb-2 text-[12px] leading-snug text-toss-sub">{hint}</p>
@@ -78,8 +79,9 @@ export default function LiteInputScreen({ onSubmit, initialValues }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col min-h-screen bg-toss-canvas pb-36">
-      <header className="px-5 pt-10 pb-6 bg-toss-canvas">
+    <form onSubmit={handleSubmit} className="flex min-h-screen flex-col bg-toss-canvas pb-36">
+      <div className={`${LITE_COLUMN_CLASS} flex min-h-0 flex-1 flex-col`}>
+      <header className="bg-toss-canvas px-4 pb-6 pt-10">
         <span className="inline-flex items-center rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold text-toss-blue shadow-sm ring-1 ring-black/[0.04]">
           간편 진단
         </span>
@@ -96,7 +98,7 @@ export default function LiteInputScreen({ onSubmit, initialValues }: Props) {
         </div>
       </header>
 
-      <div className="flex-1 px-4 flex flex-col gap-3">
+      <div className="flex flex-1 flex-col gap-3 px-3">
         <Field
           label="현재 나이"
           value={v.currentAge}
@@ -164,8 +166,10 @@ export default function LiteInputScreen({ onSubmit, initialValues }: Props) {
           <p className="text-[13px] text-red-500 font-medium px-1">은퇴 나이는 현재 나이보다 커야 해요.</p>
         )}
       </div>
+      </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-10 border-t border-toss-line bg-white/95 px-4 pb-8 pt-3 backdrop-blur-md">
+      <div className="fixed bottom-0 left-0 right-0 z-10 border-t border-toss-line bg-white/95 backdrop-blur-md">
+        <div className={`${LITE_COLUMN_CLASS} px-3 pb-8 pt-3`}>
         <button
           type="submit"
           disabled={v.retirementAge <= v.currentAge}
@@ -187,6 +191,7 @@ export default function LiteInputScreen({ onSubmit, initialValues }: Props) {
         >
           설계사 전용 · 상세 진단
         </Link>
+        </div>
       </div>
     </form>
   );
