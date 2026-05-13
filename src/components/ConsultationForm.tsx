@@ -83,12 +83,14 @@ export default function ConsultationForm({ inputs }: Props) {
         }),
       });
 
-      await supabase.from('consultations').insert({
-        name: name.trim(),
-        phone: formattedPhone,
-        preferred_time: preferredTime,
-        current_age: inputs.currentAge,
-      });
+      if (supabase) {
+        await supabase.from('consultations').insert({
+          name: name.trim(),
+          phone: formattedPhone,
+          preferred_time: preferredTime,
+          current_age: inputs.currentAge,
+        });
+      }
       
       setShowSuccess(true);
       setName(''); setPhone(''); setBirthDate(''); setLocation(''); setAgreed(false); setPreferredTime('');
