@@ -3,6 +3,7 @@ import { ChevronLeft, AlertTriangle, ShieldCheck } from 'lucide-react';
 import ConsultationForm from './ConsultationForm';
 import LiteLegalDisclaimer from './LiteLegalDisclaimer';
 import LiteResultCharts from './LiteResultCharts';
+import { stashSimulatorInputsForPro } from '../lib/liteProHandoff';
 import { formatKRW, formatMan } from '../lib/calculator';
 import type { SimulationResult } from '../lib/calculator';
 import { LITE_BUCKET_RATIO } from '../lib/liteToSimulator';
@@ -131,6 +132,7 @@ export default function LiteResultScreen({ result, onBack }: Props) {
           </p>
           <Link
             to="/pro"
+            onClick={() => stashSimulatorInputsForPro(result.inputs)}
             className="text-[12px] font-semibold text-toss-blue underline decoration-toss-line underline-offset-4 hover:text-toss-bluePress"
           >
             설계사 전용 · 상세 진단 (프로)
