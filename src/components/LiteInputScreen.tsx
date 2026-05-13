@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import type { LiteInputValues } from '../lib/liteToSimulator';
 import { LITE_DEFAULTS } from '../lib/liteToSimulator';
+import { LiteLegalDisclaimerCompact } from './LiteLegalDisclaimer';
 
 interface Props {
   onSubmit: (values: LiteInputValues) => void;
@@ -175,6 +176,9 @@ export default function LiteInputScreen({ onSubmit, initialValues }: Props) {
         <p className="mt-2.5 text-center text-[11px] text-toss-sub">
           본 결과는 참고용이에요. 세부 비중·세법은 상담 시 안내드려요.
         </p>
+        <div className="mt-2 px-0.5">
+          <LiteLegalDisclaimerCompact />
+        </div>
         <Link
           to="/pro"
           className="mt-2 block text-center text-[12px] font-medium text-toss-sub underline decoration-toss-line underline-offset-4 hover:text-toss-ink"

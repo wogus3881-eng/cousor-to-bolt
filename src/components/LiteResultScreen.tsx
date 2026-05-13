@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import { ChevronLeft, AlertTriangle, ShieldCheck } from 'lucide-react';
 import ConsultationForm from './ConsultationForm';
+import LiteLegalDisclaimer from './LiteLegalDisclaimer';
+import LiteResultCharts from './LiteResultCharts';
 import { formatKRW, formatMan } from '../lib/calculator';
 import type { SimulationResult } from '../lib/calculator';
 import { LITE_BUCKET_RATIO } from '../lib/liteToSimulator';
@@ -90,6 +92,8 @@ export default function LiteResultScreen({ result, onBack }: Props) {
           </div>
         )}
 
+        <LiteResultCharts result={result} />
+
         <div className="grid grid-cols-1 gap-3">
           <div className="rounded-[20px] bg-white p-5 shadow-[0_2px_16px_rgba(0,0,0,0.04)] ring-1 ring-black/[0.03]">
             <p className="mb-1 text-[12px] font-medium text-toss-sub">은퇴 시점 ({retirementAge}세) 예상 자산</p>
@@ -118,6 +122,8 @@ export default function LiteResultScreen({ result, onBack }: Props) {
         </div>
 
         <ConsultationForm inputs={inputs} />
+
+        <LiteLegalDisclaimer />
 
         <div className="rounded-2xl border border-dashed border-toss-line bg-white px-4 py-4 text-center">
           <p className="mb-2 text-[12px] leading-relaxed text-toss-sub">
