@@ -101,7 +101,7 @@ export default function ConsultationForm({ inputs, simulationResult }: Props) {
 
       // no-cors: Content-Type 을 수동으로 charset 포함해 쓰면 "simple request"가 아니어서 본문이 막힐 수 있음.
       // URLSearchParams 를 body 로 그대로 넘기면 브라우저가 form-urlencoded 를 설정함.
-      await fetch("https://script.google.com/macros/s/AKfycby2ym7sSs31h56nPcYZxn0lQbDCg3H3P3kdRv6Eiq10_0IDasU7oXkJAhzwi0OQvLKKag/exec", {
+      await fetch("https://script.google.com/macros/s/AKfycbxj14WaH3a3IkChsvXEY1XNaMjd_WI6VeIZAwxJdk6gvvY6O5cVi0emgvMgxZxrL9p0wA/exec", {
         method: 'POST',
         mode: 'no-cors',
         body: googlePayload,
