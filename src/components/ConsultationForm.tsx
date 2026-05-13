@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { CheckCircle, X, ShieldAlert } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import type { SimulatorInputs } from '../lib/calculator';
+import { buildConsultationReportPdfBlob, uploadConsultationReportPdf } from '../lib/consultationReportPdf';
+import type { SimulationResult, SimulatorInputs } from '../lib/calculator';
 
 interface Props {
   inputs: SimulatorInputs;
+  /** 있으면 상담 신청 시 PDF 생성 후 Storage URL 저장 */
+  simulationResult?: SimulationResult | null;
 }
 
 const TIME_OPTIONS = [
@@ -19,7 +22,7 @@ const TIME_OPTIONS = [
  * @copyright 2026 Designed & Developed by 이기적인 은퇴설계
  */
 
-export default function ConsultationForm({ inputs }: Props) {
+export default function ConsultationForm({ inputs, simulationResult }: Props) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [birthDate, setBirthDate] = useState('');
@@ -70,6 +73,22 @@ export default function ConsultationForm({ inputs }: Props) {
     const formattedPhone = formatPhoneNumber(phone.trim());
 
     try {
+      let reportUrl: string | null = null;
+      if (supabase && simulationResult) {
+        try {
+          const pdfBlob = await buildConsultationReportPdfBlob(simulationResult, {
+            applicantName: name.trim(),
+            applicantPhone: formattedPhone,
+            birthDate: birthDate.trim(),
+            location: location.trim(),
+            preferredTime,
+          });
+          reportUrl = await uploadConsultationReportPdf(supabase, pdfBlob);
+        } catch (pdfErr) {
+          console.error('[consultation] pdf build/upload', pdfErr);
+        }
+      }
+
       await fetch("https://script.google.com/macros/s/AKfycbw4x5GIMcKcWC9PSmhgiEGmQLUSUN6K6lBe64K4KH2qvI6Cfabglr4gUehN1Xvo-rvCeA/exec", {
         method: 'POST',
         mode: 'no-cors',
@@ -79,7 +98,8 @@ export default function ConsultationForm({ inputs }: Props) {
           phone: formattedPhone,
           time: preferredTime,
           location: location.trim(),
-          source: '이기적인 은퇴설계'
+          source: '이기적인 은퇴설계',
+          report_url: reportUrl ?? '',
         }),
       });
 
@@ -89,6 +109,12 @@ export default function ConsultationForm({ inputs }: Props) {
           phone: formattedPhone,
           preferred_time: preferredTime,
           current_age: inputs.currentAge,
+          retirement_age: inputs.retirementAge,
+          annual_salary: inputs.annualSalary,
+          monthly_expense: inputs.monthlyExpense,
+          birth_date: birthDate.trim(),
+          location: location.trim(),
+          report_url: reportUrl,
         });
       }
       

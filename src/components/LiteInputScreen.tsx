@@ -192,7 +192,7 @@ export default function LiteInputScreen({ onSubmit, initialValues }: Props) {
                   }}
                   min={1}
                   max={500}
-                  step={5}
+                  step={1}
                   suffix="만 원"
                 />
               </div>
