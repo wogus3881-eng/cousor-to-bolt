@@ -28,6 +28,10 @@ export default function LiteLegalDisclaimer() {
           시장·금리·물가·연금 정책·세율 변동과 다를 수 있습니다.
         </li>
         <li>
+          <strong className="text-toss-ink">준비 점수·진단 코멘트</strong>는 인공지능 자동 생성이 아니라, 입력값에 따른{' '}
+          <strong className="text-toss-ink">내부 규칙 기반 참고 문구</strong>이며 절대평가·공신력 지표가 아닙니다.
+        </li>
+        <li>
           <strong className="text-toss-ink">수익·원금 보장을 약속하지 않으며,</strong> 과거·시뮬레이션 결과가 미래
           성과를 보장하지 않습니다.
         </li>
