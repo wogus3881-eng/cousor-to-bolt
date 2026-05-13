@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import {
   ChevronRight, ChevronDown, User, Briefcase, PiggyBank, TrendingUp,
   Coffee, BarChart2, CalendarDays, HeartPulse, Activity, HelpCircle,
@@ -504,6 +504,12 @@ export default function InputScreen({ onSimulate, initialInputs }: Props) {
   const [v, setV] = useState<SimulatorInputs>(() => initialInputs ?? DEFAULT_INPUTS);
   const [pensionAutoSet, setPensionAutoSet] = useState(!initialInputs);
   const [bucketOpen, setBucketOpen] = useState(false);
+
+  useLayoutEffect(() => {
+    if (initialInputs === undefined) return;
+    setV(initialInputs);
+    setPensionAutoSet(false);
+  }, [initialInputs]);
 
   useEffect(() => {
     if (pensionAutoSet) {

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import type { LiteInputValues } from '../lib/liteToSimulator';
 import { LITE_DEFAULTS } from '../lib/liteToSimulator';
+import { stashLiteValuesForPro } from '../lib/liteProHandoff';
 import { LiteLegalDisclaimerCompact } from './LiteLegalDisclaimer';
 
 interface Props {
@@ -181,6 +182,7 @@ export default function LiteInputScreen({ onSubmit, initialValues }: Props) {
         </div>
         <Link
           to="/pro"
+          onClick={() => stashLiteValuesForPro(v)}
           className="mt-2 block text-center text-[12px] font-medium text-toss-sub underline decoration-toss-line underline-offset-4 hover:text-toss-ink"
         >
           설계사 전용 · 상세 진단
