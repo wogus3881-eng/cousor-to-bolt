@@ -67,9 +67,10 @@ export default function LiteResultScreen({ result, onBack }: Props) {
 
         <div className="space-y-2 rounded-2xl border border-toss-line bg-white px-4 py-3 text-[11px] leading-relaxed text-toss-sub">
           <p>
-            <strong className="text-toss-ink">간편 진단 가정:</strong> 월 저축은 은행 {Math.round(LITE_BUCKET_RATIO.bank * 100)}% · 증권{' '}
-            {Math.round(LITE_BUCKET_RATIO.stock * 100)}% · 보험 {Math.round(LITE_BUCKET_RATIO.insurance * 100)}%로 나누었습니다. 활동
-            종료 나이·의료비 등은 표준값을 사용했습니다.
+            <strong className="text-toss-ink">간편 진단 가정:</strong> 월 저축 합계는 입력하신 개인연금 월 납입(있을
+            경우)을 반영한 뒤, 나머지를 은행·증권 비율({Math.round(LITE_BUCKET_RATIO.bank * 100)}% :{' '}
+            {Math.round(LITE_BUCKET_RATIO.stock * 100)}%)로 나누었습니다. 개인연금·보험 적립 부분은 시뮬레이터의 연금/보험
+            버킷에 반영됩니다. 활동 종료 나이·의료비 등은 표준값을 사용했습니다.
           </p>
           <p>준비 점수·그래프는 참고용 휴리스틱이며, 세부 비교는 설계사 전용 화면에서 조정할 수 있어요.</p>
         </div>

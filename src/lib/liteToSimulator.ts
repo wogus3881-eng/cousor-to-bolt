@@ -11,10 +11,14 @@ const MAN = 10000;
 export interface LiteInputValues {
   currentAge: number;
   retirementAge: number;
+  /** 연금저축·IRP 등 개인연금 가입 여부 */
+  hasPrivatePension: boolean;
+  /** 가입 시 월 납입(만 원). 미가입이면 무시 */
+  privatePensionMonthlyMan: number;
+  annualSalaryMan: number;
   currentSavingsMan: number;
   /** 월 저축 합계 (만 원) — 내부에서 은행/증권/보험 비율로 나눕니다 */
   monthlySavingTotalMan: number;
-  annualSalaryMan: number;
   monthlyExpenseMan: number;
 }
 
@@ -35,16 +39,35 @@ function calcDefaultPensionYears(currentAge: number) {
  */
 export function liteInputToSimulator(raw: LiteInputValues): SimulatorInputs {
   const monthlyTotal = raw.monthlySavingTotalMan * MAN;
+  const defaultInsurance = monthlyTotal * LITE_BUCKET_RATIO.insurance;
+  const bankStockSum = LITE_BUCKET_RATIO.bank + LITE_BUCKET_RATIO.stock;
+  const bankOfRemainder = LITE_BUCKET_RATIO.bank / bankStockSum;
+
+  let monthlyInsurance: number;
+  let remainderForBankStock: number;
+
+  if (raw.hasPrivatePension && raw.privatePensionMonthlyMan > 0) {
+    const userIns = raw.privatePensionMonthlyMan * MAN;
+    monthlyInsurance = Math.min(userIns, monthlyTotal);
+    remainderForBankStock = Math.max(0, monthlyTotal - monthlyInsurance);
+  } else {
+    monthlyInsurance = defaultInsurance;
+    remainderForBankStock = Math.max(0, monthlyTotal - monthlyInsurance);
+  }
+
+  const monthlyBank = remainderForBankStock * bankOfRemainder;
+  const monthlyStock = remainderForBankStock * (1 - bankOfRemainder);
+
   return {
     currentAge: raw.currentAge,
     retirementAge: raw.retirementAge,
     pensionYears: calcDefaultPensionYears(raw.currentAge),
     currentSavings: raw.currentSavingsMan * MAN,
-    monthlyBank: monthlyTotal * LITE_BUCKET_RATIO.bank,
+    monthlyBank,
     bankRate: DEFAULT_BANK_RATE,
-    monthlyStock: monthlyTotal * LITE_BUCKET_RATIO.stock,
+    monthlyStock,
     stockRate: DEFAULT_STOCK_RATE,
-    monthlyInsurance: monthlyTotal * LITE_BUCKET_RATIO.insurance,
+    monthlyInsurance,
     insuranceRate: DEFAULT_INS_RATE,
     insurancePaymentYears: 10,
     annualSalary: raw.annualSalaryMan * MAN,
@@ -58,8 +81,10 @@ export function liteInputToSimulator(raw: LiteInputValues): SimulatorInputs {
 export const LITE_DEFAULTS: LiteInputValues = {
   currentAge: 40,
   retirementAge: 60,
+  hasPrivatePension: false,
+  privatePensionMonthlyMan: 20,
+  annualSalaryMan: 5000,
   currentSavingsMan: 5000,
   monthlySavingTotalMan: 100,
-  annualSalaryMan: 5000,
   monthlyExpenseMan: 300,
 };
