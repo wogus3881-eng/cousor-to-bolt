@@ -89,18 +89,21 @@ export default function ConsultationForm({ inputs, simulationResult }: Props) {
         }
       }
 
+      const googlePayload = new URLSearchParams({
+        name: name.trim(),
+        birthDate: birthDate.trim(),
+        phone: formattedPhone,
+        time: preferredTime,
+        location: location.trim(),
+        source: '이기적인 은퇴설계',
+        report_url: reportUrl ?? '',
+      });
+
       await fetch("https://script.google.com/macros/s/AKfycby2ym7sSs31h56nPcYZxn0lQbDCg3H3P3kdRv6Eiq10_0IDasU7oXkJAhzwi0OQvLKKag/exec", {
         method: 'POST',
         mode: 'no-cors',
-        body: JSON.stringify({
-          name: name.trim(),
-          birthDate: birthDate.trim(),
-          phone: formattedPhone,
-          time: preferredTime,
-          location: location.trim(),
-          source: '이기적인 은퇴설계',
-          report_url: reportUrl ?? '',
-        }),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+        body: googlePayload.toString(),
       });
 
       if (supabase) {

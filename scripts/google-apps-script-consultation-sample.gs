@@ -4,8 +4,9 @@
  * 웹앱 배포 URL(exec)은 프론트 ConsultationForm.tsx 의 fetch 주소와 동일해야 함 (여기서 수정하지 않음).
  * 아래는 스프레드시트 파일 ID만 넣으면 됨 (시트 URL의 d/ 와 /edit 사이).
  *
- * ConsultationForm.tsx 가 POST JSON으로 보내는 필드:
+ * ConsultationForm.tsx 가 POST 로 보내는 필드 (application/x-www-form-urlencoded):
  *   name, birthDate, phone, time, location, source, report_url
+ * → Apps Script 에서는 e.parameter.report_url 로 읽으면 됨 (JSON 본문보다 호환 좋음).
  *
  * 사용법:
  * 1) 스프레드시트에 헤더 행을 맞춤 (아래 HEADER_ROW 예시 참고)
@@ -19,11 +20,30 @@ var SHEET_NAME = 'Sheet1'; // 또는 실제 시트 이름
 /** 1행 헤더 예시 — 실제 시트와 열 순서를 반드시 일치시키세요 */
 // | 접수일시 | 이름 | 생년월일 | 연락처 | 희망시간 | 지역 | 유입경로 | 진단PDF_URL |
 
+function parsePayload(e) {
+  var ct = (e.postData && e.postData.type) ? String(e.postData.type) : '';
+  var raw = e.postData && e.postData.contents;
+  if (raw && ct.indexOf('json') !== -1) {
+    try {
+      return JSON.parse(raw);
+    } catch (err) {
+      return null;
+    }
+  }
+  return {
+    name: e.parameter.name || '',
+    birthDate: e.parameter.birthDate || '',
+    phone: e.parameter.phone || '',
+    time: e.parameter.time || '',
+    location: e.parameter.location || '',
+    source: e.parameter.source || '',
+    report_url: e.parameter.report_url || ''
+  };
+}
+
 function doPost(e) {
-  var data;
-  try {
-    data = JSON.parse(e.postData.contents);
-  } catch (err) {
+  var data = parsePayload(e);
+  if (!data) {
     return jsonOut({ ok: false, error: 'invalid_json' });
   }
 
