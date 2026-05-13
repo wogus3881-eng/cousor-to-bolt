@@ -11,9 +11,32 @@ export interface ConsultationReportMeta {
   preferredTime: string;
 }
 
-/** Bolt 등에서 `npm install` 없이도 동작하도록 CDN ESM만 사용 (Vite가 로컬 패키지를 해석하지 않음) */
-const HTML2CANVAS_ESM = 'https://esm.sh/html2canvas@1.4.1';
-const JSPDF_ESM = 'https://esm.sh/jspdf@2.5.2';
+/**
+ * Bolt 등 npm install 없이 동작: CDN ESM만 사용 (동적 import, Vite는 번들에서 제외).
+ * esm.sh 차단 시 jsDelivr 등으로 폴백 (미리보기 CSP·네트워크 이슈 완화).
+ */
+const HTML2CANVAS_CDNS = [
+  'https://esm.sh/html2canvas@1.4.1',
+  'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm',
+] as const;
+
+const JSPDF_CDNS = [
+  'https://esm.sh/jspdf@2.5.2',
+  'https://cdn.jsdelivr.net/npm/jspdf@2.5.2/+esm',
+] as const;
+
+async function importFirstWorking<T>(urls: readonly string[]): Promise<T> {
+  let last: unknown;
+  for (const url of urls) {
+    try {
+      return (await import(/* @vite-ignore */ url)) as T;
+    } catch (err) {
+      last = err;
+      console.warn('[consultationReportPdf] CDN import failed, trying next', url, err);
+    }
+  }
+  throw last instanceof Error ? last : new Error(String(last));
+}
 
 /** html2canvas + jsPDF — 한글은 시스템 폰트로 캡처 */
 export async function buildConsultationReportPdfBlob(
@@ -116,17 +139,18 @@ export async function buildConsultationReportPdfBlob(
 
   document.body.appendChild(wrap);
   try {
-    const html2canvas = (await import(/* @vite-ignore */ HTML2CANVAS_ESM)).default as (
-      el: HTMLElement,
-      opts?: Record<string, unknown>,
-    ) => Promise<HTMLCanvasElement>;
-    const { jsPDF } = (await import(/* @vite-ignore */ JSPDF_ESM)) as {
+    const html2canvas = (
+      await importFirstWorking<{ default: (el: HTMLElement, opts?: Record<string, unknown>) => Promise<HTMLCanvasElement> }>(
+        HTML2CANVAS_CDNS,
+      )
+    ).default;
+    const { jsPDF } = await importFirstWorking<{
       jsPDF: new (opts?: Record<string, unknown>) => {
         internal: { pageSize: { getWidth: () => number; getHeight: () => number } };
         addImage: (d: string, fmt: string, x: number, y: number, w: number, h: number) => void;
         output: (t: 'blob') => Blob;
       };
-    };
+    }>(JSPDF_CDNS);
     const canvas = await html2canvas(wrap, {
       scale: 2,
       backgroundColor: '#ffffff',
