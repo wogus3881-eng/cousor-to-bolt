@@ -5,7 +5,7 @@ import LiteLegalDisclaimer from './LiteLegalDisclaimer';
 import LiteResultCharts from './LiteResultCharts';
 import LiteResultDashboard from './LiteResultDashboard';
 import { stashSimulatorInputsForPro } from '../lib/liteProHandoff';
-import type { SimulationResult } from '../lib/calculator';
+import { DEFAULT_BANK_RATE, DEFAULT_INS_RATE, DEFAULT_STOCK_RATE, type SimulationResult } from '../lib/calculator';
 import { LITE_BUCKET_RATIO } from '../lib/liteToSimulator';
 import { LITE_COLUMN_CLASS } from './liteLayout';
 
@@ -71,6 +71,10 @@ export default function LiteResultScreen({ result, onBack }: Props) {
             경우)을 반영한 뒤, 나머지를 은행·증권 비율({Math.round(LITE_BUCKET_RATIO.bank * 100)}% :{' '}
             {Math.round(LITE_BUCKET_RATIO.stock * 100)}%)로 나누었습니다. 개인연금·보험 적립 부분은 시뮬레이터의 연금/보험
             버킷에 반영됩니다. 활동 종료 나이·의료비 등은 표준값을 사용했습니다.
+          </p>
+          <p>
+            은행 연 {DEFAULT_BANK_RATE}%, 개인연금/보험연금 연 {DEFAULT_INS_RATE}%, 증권은 장기 투자형 가정 연{' '}
+            {DEFAULT_STOCK_RATE}%로 단순 계산했으며, 실제 상품·시장 수익률과 다를 수 있어요.
           </p>
           <p>준비 점수·그래프는 참고용 휴리스틱이며, 세부 비교는 설계사 전용 화면에서 조정할 수 있어요.</p>
         </div>
