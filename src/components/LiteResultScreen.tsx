@@ -22,19 +22,19 @@ export default function LiteResultScreen({ result, onBack }: Props) {
   return (
     <div className="flex min-h-screen flex-col bg-toss-canvas">
       <header className="sticky top-0 z-20 border-b border-toss-line bg-white/90 backdrop-blur-md">
-        <div className={`${LITE_COLUMN_CLASS} px-3 pb-4 pt-10`}>
+        <div className={`${LITE_COLUMN_CLASS} px-3 pb-3 pt-6`}>
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={onBack}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-toss-canvas text-toss-ink transition hover:bg-toss-line/80 active:scale-95"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-toss-canvas text-toss-ink transition hover:bg-toss-line/80 active:scale-95"
               aria-label="뒤로"
             >
               <ChevronLeft size={20} strokeWidth={2.25} />
             </button>
             <div className="min-w-0 flex-1">
-              <p className="text-[12px] font-medium text-toss-sub">고객 간편 진단</p>
-              <p className="truncate text-[16px] font-bold text-toss-ink">은퇴 진단 결과</p>
+              <p className="text-[11px] font-medium text-toss-sub">고객 간편 진단</p>
+              <p className="truncate text-[15px] font-bold text-toss-ink">은퇴 진단 결과</p>
             </div>
             {!isSafe ? (
               <div className="ml-auto flex shrink-0 items-center gap-1.5 rounded-full border border-red-100 bg-red-50 px-3 py-1.5">
@@ -51,11 +51,11 @@ export default function LiteResultScreen({ result, onBack }: Props) {
         </div>
       </header>
 
-      <div className={`${LITE_COLUMN_CLASS} flex flex-1 flex-col gap-4 px-3 py-5`}>
+      <div className={`${LITE_COLUMN_CLASS} flex flex-1 flex-col gap-3 px-3 py-4`}>
         <LiteResultDashboard result={result} />
 
         {weakPension && (
-          <div className="flex gap-3 rounded-2xl border border-amber-100 bg-amber-50/90 p-4">
+          <div className="flex gap-2.5 rounded-2xl border border-amber-100 bg-amber-50/90 p-3.5">
             <AlertTriangle size={18} className="mt-0.5 shrink-0 text-amber-500" />
             <p className="text-[12px] leading-relaxed text-amber-900">
               국민연금 가입 기간이 짧게 반영되었습니다. 개인 준비 비중이 더 중요할 수 있습니다.
@@ -65,7 +65,7 @@ export default function LiteResultScreen({ result, onBack }: Props) {
 
         <LiteResultCharts result={result} />
 
-        <div className="space-y-2 rounded-2xl border border-toss-line bg-white px-4 py-3 text-[11px] leading-relaxed text-toss-sub">
+        <div className="space-y-1.5 rounded-2xl border border-toss-line bg-white px-3.5 py-2.5 text-[10px] leading-relaxed text-toss-sub">
           <p>
             <strong className="text-toss-ink">간편 진단 가정:</strong> 월 저축 합계는 입력하신 개인연금 월 납입(있을
             경우)을 반영한 뒤, 나머지를 은행·증권 비율({Math.round(LITE_BUCKET_RATIO.bank * 100)}% :{' '}
@@ -76,9 +76,9 @@ export default function LiteResultScreen({ result, onBack }: Props) {
         </div>
 
         <div id="lite-consult" className="scroll-mt-6">
-          <div className="mb-3 rounded-2xl border border-toss-blue/25 bg-gradient-to-r from-blue-50 to-sky-50 px-4 py-3.5 text-center shadow-sm ring-1 ring-toss-blue/10">
-            <p className="text-[13px] font-bold text-toss-ink">1분이면 접수 끝 — 먼저 연락드릴게요</p>
-            <p className="mt-1 text-[11px] leading-relaxed text-toss-sub">
+          <div className="mb-2.5 rounded-2xl border border-toss-blue/25 bg-gradient-to-r from-blue-50 to-sky-50 px-3.5 py-3 text-center shadow-sm ring-1 ring-toss-blue/10">
+            <p className="text-[12px] font-bold text-toss-ink">1분이면 접수 끝 — 먼저 연락드릴게요</p>
+            <p className="mt-1 text-[10px] leading-relaxed text-toss-sub">
               위 진단 숫자를 바탕으로, 빈칸만 채워 주세요. 부담 없이 가능한 범위부터 상담해 드려요.
             </p>
           </div>
@@ -87,8 +87,8 @@ export default function LiteResultScreen({ result, onBack }: Props) {
 
         <LiteLegalDisclaimer />
 
-        <div className="rounded-2xl border border-dashed border-toss-line bg-white px-4 py-4 text-center">
-          <p className="mb-2 text-[12px] leading-relaxed text-toss-sub">
+        <div className="rounded-2xl border border-dashed border-toss-line bg-white px-3.5 py-3 text-center">
+          <p className="mb-1.5 text-[11px] leading-relaxed text-toss-sub">
             상세 자산 배분·세금 인사이트는 무료 상담 또는 설계사 리포트로 안내드립니다.
           </p>
           <Link
