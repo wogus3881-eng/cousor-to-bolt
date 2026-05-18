@@ -42,10 +42,10 @@ function Field({
 }) {
   const clamped = Math.min(max, Math.max(min, value || 0));
   return (
-    <div className="rounded-[20px] bg-white p-4 shadow-[0_2px_16px_rgba(0,0,0,0.04)] ring-1 ring-black/[0.03]">
-      <p className="text-[13px] font-semibold text-toss-ink">{label}</p>
+    <div className="rounded-[16px] bg-white p-3.5 shadow-[0_2px_12px_rgba(0,0,0,0.035)] ring-1 ring-black/[0.03]">
+      <p className="text-[12px] font-semibold text-toss-ink">{label}</p>
       {hint ? (
-        <p className="mt-1 mb-2 text-[12px] leading-snug text-toss-sub">{hint}</p>
+        <p className="mb-1.5 mt-0.5 text-[11px] leading-snug text-toss-sub">{hint}</p>
       ) : (
         <div className="mb-1" />
       )}
@@ -57,9 +57,9 @@ function Field({
           step={step}
           value={Number.isFinite(value) ? value : min}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="min-w-0 flex-1 border-0 border-b-2 border-toss-line bg-transparent py-1 text-right text-[26px] font-bold leading-none tracking-tight text-toss-ink outline-none transition-colors focus:border-toss-blue"
+          className="min-w-0 flex-1 border-0 border-b-2 border-toss-line bg-transparent py-0.5 text-right text-[22px] font-bold leading-none tracking-tight text-toss-ink outline-none transition-colors focus:border-toss-blue"
         />
-        <span className="shrink-0 pb-1 text-[15px] font-medium text-toss-sub">{suffix}</span>
+        <span className="shrink-0 pb-0.5 text-[13px] font-medium text-toss-sub">{suffix}</span>
       </div>
       <input
         type="range"
@@ -68,7 +68,7 @@ function Field({
         step={step}
         value={clamped}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="mt-4 h-1.5 w-full rounded-full bg-toss-line accent-[#3182f6]"
+        className="mt-3 h-1.5 w-full rounded-full bg-toss-line accent-[#3182f6]"
       />
     </div>
   );
@@ -94,27 +94,27 @@ export default function LiteInputScreen({ onSubmit, initialValues }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex min-h-screen flex-col bg-toss-canvas pb-36">
+    <form onSubmit={handleSubmit} className="flex min-h-screen flex-col bg-toss-canvas pb-32">
       <div className={`${LITE_COLUMN_CLASS} flex min-h-0 flex-1 flex-col`}>
-        <header className="bg-toss-canvas px-4 pb-6 pt-10">
-          <span className="inline-flex items-center rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold text-toss-blue shadow-sm ring-1 ring-black/[0.04]">
+        <header className="bg-toss-canvas px-3 pb-4 pt-6">
+          <span className="inline-flex items-center rounded-full bg-white px-2.5 py-1 text-[10px] font-semibold text-toss-blue shadow-sm ring-1 ring-black/[0.04]">
             간편 진단
           </span>
-          <h1 className="mt-4 text-[26px] font-bold leading-[1.35] tracking-tight text-toss-ink">
+          <h1 className="mt-3 text-[23px] font-bold leading-[1.3] tracking-tight text-toss-ink">
             내 노후,
             <br />
             <span className="text-toss-blue">지금 얼마나 버틸까요?</span>
           </h1>
-          <p className="mt-3 text-[15px] leading-relaxed text-toss-sub">
+          <p className="mt-2 text-[13px] leading-relaxed text-toss-sub">
             위에서부터 순서대로만 적으면 돼요. 대략적인 값이면 충분해요.
           </p>
-          <div className="mt-5 rounded-2xl bg-white/90 px-4 py-3 text-[12px] leading-relaxed text-toss-sub shadow-sm ring-1 ring-black/[0.04]">
+          <div className="mt-3 rounded-2xl bg-white/90 px-3.5 py-2.5 text-[11px] leading-relaxed text-toss-sub shadow-sm ring-1 ring-black/[0.04]">
             월 저축 합계에서 개인연금(연금저축·IRP) 월 납입을 빼지 마세요. 가입 중이면 아래에서 따로 적어 주시면, 나머지는
             은행·증권 쪽으로만 나눕니다.
           </div>
         </header>
 
-        <div className="flex flex-1 flex-col gap-3 px-3">
+        <div className="flex flex-1 flex-col gap-2.5 px-3">
           <Field
             label="현재 나이"
             value={v.currentAge}
@@ -148,19 +148,19 @@ export default function LiteInputScreen({ onSubmit, initialValues }: Props) {
             suffix="만 원"
           />
 
-          <div className="rounded-[20px] bg-white p-4 shadow-[0_2px_16px_rgba(0,0,0,0.04)] ring-1 ring-black/[0.03]">
-            <p className="text-[13px] font-semibold text-toss-ink">개인연금 가입 여부</p>
-            <p className="mt-1 text-[12px] leading-snug text-toss-sub">
+          <div className="rounded-[16px] bg-white p-3.5 shadow-[0_2px_12px_rgba(0,0,0,0.035)] ring-1 ring-black/[0.03]">
+            <p className="text-[12px] font-semibold text-toss-ink">개인연금 가입 여부</p>
+            <p className="mt-0.5 text-[11px] leading-snug text-toss-sub">
               연금저축·IRP 등 <strong className="text-toss-ink">월 납입 중인 퇴직연금</strong>이 있으면 예를 눌러 주세요.
             </p>
-            <div className="mt-3 grid grid-cols-2 gap-2">
+            <div className="mt-2.5 grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => {
                   setPensionYesError(false);
                   setV((p) => ({ ...p, hasPrivatePension: false }));
                 }}
-                className={`rounded-2xl border-2 py-3.5 text-[14px] font-semibold transition ${
+                className={`rounded-xl border-2 py-3 text-[13px] font-semibold transition ${
                   !v.hasPrivatePension
                     ? 'border-toss-blue bg-blue-50 text-toss-blue'
                     : 'border-toss-line bg-toss-canvas text-toss-sub'
@@ -171,7 +171,7 @@ export default function LiteInputScreen({ onSubmit, initialValues }: Props) {
               <button
                 type="button"
                 onClick={() => setV((p) => ({ ...p, hasPrivatePension: true }))}
-                className={`rounded-2xl border-2 py-3.5 text-[14px] font-semibold transition ${
+                className={`rounded-xl border-2 py-3 text-[13px] font-semibold transition ${
                   v.hasPrivatePension
                     ? 'border-toss-blue bg-blue-50 text-toss-blue'
                     : 'border-toss-line bg-toss-canvas text-toss-sub'
@@ -181,7 +181,7 @@ export default function LiteInputScreen({ onSubmit, initialValues }: Props) {
               </button>
             </div>
             {v.hasPrivatePension && (
-              <div className="mt-3 border-t border-toss-line pt-3">
+              <div className="mt-2.5 border-t border-toss-line pt-2.5">
                 <Field
                   label="개인연금 월 납입액"
                   hint="연금저축·IRP 등 합산 (만 원)"
@@ -198,7 +198,7 @@ export default function LiteInputScreen({ onSubmit, initialValues }: Props) {
               </div>
             )}
             {pensionYesError && (
-              <p className="mt-2 text-[12px] font-medium text-red-500">가입 중이면 월 납입액을 1만 원 이상 입력해 주세요.</p>
+              <p className="mt-2 text-[11px] font-medium text-red-500">가입 중이면 월 납입액을 1만 원 이상 입력해 주세요.</p>
             )}
           </div>
 
@@ -240,25 +240,25 @@ export default function LiteInputScreen({ onSubmit, initialValues }: Props) {
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 z-10 border-t border-toss-line bg-white/95 backdrop-blur-md">
-        <div className={`${LITE_COLUMN_CLASS} px-3 pb-8 pt-3`}>
+        <div className={`${LITE_COLUMN_CLASS} px-3 pb-5 pt-2.5`}>
           <button
             type="submit"
             disabled={v.retirementAge <= v.currentAge || (v.hasPrivatePension && v.privatePensionMonthlyMan < 1)}
-            className="flex w-full items-center justify-center gap-1 rounded-2xl bg-toss-blue py-4 text-[16px] font-semibold text-white shadow-lg shadow-toss-blue/25 transition hover:bg-toss-bluePress active:scale-[0.99] disabled:pointer-events-none disabled:opacity-40"
+            className="flex w-full items-center justify-center gap-1 rounded-2xl bg-toss-blue py-3.5 text-[15px] font-semibold text-white shadow-lg shadow-toss-blue/25 transition hover:bg-toss-bluePress active:scale-[0.99] disabled:pointer-events-none disabled:opacity-40"
           >
             간편 진단 결과 보기
             <ChevronRight size={18} strokeWidth={2.25} />
           </button>
-          <p className="mt-2.5 text-center text-[11px] text-toss-sub">
+          <p className="mt-2 text-center text-[10px] text-toss-sub">
             본 결과는 참고용이에요. 세부 비중·세법은 상담 시 안내드려요.
           </p>
-          <div className="mt-2 px-0.5">
+          <div className="mt-1.5 px-0.5">
             <LiteLegalDisclaimerCompact />
           </div>
           <Link
             to="/pro"
             onClick={() => stashLiteValuesForPro(v)}
-            className="mt-2 block text-center text-[12px] font-medium text-toss-sub underline decoration-toss-line underline-offset-4 hover:text-toss-ink"
+            className="mt-1.5 block text-center text-[11px] font-medium text-toss-sub underline decoration-toss-line underline-offset-4 hover:text-toss-ink"
           >
             설계사 전용 · 상세 진단
           </Link>

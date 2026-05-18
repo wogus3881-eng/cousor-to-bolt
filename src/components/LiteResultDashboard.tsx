@@ -120,12 +120,12 @@ export default function LiteResultDashboard({ result }: Props) {
   const limitLabel = dignityEndAge === null ? '100세+ 추정' : `약 ${dignityEndAge}세`;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       <section
-        className={`rounded-[20px] border p-5 shadow-[0_2px_16px_rgba(0,0,0,0.05)] ring-1 ring-black/[0.03] ${bandHeroClass(readiness.band)}`}
+        className={`rounded-[18px] border p-4 shadow-[0_2px_14px_rgba(0,0,0,0.045)] ring-1 ring-black/[0.03] ${bandHeroClass(readiness.band)}`}
       >
-        <p className="text-[13px] font-bold text-toss-ink">은퇴 준비 한눈에 보기</p>
-        <div className="mt-4 flex gap-5">
+        <p className="text-[12px] font-bold text-toss-ink">은퇴 준비 한눈에 보기</p>
+        <div className="mt-3 flex gap-4">
           <ScoreRing score={readiness.score} band={readiness.band} />
           <div className="min-w-0 flex-1 pt-1">
             <span
@@ -139,7 +139,7 @@ export default function LiteResultDashboard({ result }: Props) {
             >
               {readiness.label}
             </span>
-            <p className="mt-2 text-[15px] font-bold leading-snug text-toss-ink">
+            <p className="mt-2 text-[14px] font-bold leading-snug text-toss-ink">
               {readiness.band === 'ok'
                 ? '지금 리듬을 유지할수록 좋아요'
                 : '지금 구조를 한 번 점검해 볼 만해요'}
@@ -149,22 +149,22 @@ export default function LiteResultDashboard({ result }: Props) {
         </div>
       </section>
 
-      <section className="grid grid-cols-2 gap-2.5">
-        <div className="rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-black/[0.04]">
+      <section className="grid grid-cols-2 gap-2">
+        <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-black/[0.04]">
           <p className="text-[10px] font-medium text-toss-sub">90세까지 부족 추정</p>
           <p className={`mt-1 text-[15px] font-bold tabular-nums ${extraNeeded > 0 ? 'text-red-600' : 'text-toss-ink'}`}>
             {shortageLabel}
           </p>
         </div>
-        <div className="rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-black/[0.04]">
+        <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-black/[0.04]">
           <p className="text-[10px] font-medium text-toss-sub">품격 유지 한계</p>
           <p className="mt-1 text-[15px] font-bold text-emerald-700 tabular-nums">{limitLabel}</p>
         </div>
-        <div className="rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-black/[0.04]">
+        <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-black/[0.04]">
           <p className="text-[10px] font-medium text-toss-sub">은퇴 시점 예상 자산</p>
           <p className="mt-1 text-[15px] font-bold text-toss-blue tabular-nums">{formatKRW(retirementBalance)}</p>
         </div>
-        <div className="rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-black/[0.04]">
+        <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-black/[0.04]">
           <p className="text-[10px] font-medium text-toss-sub">은퇴 직후 월 부족분</p>
           <p className={`mt-1 text-[15px] font-bold tabular-nums ${monthlyGap > 0 ? 'text-orange-600' : 'text-toss-ink'}`}>
             {formatKRW(monthlyGap)}
@@ -172,14 +172,14 @@ export default function LiteResultDashboard({ result }: Props) {
         </div>
       </section>
 
-      <section className="rounded-[20px] border border-toss-line bg-white p-4 shadow-sm ring-1 ring-black/[0.03]">
+      <section className="rounded-[18px] border border-toss-line bg-white p-3.5 shadow-sm ring-1 ring-black/[0.03]">
         <div className="flex items-center gap-2 border-l-[3px] border-toss-blue pl-2">
           <p className="text-[13px] font-bold text-toss-ink">은퇴 직후 월 현금흐름 구조</p>
         </div>
         <p className="mt-1.5 pl-2 text-[11px] leading-relaxed text-toss-sub">
           필요 생활비(물가 반영)를 100%로 두고, 국민연금·보험·자산에서 메울 부분을 나눈 참고도예요.
         </p>
-        <div className="mt-4 space-y-3.5">
+        <div className="mt-3 space-y-3">
           <FlowRow label="필요 생활비" amount={flow.need} need={flow.need} barClass="bg-slate-400" />
           <FlowRow label="국민연금(추정)" amount={flow.pension} need={flow.need} barClass="bg-toss-blue" />
           <FlowRow label="보험·연금 수령" amount={flow.insurance} need={flow.need} barClass="bg-violet-500" />
@@ -187,7 +187,7 @@ export default function LiteResultDashboard({ result }: Props) {
         </div>
       </section>
 
-      <section className="rounded-[20px] border border-navy-800/20 bg-gradient-to-br from-navy-900 to-navy-950 p-5 text-white shadow-lg">
+      <section className="rounded-[18px] border border-navy-800/20 bg-gradient-to-br from-navy-900 to-navy-950 p-4 text-white shadow-lg">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
             <Sparkles size={16} className="text-amber-200" />
@@ -198,7 +198,7 @@ export default function LiteResultDashboard({ result }: Props) {
           </div>
         </div>
         <p className="mt-3 text-[12px] leading-relaxed text-navy-100/95">{buildAdvisorCopy(result, readiness.band)}</p>
-        <div className="mt-4 flex items-start gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
+        <div className="mt-3 flex items-start gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
           <TrendingUp size={14} className="mt-0.5 shrink-0 text-amber-300" />
           <p className="text-[11px] leading-relaxed text-navy-100/90">
             숫자만으로 결정하지 마시고, <strong className="text-white">무료 상담</strong>에서 가족·세금·상품까지 한 번에
