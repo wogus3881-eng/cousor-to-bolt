@@ -1,13 +1,10 @@
 import { useState, useEffect } from 'react';
 import { CheckCircle, X, ShieldAlert } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { buildConsultationReportPdfBlob, uploadConsultationReportPdf } from '../lib/consultationReportPdf';
-import type { SimulationResult, SimulatorInputs } from '../lib/calculator';
+import type { SimulatorInputs } from '../lib/calculator';
 
 interface Props {
   inputs: SimulatorInputs;
-  /** 있으면 상담 신청 시 PDF 생성 후 Storage URL 저장 */
-  simulationResult?: SimulationResult | null;
 }
 
 const TIME_OPTIONS = [
@@ -26,7 +23,7 @@ const GOOGLE_SHEET_WEBAPP_EXEC =
  * @copyright 2026 Designed & Developed by 이기적인 은퇴설계
  */
 
-export default function ConsultationForm({ inputs, simulationResult }: Props) {
+export default function ConsultationForm({ inputs }: Props) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [birthDate, setBirthDate] = useState('');
@@ -77,22 +74,6 @@ export default function ConsultationForm({ inputs, simulationResult }: Props) {
     const formattedPhone = formatPhoneNumber(phone.trim());
 
     try {
-      let reportUrl: string | null = null;
-      if (supabase && simulationResult) {
-        try {
-          const pdfBlob = await buildConsultationReportPdfBlob(simulationResult, {
-            applicantName: name.trim(),
-            applicantPhone: formattedPhone,
-            birthDate: birthDate.trim(),
-            location: location.trim(),
-            preferredTime,
-          });
-          reportUrl = await uploadConsultationReportPdf(supabase, pdfBlob);
-        } catch (pdfErr) {
-          console.error('[consultation] pdf build/upload', pdfErr);
-        }
-      }
-
       await fetch(GOOGLE_SHEET_WEBAPP_EXEC, {
         method: 'POST',
         mode: 'no-cors',
@@ -103,7 +84,6 @@ export default function ConsultationForm({ inputs, simulationResult }: Props) {
           time: preferredTime,
           location: location.trim(),
           source: '이기적인 은퇴설계',
-          report_url: reportUrl ?? '',
         }),
       });
 
@@ -118,7 +98,6 @@ export default function ConsultationForm({ inputs, simulationResult }: Props) {
           monthly_expense: inputs.monthlyExpense,
           birth_date: birthDate.trim(),
           location: location.trim(),
-          report_url: reportUrl,
         });
       }
       

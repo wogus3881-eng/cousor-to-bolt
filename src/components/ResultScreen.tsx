@@ -1788,7 +1788,7 @@ export default function ResultScreen({ result: initialResult, onBack }: Props) {
 
         {/* 상담 신청 폼 */}
         <div ref={consultationRef}>
-          <ConsultationForm inputs={inputs} simulationResult={result} />
+          <ConsultationForm inputs={inputs} />
         </div>
 
         {/* ── 리포트 저장 버튼 ── */}
