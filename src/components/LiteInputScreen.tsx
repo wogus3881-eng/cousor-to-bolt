@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import type { LiteInputValues } from '../lib/liteToSimulator';
 import { LITE_DEFAULTS } from '../lib/liteToSimulator';
+import { DEFAULT_BANK_RATE, DEFAULT_INS_RATE, DEFAULT_STOCK_RATE } from '../lib/calculator';
 import { stashLiteValuesForPro } from '../lib/liteProHandoff';
 import { LiteLegalDisclaimerCompact } from './LiteLegalDisclaimer';
 import { LITE_COLUMN_CLASS } from './liteLayout';
@@ -111,6 +112,9 @@ export default function LiteInputScreen({ onSubmit, initialValues }: Props) {
           <div className="mt-3 rounded-2xl bg-white/90 px-3.5 py-2.5 text-[11px] leading-relaxed text-toss-sub shadow-sm ring-1 ring-black/[0.04]">
             월 저축 합계에서 개인연금(연금저축·IRP) 월 납입을 빼지 마세요. 가입 중이면 아래에서 따로 적어 주시면, 나머지는
             은행·증권 쪽으로만 나눕니다.
+            <br />
+            은행 연 {DEFAULT_BANK_RATE}%, 개인연금/보험연금 연 {DEFAULT_INS_RATE}%, 증권은 장기 투자형 가정 연{' '}
+            {DEFAULT_STOCK_RATE}%로 단순 계산합니다.
           </div>
         </header>
 
