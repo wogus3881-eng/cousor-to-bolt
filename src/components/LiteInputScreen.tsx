@@ -139,7 +139,8 @@ export default function LiteInputScreen({ onSubmit, initialValues }: Props) {
             suffix="세"
           />
           <Field
-            label="세전 연봉 (국민연금 산정용)"
+            label="연 소득"
+            hint="직장인은 세전 연봉, 자영업자는 월평균 소득 × 12개월로 대략 입력해 주세요. 국민연금은 상한이 있어 일정 수준 이상 늘지 않아요."
             value={v.annualSalaryMan}
             onChange={set('annualSalaryMan')}
             min={3000}

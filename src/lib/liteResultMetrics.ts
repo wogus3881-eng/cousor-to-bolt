@@ -11,19 +11,17 @@ export interface LiteReadiness {
 
 /** 간편 진단용 0~100 준비 점수 (참고용 휴리스틱) */
 export function computeLiteReadiness(result: SimulationResult): LiteReadiness {
-  const { dignityEndAge, inputs, pensionReplacementRate } = result;
+  const { dignityEndAge, inputs } = result;
   const retire = inputs.retirementAge;
   const span = Math.max(1, 100 - retire);
 
   if (dignityEndAge === null) {
-    const bonus = Math.min(12, Math.floor(pensionReplacementRate / 4));
-    const score = Math.min(96, 80 + bonus);
     return {
-      score,
+      score: 100,
       band: 'ok',
       label: '양호',
       subline:
-        '현재 가정만으로는 100세까지 큰 부족이 없어 보여요. 세부 조정은 상담에서 함께 확인해 보세요.',
+        '현재 입력 기준으로는 100세까지 큰 부족이 없어 보여요. 실제 세금·수익률·의료비는 상담에서 함께 확인해 보세요.',
     };
   }
 
