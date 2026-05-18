@@ -25,7 +25,8 @@ function formatManWon(n: number) {
 }
 
 export default function LiteResultCharts({ result }: Props) {
-  const { yearRows, inputs, inflationAdjustedMonthlyExpense, pensionAtRetirement, lifeExpectancy } = result;
+  const { yearRows, inputs, inflationAdjustedMonthlyExpense, pensionAtRetirement, insAnnuityMonthly, lifeExpectancy } =
+    result;
   const start = inputs.currentAge;
   const end = lifeExpectancy;
 
@@ -43,6 +44,10 @@ export default function LiteResultCharts({ result }: Props) {
     {
       name: '국민연금(세전)',
       월액: Math.round(pensionAtRetirement),
+    },
+    {
+      name: '개인연금/보험연금',
+      월액: Math.round(insAnnuityMonthly),
     },
     {
       name: '필요 생활비',
@@ -113,9 +118,9 @@ export default function LiteResultCharts({ result }: Props) {
           <p className="text-[13px] font-bold text-toss-ink">은퇴 직후 월 단위 비교 (참고)</p>
         </div>
         <p className="mt-1.5 pl-2 text-[11px] leading-relaxed text-toss-sub">
-          국민연금은 세전 추정, 생활비는 물가 반영 추정이에요. 세후·실수령과 다를 수 있어요.
+          개인연금/보험연금이 0원이면 아직 별도 연금 준비가 반영되지 않은 상태예요.
         </p>
-        <div className="mt-3 h-[180px] w-full min-w-0">
+        <div className="mt-3 h-[210px] w-full min-w-0">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={compareData} layout="vertical" margin={{ top: 4, right: 16, left: 4, bottom: 4 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e8eb" horizontal={false} />
@@ -124,7 +129,7 @@ export default function LiteResultCharts({ result }: Props) {
                 tick={{ fontSize: 10, fill: '#6b7684' }}
                 tickFormatter={(v) => formatManWon(v)}
               />
-              <YAxis type="category" dataKey="name" width={88} tick={{ fontSize: 11, fill: '#191f28' }} />
+              <YAxis type="category" dataKey="name" width={112} tick={{ fontSize: 10, fill: '#191f28' }} />
               <Tooltip
                 formatter={(v: number) => formatKRW(v)}
                 contentStyle={{
@@ -135,7 +140,7 @@ export default function LiteResultCharts({ result }: Props) {
               />
               <Bar dataKey="월액" radius={[0, 8, 8, 0]} maxBarSize={32}>
                 {compareData.map((_, i) => (
-                  <Cell key={i} fill={i === 0 ? '#3182f6' : '#8b95a1'} />
+                  <Cell key={i} fill={i === 0 ? '#3182f6' : i === 1 ? '#8b5cf6' : '#8b95a1'} />
                 ))}
               </Bar>
             </BarChart>
