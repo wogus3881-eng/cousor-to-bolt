@@ -7,8 +7,8 @@
  *   1) SPREADSHEET_ID  → 스프레드시트 URL 의 .../d/여기/edit
  *   2) SHEET_NAME     → 데이터 넣을 탭 이름 (기본 Sheet1)
  *
- * 스프레드시트 1행 헤더 예시 (이미 있으면 appendRow 열 순서만 맞추면 됨):
- *   접수일시 | 이름 | 생년월일 | 연락처 | 희망시간 | 지역 | 유입경로 | 진단PDF_URL
+ * 스프레드시트 1행 헤더:
+ *   접수일시 | 이름 | 생년월일 | 연락처 | 희망시간 | 지역 | 유입경로
  *
  * 프론트(이 저장소 ConsultationForm): fetch + JSON.stringify + no-cors
  *
@@ -33,8 +33,6 @@ function doPost(e) {
     var time = '';
     var location = '';
     var source = '';
-    var reportUrl = '';
-
     var raw = e.postData && e.postData.contents ? String(e.postData.contents).trim() : '';
     if (raw && raw.charAt(0) === '{') {
       try {
@@ -45,7 +43,6 @@ function doPost(e) {
         time = (j.time || '').toString();
         location = (j.location || '').toString();
         source = (j.source || '').toString();
-        reportUrl = (j.report_url || '').toString();
       } catch (ignore) {}
     }
 
@@ -57,11 +54,10 @@ function doPost(e) {
       time = (p.time || '').toString();
       location = (p.location || '').toString();
       source = (p.source || '').toString();
-      reportUrl = (p.report_url || '').toString();
     }
 
     Logger.log(
-      JSON.stringify({ name: name, birthDate: birthDate, phone: phone, time: time, location: location, source: source, report_url: reportUrl }),
+      JSON.stringify({ name: name, birthDate: birthDate, phone: phone, time: time, location: location, source: source }),
     );
 
     var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
@@ -70,7 +66,7 @@ function doPost(e) {
       return jsonOut({ ok: false, error: 'sheet_not_found:' + SHEET_NAME });
     }
 
-    // 열 순서: 접수일시, 이름, 생년월일, 연락처, 희망시간, 지역, 유입경로, 진단PDF_URL
+    // 열 순서: 접수일시, 이름, 생년월일, 연락처, 희망시간, 지역, 유입경로
     sheet.appendRow([
       new Date(),
       name,
@@ -79,7 +75,6 @@ function doPost(e) {
       time,
       location,
       source,
-      reportUrl,
     ]);
 
     return jsonOut({ ok: true });

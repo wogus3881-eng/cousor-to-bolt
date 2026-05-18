@@ -82,7 +82,7 @@ export default function LiteResultScreen({ result, onBack }: Props) {
               위 진단 숫자를 바탕으로, 빈칸만 채워 주세요. 부담 없이 가능한 범위부터 상담해 드려요.
             </p>
           </div>
-          <ConsultationForm inputs={inputs} simulationResult={result} />
+          <ConsultationForm inputs={inputs} />
         </div>
 
         <LiteLegalDisclaimer />

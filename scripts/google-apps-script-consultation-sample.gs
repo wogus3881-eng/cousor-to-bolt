@@ -1,12 +1,11 @@
 /**
- * 상담 신청 웹앱용 샘플 (스프레드시트에 report_url 포함 저장)
+ * 상담 신청 웹앱용 샘플 (스프레드시트에 기본 상담 정보 저장)
  *
  * 웹앱 배포 URL(exec)은 프론트 ConsultationForm.tsx 의 fetch 주소와 동일해야 함 (여기서 수정하지 않음).
  * 아래는 스프레드시트 파일 ID만 넣으면 됨 (시트 URL의 d/ 와 /edit 사이).
  *
- * ConsultationForm.tsx: 숨은 iframe + HTML form POST (fetch no-cors 보다 본문 전달 안정적).
- *   name, birthDate, phone, time, location, source, report_url
- * → Apps Script 에서는 e.parameter.report_url 로 읽으면 됨 (JSON 본문보다 호환 좋음).
+ * ConsultationForm.tsx 가 보내는 필드:
+ *   name, birthDate, phone, time, location, source
  *
  * 사용법:
  * 1) 스프레드시트에 헤더 행을 맞춤 (아래 HEADER_ROW 예시 참고)
@@ -14,19 +13,18 @@
  * 3) 기존 doPost 가 있으면 appendRow 부분만 합치거나 컬럼 순서를 기존 시트에 맞게 조정
  */
 
-var SPREADSHEET_ID = 'AKfycbzwYcAmTWCFF92i0UStbfQwCOJsyKASK3YKbi93u-g_dCQ-7FtCmLFIa965ravqjqWW';
+var SPREADSHEET_ID = '스프레드시트_ID를_여기에_붙여넣기';
 var SHEET_NAME = 'Sheet1'; // 또는 실제 시트 이름
 
 /** 1행 헤더 예시 — 실제 시트와 열 순서를 반드시 일치시키세요 */
-// | 접수일시 | 이름 | 생년월일 | 연락처 | 희망시간 | 지역 | 유입경로 | 진단PDF_URL |
+// | 접수일시 | 이름 | 생년월일 | 연락처 | 희망시간 | 지역 | 유입경로 |
 
 function parsePayload(e) {
   if (!e) {
     return null;
   }
-  var ct = (e.postData && e.postData.type) ? String(e.postData.type) : '';
-  var raw = e.postData && e.postData.contents;
-  if (raw && ct.indexOf('json') !== -1) {
+  var raw = e.postData && e.postData.contents ? String(e.postData.contents).trim() : '';
+  if (raw && raw.charAt(0) === '{') {
     try {
       return JSON.parse(raw);
     } catch (err) {
@@ -39,8 +37,7 @@ function parsePayload(e) {
     phone: e.parameter.phone || '',
     time: e.parameter.time || '',
     location: e.parameter.location || '',
-    source: e.parameter.source || '',
-    report_url: e.parameter.report_url || ''
+    source: e.parameter.source || ''
   };
 }
 
@@ -55,8 +52,6 @@ function doPost(e) {
     return jsonOut({ ok: false, error: 'sheet_not_found' });
   }
 
-  var reportUrl = data.report_url || '';
-
   sheet.appendRow([
     new Date(),
     data.name || '',
@@ -65,7 +60,6 @@ function doPost(e) {
     data.time || '',
     data.location || '',
     data.source || '',
-    reportUrl,
   ]);
 
   return jsonOut({ ok: true });
