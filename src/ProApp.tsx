@@ -2,15 +2,23 @@ import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { Link } from 'react-router-dom';
 import InputScreen from './components/InputScreen';
 import ResultScreen from './components/ResultScreen';
+import ProTierBar from './components/ProTierBar';
 import { simulate } from './lib/calculator';
 import type { SimulatorInputs, SimulationResult } from './lib/calculator';
 import { peekHandoffSimulatorInputs, clearLiteProHandoffStorage } from './lib/liteProHandoff';
+import { proFeatures, PRO_TIER_META, type ProTier } from './lib/proTier';
+import { canRunBasicSimulation, getBasicUsage, recordBasicSimulation } from './lib/proUsageLimits';
 
-/** 전문가용(프로) 전체 입력 · 결과 플로우 — 추후 /pro 경로에 로그인·구독 가드만 추가하면 됨 */
-export default function ProApp() {
+interface Props {
+  tier: ProTier;
+}
+
+export default function ProApp({ tier }: Props) {
+  const features = proFeatures(tier);
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [savedInputs, setSavedInputs] = useState<SimulatorInputs | undefined>(undefined);
   const [handoffBanner, setHandoffBanner] = useState(false);
+  const [limitMessage, setLimitMessage] = useState<string | null>(null);
   const handoffBootRef = useRef(false);
 
   useLayoutEffect(() => {
@@ -33,6 +41,13 @@ export default function ProApp() {
   }, []);
 
   function handleSimulate(inputs: SimulatorInputs) {
+    if (!features.unlimitedSimulations && !canRunBasicSimulation()) {
+      const { simLimit } = getBasicUsage();
+      setLimitMessage(`이번 달 Basic 시뮬레이션 한도(${simLimit}회)를 모두 사용했어요. Plus로 업그레이드하면 무제한입니다.`);
+      return;
+    }
+    setLimitMessage(null);
+    if (!features.unlimitedSimulations) recordBasicSimulation();
     setSavedInputs(inputs);
     setResult(simulate(inputs));
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -43,24 +58,30 @@ export default function ProApp() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  const footer = (
+    <footer className="space-y-2 border-t border-slate-100 bg-white py-8 text-center">
+      <p className="text-[10px] font-medium text-slate-400">
+        <span className="font-bold text-slate-500">이기적인 은퇴설계</span> · {PRO_TIER_META[tier].label} | ⓒ 2026
+      </p>
+      <Link to="/v2" className="text-[10px] text-navy-500 underline underline-offset-2 hover:text-navy-700">
+        고객용 간편 진단 (v2)
+      </Link>
+    </footer>
+  );
+
   if (result) {
     return (
-      <div className="min-h-screen bg-slate-50 select-none">
-        <ResultScreen result={result} onBack={handleBack} />
-        <footer className="py-8 text-center border-t border-slate-100 bg-white space-y-2">
-          <p className="text-[10px] text-slate-400 font-medium">
-            <span className="font-bold text-slate-500">이기적인 은퇴설계</span> · 프로 진단 | ⓒ 2026 All rights reserved.
-          </p>
-          <Link to="/" className="text-[10px] text-navy-500 hover:text-navy-700 underline underline-offset-2">
-            고객용 간편 진단으로 이동
-          </Link>
-        </footer>
+      <div className={`min-h-screen bg-slate-50 select-none ${features.reportWatermark ? 'pro-print-basic' : ''}`}>
+        <ProTierBar tier={tier} />
+        <ResultScreen result={result} onBack={handleBack} tier={tier} />
+        {footer}
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 select-none flex flex-col">
+    <div className="flex min-h-screen select-none flex-col bg-slate-50">
+      <ProTierBar tier={tier} />
       {handoffBanner && (
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-blue-100 bg-blue-50 px-4 py-2.5 text-[12px] text-blue-900">
           <p>
@@ -75,18 +96,18 @@ export default function ProApp() {
           </button>
         </div>
       )}
+      {limitMessage && (
+        <div className="mx-4 mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[12px] leading-relaxed text-amber-900">
+          {limitMessage}{' '}
+          <Link to={PRO_TIER_META.plus.path} className="font-bold underline underline-offset-2">
+            Plus 보기
+          </Link>
+        </div>
+      )}
       <div className="flex-grow">
-        <InputScreen onSimulate={handleSimulate} initialInputs={savedInputs} />
+        <InputScreen onSimulate={handleSimulate} initialInputs={savedInputs} tier={tier} />
       </div>
-
-      <footer className="py-8 text-center border-t border-slate-100 bg-white space-y-2">
-        <p className="text-[10px] text-slate-400 font-medium tracking-tight">
-          Designed by <span className="font-bold text-slate-500">이기적인 은퇴설계</span> · 프로 진단 | ⓒ 2026 All rights reserved.
-        </p>
-        <Link to="/" className="text-[10px] text-navy-500 hover:text-navy-700 underline underline-offset-2">
-          고객용 간편 진단으로 이동
-        </Link>
-      </footer>
+      {footer}
     </div>
   );
 }
