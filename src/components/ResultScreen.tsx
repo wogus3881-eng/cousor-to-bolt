@@ -59,6 +59,11 @@ const EMERALD = '#10b981';
 
 const SLATE  = '#64748b';
 
+const CHART_LEGEND_PROPS = {
+  wrapperStyle: { fontSize: 10, color: '#0f2057', fontWeight: 700, paddingTop: 8 },
+  iconSize: 8,
+} as const;
+
 
 
 function formatAxis(v: number) {
@@ -1319,7 +1324,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
               <Tooltip content={<CustomTooltip />} />
 
-              {!compactChart && <Legend wrapperStyle={{ fontSize: 10 }} iconSize={8} />}
+              {!compactChart && <Legend {...CHART_LEGEND_PROPS} />}
 
 
 
@@ -1427,10 +1432,10 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
           {/* 범례 카드 */}
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <div className="bg-navy-50 rounded-xl p-2.5 text-center border border-navy-100">
-              <div className="w-5 h-0.5 bg-navy-700 mx-auto mb-1.5 rounded" />
-              <p className="text-[10px] font-bold text-navy-700">명목 자산</p>
-              <p className="text-[9px] text-navy-400 mt-0.5">원금+이자 합계</p>
+            <div className="rounded-xl border border-navy-200 bg-white p-2.5 text-center shadow-sm">
+              <div className="mx-auto mb-1.5 h-1 w-6 rounded bg-navy-900" />
+              <p className="text-[10px] font-bold text-navy-950">명목 자산</p>
+              <p className="mt-0.5 text-[9px] font-medium text-navy-600">원금+이자 합계</p>
             </div>
             <div className="bg-orange-50 rounded-xl p-2.5 text-center border border-orange-100">
               <div className="w-5 h-0.5 bg-orange-400 mx-auto mb-1.5 rounded" style={{borderStyle:'dashed'}} />
@@ -1564,7 +1569,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
               <YAxis tick={{ fontSize: compactChart ? 9 : 10, fill: SLATE }} tickLine={false} axisLine={false}
                 tickFormatter={formatAxis} width={compactChart ? 46 : 42} />
               <Tooltip content={<CustomTooltip />} />
-              {!compactChart && <Legend wrapperStyle={{ fontSize: 10 }} iconSize={8} />}
+              {!compactChart && <Legend {...CHART_LEGEND_PROPS} />}
 
               <ReferenceLine x={activeEndAge} stroke={SLATE} strokeDasharray="3 2" strokeWidth={1.5}
                 label={compactChart ? undefined : { value: `${activeEndAge}세 활동종료`, position: 'insideTopRight', fill: SLATE, fontSize: 9 }} />
