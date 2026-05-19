@@ -44,6 +44,7 @@ function DualInput({
   label, sublabel, icon, value, min, max, step, unit, display, parse,
   trackColor, onChange, decimalPlaces = 0,
   warningFn,
+  tooltip,
 }: {
   label: string;
   sublabel?: string;
@@ -59,6 +60,7 @@ function DualInput({
   onChange: (v: number) => void;
   decimalPlaces?: number;
   warningFn?: (v: number) => string | null;
+  tooltip?: string;
 }) {
   const [raw, setRaw] = useState('');
   const [editing, setEditing] = useState(false);
@@ -75,16 +77,26 @@ function DualInput({
   return (
     <div className="bg-white rounded-2xl p-5 shadow-sm border border-navy-100 transition-shadow hover:shadow-md">
       <div className="flex items-center justify-between mb-3">
-        {icon && (
+        {icon ? (
           <div className="flex items-center gap-2">
             <span className="text-navy-600">{icon}</span>
             <div>
-              <p className="text-xs font-semibold text-navy-800">{label}</p>
+              <div className="flex items-center gap-1">
+                <p className="text-xs font-semibold text-navy-800">{label}</p>
+                {tooltip && <Tooltip text={tooltip} />}
+              </div>
               {sublabel && <p className="text-[10px] text-navy-400">{sublabel}</p>}
             </div>
           </div>
+        ) : (
+          <div>
+            <div className="flex items-center gap-1">
+              <p className="text-xs font-semibold text-navy-800">{label}</p>
+              {tooltip && <Tooltip text={tooltip} />}
+            </div>
+            {sublabel && <p className="text-[10px] text-navy-400">{sublabel}</p>}
+          </div>
         )}
-        {!icon && <p className="text-xs font-semibold text-navy-800">{label}</p>}
 
         {/* 숫자 입력 필드 */}
         <div className="flex items-baseline gap-1">
@@ -496,6 +508,13 @@ const DEFAULT_INPUTS: SimulatorInputs = {
   activeEndAge: 78,
   medicalCostEnabled: true,
   monthlyMedicalCost: MAN * 40,
+  monthlyPension401k: 0,
+  pension401kRate: 3.0,
+  pension401kPaymentYears: 25,
+  pensionStartAge: 65,
+  isaMonthly: 0,
+  isaRate: DEFAULT_STOCK_RATE,
+  isaTermYears: 5,
 };
 
 function calcDefaultPensionYears(currentAge: number) {
@@ -526,6 +545,11 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
   }
 
   const totalMonthly = v.monthlyBank + v.monthlyStock + v.monthlyInsurance;
+  const pension401kPayYearsDefault = Math.max(1, Math.min(40, v.retirementAge - v.currentAge));
+  const pension401kPaymentYears = v.pension401kPaymentYears ?? pension401kPayYearsDefault;
+  const pensionStartAge = v.pensionStartAge ?? 65;
+  const isaRate = v.isaRate ?? v.stockRate;
+  const isaTermYears = v.isaTermYears ?? 5;
 
   return (
     <div className="flex flex-col min-h-screen bg-navy-950">
@@ -578,6 +602,26 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
             isAutoSet={pensionAutoSet}
           />
         </div>
+
+        {features.pensionStartAgeSelect && (
+          <div className="animate-fade-in" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
+            <DualInput
+              label="국민연금 수급 개시 연령"
+              icon={<CalendarDays size={16} />}
+              value={pensionStartAge}
+              min={60} max={70} step={1} unit="세"
+              display={String} parse={parseInt}
+              trackColor="bg-navy-500"
+              onChange={set('pensionStartAge')}
+              tooltip="60~64세 조기수령 시 1년마다 6% 감액, 66~70세 연기수령 시 1년마다 7.2% 증액됩니다."
+              warningFn={(age) => {
+                if (age < 63) return '조기수령 시 연금액이 많이 줄어요. 신중히 검토해 보세요.';
+                if (age > 67) return '연기수령 시 월 수령액이 늘지만, 수령 시작이 늦어집니다.';
+                return null;
+              }}
+            />
+          </div>
+        )}
 
         {/* 연봉 */}
         <div className="animate-fade-in" style={{ animationDelay: '180ms', animationFillMode: 'both' }}>
@@ -635,6 +679,82 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
               <BucketCard theme={BANK_THEME} amount={v.monthlyBank} rate={v.bankRate} onAmountChange={set('monthlyBank')} onRateChange={set('bankRate')} />
               <BucketCard theme={STOCK_THEME} amount={v.monthlyStock} rate={v.stockRate} onAmountChange={set('monthlyStock')} onRateChange={set('stockRate')} />
               <BucketCard theme={INS_THEME} amount={v.monthlyInsurance} rate={v.insuranceRate} onAmountChange={set('monthlyInsurance')} onRateChange={set('insuranceRate')} paymentYears={v.insurancePaymentYears ?? 10} onPaymentYearsChange={set('insurancePaymentYears')} />
+
+              {features.pension401kBucket && (
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2 px-1 pt-1">
+                    <Landmark size={15} className="text-indigo-600" />
+                    <p className="text-xs font-bold text-navy-800">퇴직연금 (IRP/DC)</p>
+                  </div>
+                  <DualInput
+                    label="월 납입액"
+                    value={v.monthlyPension401k ?? 0}
+                    min={0} max={MAN * 200} step={MAN * 10} unit="만 원"
+                    display={val => Math.floor(val / MAN).toLocaleString()}
+                    parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
+                    trackColor="bg-indigo-500"
+                    onChange={set('monthlyPension401k')}
+                    tooltip="회사 부담금과 개인 추가납입 합산 금액이에요. DC형은 월 급여의 약 8.3%입니다."
+                  />
+                  <DualInput
+                    label="운용 수익률"
+                    value={v.pension401kRate ?? 3.0}
+                    min={1.0} max={8.0} step={0.1} unit="%"
+                    display={val => val.toFixed(1)}
+                    parse={parseFloat}
+                    trackColor="bg-indigo-500"
+                    onChange={set('pension401kRate')}
+                    decimalPlaces={1}
+                    tooltip="DC형은 직접 운용 수익률, DB형은 회사 보장률(통상 1~3%)을 입력하세요."
+                  />
+                  <DualInput
+                    label="납입 기간"
+                    value={pension401kPaymentYears}
+                    min={1} max={40} step={1} unit="년"
+                    display={String} parse={parseInt}
+                    trackColor="bg-indigo-500"
+                    onChange={set('pension401kPaymentYears')}
+                  />
+                </div>
+              )}
+
+              {features.isaCalculation && (
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2 px-1 pt-1">
+                    <TrendingUp size={15} className="text-emerald-600" />
+                    <p className="text-xs font-bold text-navy-800">ISA 계좌 (비과세)</p>
+                  </div>
+                  <DualInput
+                    label="월 납입액"
+                    value={v.isaMonthly ?? 0}
+                    min={0} max={MAN * 200} step={MAN * 10} unit="만 원"
+                    display={val => Math.floor(val / MAN).toLocaleString()}
+                    parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
+                    trackColor="bg-emerald-500"
+                    onChange={set('isaMonthly')}
+                    tooltip="연간 2,000만원 한도 내 이자·배당 200만원까지 비과세 혜택이 있어요."
+                  />
+                  <DualInput
+                    label="운용 수익률"
+                    value={isaRate}
+                    min={1.0} max={10.0} step={0.1} unit="%"
+                    display={val => val.toFixed(1)}
+                    parse={parseFloat}
+                    trackColor="bg-emerald-500"
+                    onChange={set('isaRate')}
+                    decimalPlaces={1}
+                  />
+                  <DualInput
+                    label="납입 기간"
+                    value={isaTermYears}
+                    min={1} max={5} step={1} unit="년"
+                    display={String} parse={parseInt}
+                    trackColor="bg-emerald-500"
+                    onChange={set('isaTermYears')}
+                    tooltip="ISA는 최소 3년 이상 유지해야 비과세 혜택이 적용돼요."
+                  />
+                </div>
+              )}
 
               <div className="rounded-2xl bg-gold-50 border border-gold-200 p-4 flex gap-2.5">
                 <div className="shrink-0 w-4 h-4 rounded-full bg-gold-500 flex items-center justify-center mt-0.5">

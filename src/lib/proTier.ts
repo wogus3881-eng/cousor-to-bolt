@@ -10,6 +10,12 @@ export interface ProFeatureFlags {
   reportWatermark: boolean;
   unlimitedPrint: boolean;
   unlimitedSimulations: boolean;
+  pension401kBucket: boolean;
+  pensionStartAgeSelect: boolean;
+  scenarioCompare3: boolean;
+  isaCalculation: boolean;
+  breakEvenAnalysis: boolean;
+  taxSavingsChart: boolean;
 }
 
 export const PRO_TIER_META: Record<
@@ -47,5 +53,11 @@ export function proFeatures(tier: ProTier): ProFeatureFlags {
     reportWatermark: !isPlus,
     unlimitedPrint: isPlus,
     unlimitedSimulations: isPlus,
+    pension401kBucket: true,
+    pensionStartAgeSelect: true,
+    scenarioCompare3: isPlus,
+    isaCalculation: isPlus,
+    breakEvenAnalysis: isPlus,
+    taxSavingsChart: isPlus,
   };
 }

@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { CheckCircle, X, ShieldAlert, Check } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { resolveAgentConfig, supabaseAgentId } from '../lib/agentConfig';
+import { useAgentId } from '../lib/useAgentId';
 import type { SimulatorInputs } from '../lib/calculator';
 
 interface Props {
@@ -19,10 +21,6 @@ const MIN_CONSULTATION_AGE = 29;
 
 const INELIGIBLE_MESSAGE =
   '본 상담은 만 29세 이상을 대상으로 합니다. 아래 진단은 참고용으로 활용해 주세요.';
-
-/** 구글 앱스 스크립트 웹앱 exec URL */
-const GOOGLE_SHEET_WEBAPP_EXEC =
-  'https://script.google.com/macros/s/AKfycbyWWLcp84IIMZKT4Ev8uqZ1Z071ZloDuQXiZhoIgvb9LvizwkMjSHT0aPD0pp7C3x37NA/exec';
 
 /** 출생연도 기준 만 나이: 올해 − 출생연도 (생일 전후 보정 없음) */
 function parseYearBasedAgeFromBirthDate(raw: string): number | null {
@@ -55,6 +53,9 @@ function parseYearBasedAgeFromBirthDate(raw: string): number | null {
  * @copyright 2026 Designed & Developed by 이기적인 은퇴설계
  */
 export default function ConsultationForm({ inputs }: Props) {
+  const agentParam = useAgentId();
+  const agentConfig = useMemo(() => resolveAgentConfig(agentParam), [agentParam]);
+
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [birthDate, setBirthDate] = useState('');
@@ -129,7 +130,7 @@ export default function ConsultationForm({ inputs }: Props) {
     const timeLabel = preferredTimes.join(', ');
 
     try {
-      await fetch(GOOGLE_SHEET_WEBAPP_EXEC, {
+      await fetch(agentConfig.googleSheetWebAppUrl, {
         method: 'POST',
         mode: 'no-cors',
         body: JSON.stringify({
@@ -138,22 +139,28 @@ export default function ConsultationForm({ inputs }: Props) {
           phone: formattedPhone,
           time: timeLabel,
           location: location.trim(),
-          source: '이기적인 은퇴설계',
+          source: agentConfig.sourceLabel,
+          agentId: agentConfig.agentId,
         }),
       });
 
       if (supabase) {
-        await supabase.from('consultations').insert({
-          name: name.trim(),
-          phone: formattedPhone,
-          preferred_time: timeLabel,
-          current_age: inputs.currentAge,
-          retirement_age: inputs.retirementAge,
-          annual_salary: inputs.annualSalary,
-          monthly_expense: inputs.monthlyExpense,
-          birth_date: birthDate.trim(),
-          location: location.trim(),
-        });
+        try {
+          await supabase.from('consultations').insert({
+            name: name.trim(),
+            phone: formattedPhone,
+            preferred_time: timeLabel,
+            current_age: inputs.currentAge,
+            retirement_age: inputs.retirementAge,
+            annual_salary: inputs.annualSalary,
+            monthly_expense: inputs.monthlyExpense,
+            birth_date: birthDate.trim(),
+            location: location.trim(),
+            agent_id: supabaseAgentId(agentConfig),
+          });
+        } catch {
+          // 시트 접수는 성공했으므로 Supabase 스키마 미반영 시에도 사용자 흐름 유지
+        }
       }
 
       setShowSuccess(true);

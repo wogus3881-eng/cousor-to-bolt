@@ -20,6 +20,13 @@ export interface SimulatorInputs {
   activeEndAge: number;
   medicalCostEnabled: boolean;
   monthlyMedicalCost: number;
+  monthlyPension401k?: number;
+  pension401kRate?: number;
+  pension401kPaymentYears?: number;
+  pensionStartAge?: number;
+  isaMonthly?: number;
+  isaRate?: number;
+  isaTermYears?: number;
 }
 
 export interface YearRow {
@@ -75,6 +82,13 @@ export interface SimulationResult {
   insAnnuityMonthly: number;      // 종신연금 월 수령액 (보험 원금 연금화)
   // 세금 인사이트
   annualFinancialTaxAtRetirement: number; // 은퇴 첫해 과세자산 세금+건보료 합계
+  retirementBalancePension401k: number;
+  pension401kAnnuityMonthly: number;
+  pension401kTotalTax: number;
+  pensionAdjustmentRate: number;
+  pensionBreakevenAge: number;
+  isaRetirementBalance: number;
+  isaTaxSaved: number;
 }
 
 const INFLATION = 0.03;
@@ -90,6 +104,16 @@ const PENSION_MAX_UNDER20 = 700000;
 export const DEFAULT_BANK_RATE = 2.5;
 export const DEFAULT_STOCK_RATE = 5.0;
 export const DEFAULT_INS_RATE = 3.5;
+
+const DEFAULT_PENSION401K_RATE = 3.0;
+const PENSION401K_TAX_THRESHOLD_ANNUAL = 12000000;
+const PENSION401K_TAX_RATE_LOW = 0.033;
+const PENSION401K_TAX_RATE_HIGH = 0.055;
+const ISA_TAX_FREE_GAIN_LIMIT = 2000000;
+const ISA_TAX_RATE = 0.099;
+const ISA_MAX_MONTHLY = 2000000;
+const DEFAULT_ISA_TERM_YEARS = 5;
+const DEFAULT_PENSION_START_AGE = 65;
 
 const FINANCIAL_INCOME_TAX = 0.154;
 const FINANCIAL_HI_THRESHOLD = 20000000;
@@ -144,7 +168,67 @@ function applyTaxOnReturn(balance: number, rate: number): { netBalance: number; 
   return { netBalance: balance * (1 + rate) - tax - hi, taxPaid: tax + hi };
 }
 
+function calcAnnuityMonthly(balance: number, annualRatePct: number, retirementAge: number): number {
+  const annuityYears = Math.max(1, LIFE_EXPECTANCY - retirementAge);
+  if (balance <= 0) return 0;
+  const monthlyRate = (annualRatePct / 100) / 12;
+  if (monthlyRate === 0) return balance / (annuityYears * 12);
+  return balance * monthlyRate / (1 - Math.pow(1 + monthlyRate, -(annuityYears * 12)));
+}
+
+function calcPensionAdjustmentRate(pensionStartAge: number): number {
+  if (pensionStartAge < 65) return -((65 - pensionStartAge) * 0.06);
+  if (pensionStartAge > 65) return (pensionStartAge - 65) * 0.072;
+  return 0;
+}
+
+function calcPension401kWithdrawalTax(annualGross: number): number {
+  if (annualGross <= 0) return 0;
+  const rate = annualGross <= PENSION401K_TAX_THRESHOLD_ANNUAL
+    ? PENSION401K_TAX_RATE_LOW
+    : PENSION401K_TAX_RATE_HIGH;
+  return annualGross * rate;
+}
+
+function calcPensionBreakevenAge(
+  baseMonthlyPension: number,
+  pensionStartAge: number,
+  pensionAdjustmentRate: number,
+  healthInsuranceTriggered: boolean,
+): number {
+  const PENSION_TAX = 0.04;
+  const HEALTH_INS = 0.08;
+  const HEALTH_THRESHOLD = 20000000;
+
+  const netMonthly = (grossMonthly: number) => {
+    const annual = grossMonthly * 12;
+    const tax = annual * PENSION_TAX;
+    const hi = healthInsuranceTriggered || annual > HEALTH_THRESHOLD ? grossMonthly * HEALTH_INS : 0;
+    return grossMonthly - tax / 12 - hi;
+  };
+
+  let cumStandard = 0;
+  let cumAdjusted = 0;
+  for (let age = 60; age <= LIFE_EXPECTANCY; age++) {
+    if (age >= 65) {
+      const yrs = age - 65;
+      const gross = baseMonthlyPension * Math.pow(1 + PENSION_ANNUAL_INCREASE, yrs);
+      cumStandard += netMonthly(gross) * 12;
+    }
+    if (age >= pensionStartAge) {
+      const yrs = age - pensionStartAge;
+      const gross = baseMonthlyPension * (1 + pensionAdjustmentRate)
+        * Math.pow(1 + PENSION_ANNUAL_INCREASE, yrs);
+      cumAdjusted += netMonthly(gross) * 12;
+    }
+    if (age >= Math.max(65, pensionStartAge) && cumAdjusted >= cumStandard) return age;
+  }
+  return LIFE_EXPECTANCY;
+}
+
 export function simulate(inputs: SimulatorInputs): SimulationResult {
+  const yearsToRetirementPre = Math.max(0, (inputs.retirementAge ?? 0) - (inputs.currentAge ?? 0));
+
   // 구버전 필드 정규화
   const norm: SimulatorInputs = {
     ...inputs,
@@ -155,6 +239,13 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     monthlyInsurance: inputs.monthlyInsurance ?? 0,
     insuranceRate: inputs.insuranceRate ?? DEFAULT_INS_RATE,
     insurancePaymentYears: inputs.insurancePaymentYears ?? 10,
+    monthlyPension401k: inputs.monthlyPension401k ?? 0,
+    pension401kRate: inputs.pension401kRate ?? DEFAULT_PENSION401K_RATE,
+    pension401kPaymentYears: inputs.pension401kPaymentYears ?? yearsToRetirementPre,
+    pensionStartAge: inputs.pensionStartAge ?? DEFAULT_PENSION_START_AGE,
+    isaMonthly: Math.min(inputs.isaMonthly ?? 0, ISA_MAX_MONTHLY),
+    isaRate: inputs.isaRate ?? (inputs.stockRate ?? (inputs.expectedReturn ?? DEFAULT_STOCK_RATE)),
+    isaTermYears: Math.min(inputs.isaTermYears ?? DEFAULT_ISA_TERM_YEARS, DEFAULT_ISA_TERM_YEARS),
   };
 
   const {
@@ -163,13 +254,22 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     monthlyStock, stockRate: stockRatePct,
     monthlyInsurance, insuranceRate: insRatePct,
     insurancePaymentYears,
+    monthlyPension401k, pension401kRate: pension401kRatePct, pension401kPaymentYears,
+    isaMonthly, isaRate: isaRatePct, isaTermYears,
     annualSalary, monthlyExpense,
     activeEndAge, medicalCostEnabled, monthlyMedicalCost,
   } = norm;
 
+  let pensionStartAge = Math.min(70, Math.max(60, norm.pensionStartAge ?? DEFAULT_PENSION_START_AGE));
+  if (pensionStartAge < retirementAge) pensionStartAge = retirementAge;
+  norm.pensionStartAge = pensionStartAge;
+  const pensionAdjustmentRate = calcPensionAdjustmentRate(pensionStartAge);
+
   const bankR = bankRatePct / 100;
   const stockR = stockRatePct / 100;
   const insR = insRatePct / 100;
+  const pension401kR = pension401kRatePct / 100;
+  const isaR = isaRatePct / 100;
 
   const ACTIVE_END_AGE = activeEndAge ?? 78;
   const INACTIVE_EXPENSE_RATIO = 0.75;
@@ -185,8 +285,6 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
 
   const retirementBalanceBank = fv(currentSavings * bankRatio, bankR, yearsToRetirement)
     + fvAnnuity(monthlyBank, bankR, yearsToRetirement);
-  const retirementBalanceStock = fv(currentSavings * stockRatio, stockR, yearsToRetirement)
-    + fvAnnuity(monthlyStock, stockR, yearsToRetirement);
   // 보험: 납입기간(insurancePaymentYears)만 납입 후 은퇴까지 복리 증식
   const insPayYears = Math.min(insurancePaymentYears, yearsToRetirement);
   const insBalanceAtPaymentEnd = fv(currentSavings * insRatio, insR, insPayYears)
@@ -195,6 +293,27 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
   const retirementBalanceInsurance = fv(insBalanceAtPaymentEnd, insR, yearsCompoundAfterPayment);
   // 납입 종료 나이 (은퇴 전)
   const insurancePaymentEndAge = currentAge + insPayYears;
+
+  const pension401kPayYears = Math.min(pension401kPaymentYears, yearsToRetirement);
+  const retirementBalancePension401k = fv(0, pension401kR, yearsToRetirement)
+    + fvAnnuity(monthlyPension401k, pension401kR, pension401kPayYears);
+
+  const isaContributionYears = Math.min(isaTermYears, yearsToRetirement);
+  const isaMatureBalance = isaContributionYears > 0
+    ? fvAnnuity(isaMonthly, isaR, isaContributionYears)
+    : 0;
+  const isaContributions = isaMonthly * 12 * isaContributionYears;
+  const isaInterest = Math.max(0, isaMatureBalance - isaContributions);
+  const isaTax = Math.max(0, isaInterest - ISA_TAX_FREE_GAIN_LIMIT) * ISA_TAX_RATE;
+  const regularAccountTax = isaInterest * FINANCIAL_INCOME_TAX;
+  const isaTaxSaved = Math.max(0, regularAccountTax - isaTax);
+  const isaRetirementBalance = yearsToRetirement >= isaTermYears && isaTermYears > 0
+    ? fv(isaMatureBalance, stockR, yearsToRetirement - isaTermYears)
+    : isaMatureBalance;
+
+  const retirementBalanceStock = fv(currentSavings * stockRatio, stockR, yearsToRetirement)
+    + fvAnnuity(monthlyStock, stockR, yearsToRetirement)
+    + isaRetirementBalance;
   const retirementBalance = retirementBalanceBank + retirementBalanceStock + retirementBalanceInsurance;
 
   // 비교선: 전액 과세(증권 수익률), 전액 비과세(보험 수익률)
@@ -231,30 +350,30 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     + (firstYearStockReturn > FINANCIAL_HI_THRESHOLD ? (firstYearStockReturn - FINANCIAL_HI_THRESHOLD) * FINANCIAL_HI_RATE : 0);
   const annualFinancialTaxAtRetirement = firstYearBankTax + firstYearStockTax;
 
-  // 종신연금 월 수령액 계산 (보험 원금을 100세까지 연금화)
-  // 연금현가 공식: PV = PMT * [1 - (1+r)^-n] / r  →  PMT = PV * r / [1 - (1+r)^-n]
-  const annuityYears = Math.max(1, LIFE_EXPECTANCY - retirementAge);
-  const insMonthlyRate = insR / 12;
-  const insAnnuityMonthly = retirementBalanceInsurance > 0
-    ? insMonthlyRate === 0
-      ? retirementBalanceInsurance / (annuityYears * 12)
-      : retirementBalanceInsurance * insMonthlyRate
-        / (1 - Math.pow(1 + insMonthlyRate, -(annuityYears * 12)))
-    : 0;
+  const insAnnuityMonthly = calcAnnuityMonthly(retirementBalanceInsurance, insRatePct, retirementAge);
+  const pension401kAnnuityMonthly = calcAnnuityMonthly(retirementBalancePension401k, pension401kRatePct, retirementAge);
+  const pensionBreakevenAge = calcPensionBreakevenAge(
+    pensionAtRetirement,
+    pensionStartAge,
+    pensionAdjustmentRate,
+    healthInsuranceTriggered,
+  );
 
   // ── 축적기: currentAge 기준으로 연도별 잔고를 월 복리로 추적 ──────────────────
   // 보험: 납입기간 내만 월납, 이후 은퇴까지 복리만 증식
-  const accRows: Array<{ age: number; bal: number; balBank: number; balStock: number; balIns: number }> = [];
+  const accRows: Array<{ age: number; bal: number; balBank: number; balStock: number; balIns: number; bal401k: number }> = [];
   {
     let aBank = currentSavings * bankRatio;
     let aStock = currentSavings * stockRatio;
     let aIns = currentSavings * insRatio;
+    let a401k = 0;
     const bankMR = bankR / 12;
     const stockMR = stockR / 12;
     const insMR = insR / 12;
+    const pension401kMR = pension401kR / 12;
 
     for (let age = currentAge; age <= retirementAge; age++) {
-      accRows.push({ age, bal: aBank + aStock + aIns, balBank: aBank, balStock: aStock, balIns: aIns });
+      accRows.push({ age, bal: aBank + aStock + aIns + a401k, balBank: aBank, balStock: aStock, balIns: aIns, bal401k: a401k });
       if (age < retirementAge) {
         // 월 복리 12회 반복
         for (let m = 0; m < 12; m++) {
@@ -264,6 +383,8 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
           const yearsFromNow = (age - currentAge) + (m + 1) / 12;
           const insContrib = yearsFromNow < insPayYears ? monthlyInsurance : 0;
           aIns = aIns * (1 + insMR) + insContrib;
+          const pension401kContrib = yearsFromNow < pension401kPayYears ? monthlyPension401k : 0;
+          a401k = a401k * (1 + pension401kMR) + pension401kContrib;
         }
       }
     }
@@ -273,6 +394,7 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
   let bBank = retirementBalanceBank;
   let bStock = retirementBalanceStock;
   let bIns = retirementBalanceInsurance;
+  let b401k = retirementBalancePension401k;
   let balanceGross = retirementBalanceGrossOnly;
   let balanceInsOnly = retirementBalanceInsOnly;
 
@@ -280,6 +402,7 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
   let dignityEndAgeGross: number | null = null;
   let dignityEndAgeInsOnly: number | null = null;
   let totalTaxBurden = 0;
+  let pension401kTotalTax = 0;
   let isPostDepletion = false;
 
   // 축적기 행 추가 (currentAge ~ retirementAge-1)
@@ -334,8 +457,11 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     const monthlyTotalExpense = baseMonthlyLiving + monthlyMedical;
     const yearlyExpense = monthlyTotalExpense * 12;
 
-    const yearlyPensionGross = pensionAtRetirement
-      * Math.pow(1 + PENSION_ANNUAL_INCREASE, yearsIntoRetirement) * 12;
+    const yearsSincePensionStart = age - pensionStartAge;
+    const yearlyPensionGross = age >= pensionStartAge
+      ? pensionAtRetirement * (1 + pensionAdjustmentRate)
+        * Math.pow(1 + PENSION_ANNUAL_INCREASE, Math.max(0, yearsSincePensionStart)) * 12
+      : 0;
     const yearlyTax = yearlyPensionGross * PENSION_TAX_RATE;
     const yearlyHealthIns = healthInsuranceTriggered ? yearlyPensionGross * HEALTH_INS_RATE : 0;
     const yearlyPensionNet = yearlyPensionGross - yearlyTax - yearlyHealthIns;
@@ -345,6 +471,7 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     const posBank = Math.max(0, bBank);
     const posStock = Math.max(0, bStock);
     const posIns = Math.max(0, bIns);
+    const pos401k = Math.max(0, b401k);
 
     // ── 배당 인컴 모델 ──────────────────────────────────────────────────────
     // 증권 자산은 연 5%(배당 3% + 자본성장 2%) 수익률 배당 자산으로 전환 운용
@@ -353,9 +480,13 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     const yearlyDividend = posStock * DIVIDEND_RATE;
     const monthlyDividendIncome = yearlyDividend / 12;
 
-    // 수령 우선순위: ①배당 ②국민연금 → 부족분만 원금 인출
-    // 잉여분(배당+연금 > 지출)은 증권 원금에 재투자
-    const incomeBeforePrincipal = yearlyDividend + yearlyPensionNet;
+    const yearly401kGross = pension401kAnnuityMonthly > 0 ? pension401kAnnuityMonthly * 12 : 0;
+    const yearly401kTax = calcPension401kWithdrawalTax(yearly401kGross);
+    pension401kTotalTax += yearly401kTax;
+    const yearly401kNet = yearly401kGross - yearly401kTax;
+
+    // 수령 우선순위: ①배당 ②국민연금 ③퇴직연금 ④부족분 원금 인출
+    const incomeBeforePrincipal = yearlyDividend + yearlyPensionNet + yearly401kNet;
     const principalNeeded = Math.max(0, yearlyExpense - incomeBeforePrincipal);
     const yearlyStockGrowth = posStock * CAPITAL_GROWTH; // 자본성장 부분
     const surplusForReinvest = Math.max(0, incomeBeforePrincipal - yearlyExpense);
@@ -402,7 +533,9 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     })();
     void rowBankTax;
 
-    const combinedBalance = bBank + bStock + bIns;
+    b401k = pos401k * (1 + pension401kR) - yearly401kGross;
+
+    const combinedBalance = bBank + bStock + bIns + b401k;
 
     // 비교선 1: 전액 과세
     const { netBalance: newGross, taxPaid: grossTaxPaid } = applyTaxOnReturn(Math.max(0, balanceGross), stockR);
@@ -537,6 +670,13 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     insurancePaymentEndAge,
     insAnnuityMonthly,
     annualFinancialTaxAtRetirement,
+    retirementBalancePension401k,
+    pension401kAnnuityMonthly,
+    pension401kTotalTax,
+    pensionAdjustmentRate,
+    pensionBreakevenAge,
+    isaRetirementBalance,
+    isaTaxSaved,
   };
 }
 
