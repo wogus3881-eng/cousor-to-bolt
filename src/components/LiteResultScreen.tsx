@@ -1,10 +1,8 @@
-import { Link } from 'react-router-dom';
 import { ChevronLeft, AlertTriangle, ShieldCheck } from 'lucide-react';
 import ConsultationForm from './ConsultationForm';
 import LiteLegalDisclaimer from './LiteLegalDisclaimer';
 import LiteResultCharts from './LiteResultCharts';
 import LiteResultDashboard from './LiteResultDashboard';
-import { stashSimulatorInputsForPro } from '../lib/liteProHandoff';
 import { DEFAULT_BANK_RATE, DEFAULT_INS_RATE, DEFAULT_STOCK_RATE, type SimulationResult } from '../lib/calculator';
 import { LITE_BUCKET_RATIO } from '../lib/liteToSimulator';
 import { LITE_COLUMN_CLASS } from './liteLayout';
@@ -76,7 +74,7 @@ export default function LiteResultScreen({ result, onBack }: Props) {
             은행 연 {DEFAULT_BANK_RATE}%, 개인연금/보험연금 연 {DEFAULT_INS_RATE}%, 증권은 장기 투자형 가정 연{' '}
             {DEFAULT_STOCK_RATE}%로 단순 계산했으며, 실제 상품·시장 수익률과 다를 수 있어요.
           </p>
-          <p>준비 점수·그래프는 참고용 휴리스틱이며, 세부 비교는 설계사 전용 화면에서 조정할 수 있어요.</p>
+          <p>준비 점수·그래프는 참고용 휴리스틱이며, 세부 비교는 무료 상담 시 함께 확인할 수 있어요.</p>
         </div>
 
         <div id="lite-consult" className="scroll-mt-6">
@@ -90,19 +88,6 @@ export default function LiteResultScreen({ result, onBack }: Props) {
         </div>
 
         <LiteLegalDisclaimer />
-
-        <div className="rounded-2xl border border-dashed border-toss-line bg-white px-3.5 py-3 text-center">
-          <p className="mb-1.5 text-[11px] leading-relaxed text-toss-sub">
-            상세 자산 배분·세금 인사이트는 무료 상담 또는 설계사 리포트로 안내드립니다.
-          </p>
-          <Link
-            to="/pro"
-            onClick={() => stashSimulatorInputsForPro(result.inputs)}
-            className="text-[12px] font-semibold text-toss-blue underline decoration-toss-line underline-offset-4 hover:text-toss-bluePress"
-          >
-            설계사 전용 · 상세 진단 (프로)
-          </Link>
-        </div>
       </div>
     </div>
   );
