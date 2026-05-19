@@ -26,8 +26,6 @@ import {
 
 import { ChevronLeft, AlertTriangle, TrendingDown, Lightbulb, Table2, SlidersHorizontal, CalendarDays, BadgeAlert, ShieldAlert, Flame, ChevronRight, Info, Landmark, Shield, TrendingUp, AlertCircle } from 'lucide-react';
 
-import ConsultationForm from './ConsultationForm';
-
 import { simulate, formatKRW, formatMan, DEFAULT_BANK_RATE, DEFAULT_STOCK_RATE, DEFAULT_INS_RATE } from '../lib/calculator';
 
 import type { SimulationResult, SimulatorInputs } from '../lib/calculator';
@@ -661,14 +659,10 @@ export default function ResultScreen({ result: initialResult, onBack }: Props) {
 
   const { activeEndAge, medicalCostEnabled } = inputs;
 
-  const consultationRef = useRef<HTMLDivElement>(null);
+  const reportActionsRef = useRef<HTMLDivElement>(null);
 
-
-
-  function scrollToConsultation() {
-
-    consultationRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
+  function scrollToReportActions() {
+    reportActionsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
 
@@ -1774,25 +1768,20 @@ export default function ResultScreen({ result: initialResult, onBack }: Props) {
 
             {dignityEndAge !== null && dignityEndAge < 95 && (
               <button
-                onClick={scrollToConsultation}
+                onClick={scrollToReportActions}
                 className="w-full bg-gradient-to-r from-navy-800 to-navy-700 hover:from-navy-700 hover:to-navy-600 active:scale-[0.98] text-white font-bold text-[13px] rounded-2xl py-4 flex items-center justify-center gap-2 transition-all shadow-lg shadow-navy-900/30 border border-gold-600/30"
               >
                 <span className="text-gold-400">▶</span>
-                월 {Math.ceil(monthlySavingsNeededFor95 / 10000).toLocaleString()}만 원 추가 저축,
-                더 효율적으로 줄이는 방법 확인하기
+                월 {Math.ceil(monthlySavingsNeededFor95 / 10000).toLocaleString()}만 원 추가 저축 —
+                리포트 저장 · 고객 상담 자료로 활용
                 <ChevronRight size={16} />
               </button>
             )}
           </div>
         </div>
 
-        {/* 상담 신청 폼 */}
-        <div ref={consultationRef}>
-          <ConsultationForm inputs={inputs} />
-        </div>
-
         {/* ── 리포트 저장 버튼 ── */}
-        <div className="flex gap-2">
+        <div ref={reportActionsRef} className="flex gap-2 scroll-mt-6">
           <button
             onClick={() => window.print()}
             className="flex-1 bg-navy-900 hover:bg-navy-800 active:scale-[0.98] text-white font-bold text-[13px] rounded-2xl py-4 flex items-center justify-center gap-2 transition-all shadow-lg"
