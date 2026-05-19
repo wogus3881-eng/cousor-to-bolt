@@ -6,10 +6,13 @@ import {
 } from 'lucide-react';
 import type { SimulatorInputs } from '../lib/calculator';
 import { DEFAULT_BANK_RATE, DEFAULT_STOCK_RATE, DEFAULT_INS_RATE } from '../lib/calculator';
+import { proFeatures, type ProTier } from '../lib/proTier';
+import ProUpgradePrompt from './ProUpgradePrompt';
 
 interface Props {
   onSimulate: (inputs: SimulatorInputs) => void;
   initialInputs?: SimulatorInputs;
+  tier?: ProTier;
 }
 
 const MAN = 10000;
@@ -500,7 +503,8 @@ function calcDefaultPensionYears(currentAge: number) {
 }
 
 // ── InputScreen ────────────────────────────────────────────────────────────────
-export default function InputScreen({ onSimulate, initialInputs }: Props) {
+export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }: Props) {
+  const features = proFeatures(tier);
   const [v, setV] = useState<SimulatorInputs>(() => initialInputs ?? DEFAULT_INPUTS);
   const [pensionAutoSet, setPensionAutoSet] = useState(!initialInputs);
   const [bucketOpen, setBucketOpen] = useState(false);
@@ -655,7 +659,8 @@ export default function InputScreen({ onSimulate, initialInputs }: Props) {
           />
         </div>
 
-        {/* ── 생애주기 설정 ── */}
+        {/* ── 생애주기 설정 (Plus) ── */}
+        {features.lifecycleSettings ? (
         <div className="animate-fade-in" style={{ animationDelay: '400ms', animationFillMode: 'both' }}>
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-navy-100">
             <div className="flex items-center gap-2 mb-4">
@@ -738,6 +743,13 @@ export default function InputScreen({ onSimulate, initialInputs }: Props) {
             </div>
           </div>
         </div>
+        ) : (
+          <ProUpgradePrompt
+            compact
+            title="생애주기·의료비 세부 설정은 Plus"
+            description="Basic은 표준 가정(활동종료 78세, 80세+ 의료비 반영)으로 계산합니다. 고객별로 조정하려면 Plus를 이용해 주세요."
+          />
+        )}
 
         {/* 가정 안내 */}
         <div className="rounded-2xl bg-navy-50 border border-navy-100 p-4 flex gap-2.5 mt-1 animate-fade-in" style={{ animationDelay: '440ms', animationFillMode: 'both' }}>

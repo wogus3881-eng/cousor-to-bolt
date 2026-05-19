@@ -29,6 +29,9 @@ import { ChevronLeft, AlertTriangle, TrendingDown, Lightbulb, Table2, SlidersHor
 import { simulate, formatKRW, formatMan, DEFAULT_BANK_RATE, DEFAULT_STOCK_RATE, DEFAULT_INS_RATE } from '../lib/calculator';
 
 import type { SimulationResult, SimulatorInputs } from '../lib/calculator';
+import { proFeatures, type ProTier } from '../lib/proTier';
+import { canRunBasicPrint, recordBasicPrint } from '../lib/proUsageLimits';
+import ProUpgradePrompt from './ProUpgradePrompt';
 
 
 
@@ -37,6 +40,8 @@ interface Props {
   result: SimulationResult;
 
   onBack: () => void;
+
+  tier?: ProTier;
 
 }
 
@@ -568,8 +573,9 @@ function LivePensionSlider({
 
 
 
-export default function ResultScreen({ result: initialResult, onBack }: Props) {
+export default function ResultScreen({ result: initialResult, onBack, tier = 'plus' }: Props) {
 
+  const features = proFeatures(tier);
   const [showTable, setShowTable] = useState(false);
 
   const [liveInputs, setLiveInputs] = useState<SimulatorInputs>(initialResult.inputs);
@@ -663,6 +669,15 @@ export default function ResultScreen({ result: initialResult, onBack }: Props) {
 
   function scrollToReportActions() {
     reportActionsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function handlePrintReport() {
+    if (!features.unlimitedPrint && !canRunBasicPrint()) {
+      window.alert('이번 달 Basic 리포트 저장 한도(5회)를 모두 사용했어요. Plus로 업그레이드하면 무제한입니다.');
+      return;
+    }
+    if (!features.unlimitedPrint) recordBasicPrint();
+    window.print();
   }
 
 
@@ -1059,9 +1074,9 @@ export default function ResultScreen({ result: initialResult, onBack }: Props) {
 
 
 
-        {/* ── 세금/건보료 섹션 ── */}
+        {/* ── 세금/건보료 섹션 (Plus) ── */}
 
-        {(healthInsuranceTriggered || totalTaxBurden > 0) && (
+        {features.taxDetailSection && (healthInsuranceTriggered || totalTaxBurden > 0) && (
 
           <div className="rounded-2xl border border-red-100 bg-red-50 overflow-hidden">
 
@@ -1165,8 +1180,9 @@ export default function ResultScreen({ result: initialResult, onBack }: Props) {
 
 
 
-        {/* ── 실시간 자산 조정 패널 ── */}
+        {/* ── 실시간 자산 조정 패널 (Plus) ── */}
 
+        {features.liveAdjustment ? (
         <LivePensionSlider
 
           inputs={liveInputs}
@@ -1176,6 +1192,12 @@ export default function ResultScreen({ result: initialResult, onBack }: Props) {
           onChange={setLiveInputs}
 
         />
+        ) : (
+          <ProUpgradePrompt
+            title="실시간 조정은 Pro Plus"
+            description="상담 중 슬라이더로 연금·3버킷·수익률을 바꾸면 그래프가 즉시 반영됩니다. Basic은 입력 화면에서 값을 수정한 뒤 다시 진단해 주세요."
+          />
+        )}
 
 
 
@@ -1315,9 +1337,9 @@ export default function ResultScreen({ result: initialResult, onBack }: Props) {
 
 
 
-              {/* 전액 과세 시나리오 */}
+              {/* 전액 과세 시나리오 (Plus) */}
 
-              {!compactChart && (
+              {features.taxScenarioCompare && !compactChart && (
                 <Area type="monotone" dataKey="전액과세"
 
                   stroke={GOLD} strokeWidth={1.5} strokeDasharray="5 3"
@@ -1327,9 +1349,9 @@ export default function ResultScreen({ result: initialResult, onBack }: Props) {
 
 
 
-              {/* 전액 비과세 시나리오 */}
+              {/* 전액 비과세 시나리오 (Plus) */}
 
-              {!compactChart && (
+              {features.taxScenarioCompare && !compactChart && (
                 <Area type="monotone" dataKey="전액비과세"
 
                   stroke={EMERALD} strokeWidth={1.5} strokeDasharray="4 2"
@@ -1360,11 +1382,11 @@ export default function ResultScreen({ result: initialResult, onBack }: Props) {
                 <ReferenceLine x={depletionAge} stroke={RED} strokeDasharray="4 3" strokeWidth={2}
                   label={compactChart ? undefined : { value: `${depletionAge}세 고갈`, position: 'top', fill: RED, fontSize: 10, fontWeight: 700 }} />
               )}
-              {!compactChart && depletionAgeGross && depletionAgeGross !== depletionAge && (
+              {features.taxScenarioCompare && !compactChart && depletionAgeGross && depletionAgeGross !== depletionAge && (
                 <ReferenceLine x={depletionAgeGross} stroke={GOLD} strokeDasharray="3 2" strokeWidth={1.5}
                   label={{ value: `과세 ${depletionAgeGross}세`, position: 'insideTopLeft', fill: GOLD, fontSize: 9 }} />
               )}
-              {!compactChart && dignityEndAgeInsOnly && dignityEndAgeInsOnly !== depletionAge && (
+              {features.taxScenarioCompare && !compactChart && dignityEndAgeInsOnly && dignityEndAgeInsOnly !== depletionAge && (
                 <ReferenceLine x={dignityEndAgeInsOnly} stroke={EMERALD} strokeDasharray="3 2" strokeWidth={1.5}
                   label={{ value: `비과세 ${dignityEndAgeInsOnly}세`, position: 'insideTopRight', fill: EMERALD, fontSize: 9 }} />
               )}
@@ -1420,14 +1442,14 @@ export default function ResultScreen({ result: initialResult, onBack }: Props) {
               <p className="text-[10px] font-bold" style={{color:'#a36203'}}>종신연금 수령액</p>
               <p className="text-[9px] mt-0.5" style={{color:'#b37a10'}}>자산 고갈 후에도 평생 유지</p>
             </div>
-            {!compactChart && (
+            {!compactChart && features.taxScenarioCompare && (
               <div className="bg-gold-50 rounded-xl p-2.5 text-center border border-gold-200">
                 <div className="w-5 h-0.5 bg-gold-500 mx-auto mb-1.5 rounded" style={{borderStyle:'dashed'}} />
                 <p className="text-[10px] font-bold text-gold-700">전액 과세 시나리오</p>
                 <p className="text-[9px] text-gold-600 mt-0.5">세금·건보료 최대 부담</p>
               </div>
             )}
-            {!compactChart && (
+            {!compactChart && features.taxScenarioCompare && (
               <div className="bg-emerald-50 rounded-xl p-2.5 text-center border border-emerald-100">
                 <div className="w-5 h-0.5 bg-emerald-500 mx-auto mb-1.5 rounded" style={{borderStyle:'dashed'}} />
                 <p className="text-[10px] font-bold text-emerald-700">전액 비과세 시나리오</p>
@@ -1435,6 +1457,16 @@ export default function ResultScreen({ result: initialResult, onBack }: Props) {
               </div>
             )}
           </div>
+
+          {!features.taxScenarioCompare && (
+            <div className="mt-3">
+              <ProUpgradePrompt
+                compact
+                title="과세 vs 비과세 시나리오 비교는 Plus"
+                description="전액 과세·전액 비과세 그래프로 세금·건보료 영향을 한눈에 보여주는 기능입니다."
+              />
+            </div>
+          )}
 
           {/* 종신연금 강조 인사이트 */}
           {inputs.monthlyInsurance > 0 && (
@@ -1604,7 +1636,8 @@ export default function ResultScreen({ result: initialResult, onBack }: Props) {
           </div>
         </div>
 
-        {/* ── 연도별 상세 데이터 ── */}
+        {/* ── 연도별 상세 데이터 (Plus) ── */}
+        {features.yearByYearTable ? (
         <div className="bg-white rounded-2xl border border-navy-100 shadow-sm overflow-hidden">
           <button
             onClick={() => setShowTable(!showTable)}
@@ -1670,6 +1703,12 @@ export default function ResultScreen({ result: initialResult, onBack }: Props) {
             </div>
           )}
         </div>
+        ) : (
+          <ProUpgradePrompt
+            title="연도별 상세 테이블은 Pro Plus"
+            description="은퇴~100세 현금흐름을 연도별로 확인하고, 고객 상담·리포트에 활용하려면 Plus가 필요합니다."
+          />
+        )}
 
         {/* ── 부족액 콜아웃 ── */}
         {!isSafe && (
@@ -1682,7 +1721,8 @@ export default function ResultScreen({ result: initialResult, onBack }: Props) {
           </div>
         )}
 
-        {/* ── 해결책 박스 ── */}
+        {/* ── 해결책 박스 (Plus) ── */}
+        {features.solutionInsightBox && (
         <div
           className="rounded-3xl text-white p-6 shadow-xl border border-gold-600/30"
           style={{ background: 'linear-gradient(135deg, #0f2057 0%, #162d6b 100%)' }}
@@ -1710,6 +1750,7 @@ export default function ResultScreen({ result: initialResult, onBack }: Props) {
             ))}
           </div>
         </div>
+        )}
 
         {/* ── 95세 목표 섹션 ── */}
         <div className="bg-white rounded-3xl border border-navy-100 shadow-sm overflow-hidden">
@@ -1783,7 +1824,7 @@ export default function ResultScreen({ result: initialResult, onBack }: Props) {
         {/* ── 리포트 저장 버튼 ── */}
         <div ref={reportActionsRef} className="flex gap-2 scroll-mt-6">
           <button
-            onClick={() => window.print()}
+            onClick={handlePrintReport}
             className="flex-1 bg-navy-900 hover:bg-navy-800 active:scale-[0.98] text-white font-bold text-[13px] rounded-2xl py-4 flex items-center justify-center gap-2 transition-all shadow-lg"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1793,8 +1834,13 @@ export default function ResultScreen({ result: initialResult, onBack }: Props) {
           </button>
           <button
             onClick={() => {
+              if (!features.unlimitedPrint && !canRunBasicPrint()) {
+                window.alert('이번 달 Basic 리포트 저장 한도(5회)를 모두 사용했어요. Plus로 업그레이드하면 무제한입니다.');
+                return;
+              }
+              if (!features.unlimitedPrint) recordBasicPrint();
               const el = document.querySelector<HTMLElement>('.flex-col.min-h-screen');
-              if (!el) { window.print(); return; }
+              if (!el) { handlePrintReport(); return; }
               const style = document.createElement('style');
               style.textContent = '@media print { body > *:not(.flex-col) { display: none !important; } .flex-col { display: block !important; } button { display: none !important; } }';
               document.head.appendChild(style);
