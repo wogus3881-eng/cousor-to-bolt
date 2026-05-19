@@ -1272,9 +1272,9 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
                 <linearGradient id="balanceGrad" x1="0" y1="0" x2="0" y2="1">
 
-                  <stop offset="5%" stopColor={BLUE} stopOpacity={0.28} />
+                  <stop offset="5%" stopColor={RED} stopOpacity={0.28} />
 
-                  <stop offset="95%" stopColor={BLUE} stopOpacity={0.03} />
+                  <stop offset="95%" stopColor={RED} stopOpacity={0.03} />
 
                 </linearGradient>
 
@@ -1370,11 +1370,11 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
               <Area type="monotone" dataKey="잔고"
 
-                stroke={NAVY} strokeWidth={2.5}
+                stroke={RED} strokeWidth={2.5}
 
                 fill="url(#balanceGrad)" dot={false}
 
-                activeDot={{ r: 4, fill: NAVY }} name="명목 자산 (현재 혼합)" connectNulls />
+                activeDot={{ r: 4, fill: RED }} name="명목 자산 (현재 혼합)" connectNulls />
 
 
 
@@ -1432,10 +1432,10 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
           {/* 범례 카드 */}
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <div className="rounded-xl border border-navy-200 bg-white p-2.5 text-center shadow-sm">
-              <div className="mx-auto mb-1.5 h-1 w-6 rounded bg-navy-900" />
-              <p className="text-[10px] font-bold text-navy-950">명목 자산</p>
-              <p className="mt-0.5 text-[9px] font-medium text-navy-600">원금+이자 합계</p>
+            <div className="rounded-xl border border-red-200 bg-red-50 p-2.5 text-center shadow-sm">
+              <div className="mx-auto mb-1.5 h-1 w-6 rounded bg-red-500" />
+              <p className="text-[10px] font-bold text-red-700">명목 자산</p>
+              <p className="mt-0.5 text-[9px] font-medium text-red-600">원금+이자 합계</p>
             </div>
             <div className="bg-orange-50 rounded-xl p-2.5 text-center border border-orange-100">
               <div className="w-5 h-0.5 bg-orange-400 mx-auto mb-1.5 rounded" style={{borderStyle:'dashed'}} />
