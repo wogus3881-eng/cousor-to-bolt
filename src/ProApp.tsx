@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import InputScreen from './components/InputScreen';
 import ResultScreen from './components/ResultScreen';
 import ProTierBar from './components/ProTierBar';
+import ProAccessGate from './components/ProAccessGate';
 import { simulate } from './lib/calculator';
 import type { SimulatorInputs, SimulationResult } from './lib/calculator';
 import { peekHandoffSimulatorInputs, clearLiteProHandoffStorage } from './lib/liteProHandoff';
@@ -14,6 +15,14 @@ interface Props {
 }
 
 export default function ProApp({ tier }: Props) {
+  return (
+    <ProAccessGate tier={tier}>
+      <ProAppContent tier={tier} />
+    </ProAccessGate>
+  );
+}
+
+function ProAppContent({ tier }: Props) {
   const features = proFeatures(tier);
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [savedInputs, setSavedInputs] = useState<SimulatorInputs | undefined>(undefined);

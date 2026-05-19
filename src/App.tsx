@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import LiteFlow from './LiteFlow';
 import LiteFlowV2 from './LiteFlowV2';
 import ProApp from './ProApp';
+import BlockedPage from './pages/BlockedPage';
 
 export default function App() {
   return (
@@ -11,6 +12,7 @@ export default function App() {
         <Route path="/v1" element={<LiteFlow />} />
         <Route path="/v2" element={<LiteFlowV2 />} />
         <Route path="/lite" element={<Navigate to="/v2" replace />} />
+        <Route path="/blocked" element={<BlockedPage />} />
         <Route path="/pro/basic" element={<ProApp tier="basic" />} />
         <Route path="/pro/plus" element={<ProApp tier="plus" />} />
         <Route path="/pro" element={<Navigate to="/pro/plus" replace />} />
