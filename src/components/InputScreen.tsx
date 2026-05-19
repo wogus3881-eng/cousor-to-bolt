@@ -304,15 +304,30 @@ function PensionYearsCard({ value, onChange, isAutoSet }: { value: number; onCha
 }
 
 // ── SalaryCard ─────────────────────────────────────────────────────────────────
-function SalaryCard({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+function SalaryCard({
+  value,
+  onChange,
+  employmentType,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  employmentType: 'employee' | 'self-employed';
+}) {
   const [raw, setRaw] = useState('');
   const [focused, setFocused] = useState(false);
+  const isSelfEmployed = employmentType === 'self-employed';
+  const displayAmount = isSelfEmployed ? value / 12 : value;
   const display = (v: number) => Math.floor(v / MAN).toLocaleString();
 
   function commit(s: string) {
     const p = parseFloat(s.replace(/,/g, ''));
-    if (!isNaN(p) && p >= 0) { onChange(p * MAN); setRaw(display(p * MAN)); }
-    else setRaw(display(value));
+    if (!isNaN(p) && p >= 0) {
+      const stored = isSelfEmployed ? p * MAN * 12 : p * MAN;
+      onChange(stored);
+      setRaw(display(isSelfEmployed ? stored / 12 : stored));
+    } else {
+      setRaw(display(displayAmount));
+    }
   }
 
   return (
@@ -321,22 +336,31 @@ function SalaryCard({ value, onChange }: { value: number; onChange: (v: number) 
         <div className="flex items-center gap-2">
           <span className="text-navy-600"><TrendingUp size={16} /></span>
           <div>
-            <p className="text-xs font-semibold text-navy-800">현재 세전 연봉</p>
-            <p className="text-[10px] text-navy-400">국민연금 산정 기준</p>
+            <div className="flex items-center gap-1">
+              <p className="text-xs font-semibold text-navy-800">
+                {isSelfEmployed ? '월 평균 순수입 (경비 제외)' : '현재 세전 연봉'}
+              </p>
+              {isSelfEmployed && (
+                <Tooltip text="실제 손에 쥐는 금액 기준으로 입력해 주세요. 국민연금 신고 소득과 다를 수 있어요." />
+              )}
+            </div>
+            <p className="text-[10px] text-navy-400">
+              {isSelfEmployed ? '생활비·저축 계획 기준' : '국민연금 산정 기준'}
+            </p>
           </div>
         </div>
       </div>
       <div className="flex items-baseline gap-1.5 mt-4">
         <input type="text" inputMode="numeric"
           className="flex-1 text-right text-2xl font-extrabold text-navy-900 outline-none bg-transparent min-w-0"
-          placeholder="예: 5,000"
-          value={focused ? raw : display(value)}
+          placeholder={isSelfEmployed ? '예: 300' : '예: 5,000'}
+          value={focused ? raw : display(displayAmount)}
           onChange={e => setRaw(e.target.value)}
-          onFocus={() => { setFocused(true); setRaw(display(value)); }}
+          onFocus={() => { setFocused(true); setRaw(display(displayAmount)); }}
           onBlur={() => { setFocused(false); commit(raw); }}
           onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
         />
-        <span className="text-sm text-navy-400 shrink-0">만 원</span>
+        <span className="text-sm text-navy-400 shrink-0">만 원{isSelfEmployed ? '/월' : ''}</span>
       </div>
       <div className="h-px bg-gold-200 mt-2" />
     </div>
@@ -515,6 +539,9 @@ const DEFAULT_INPUTS: SimulatorInputs = {
   isaMonthly: 0,
   isaRate: DEFAULT_STOCK_RATE,
   isaTermYears: 5,
+  employmentType: 'employee',
+  pensionBaseIncome: MAN * 100,
+  businessAsset: 0,
 };
 
 function calcDefaultPensionYears(currentAge: number) {
@@ -550,6 +577,13 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
   const pensionStartAge = v.pensionStartAge ?? 65;
   const isaRate = v.isaRate ?? v.stockRate;
   const isaTermYears = v.isaTermYears ?? 5;
+  const employmentType = v.employmentType ?? 'employee';
+  const isSelfEmployed = employmentType === 'self-employed';
+  const pensionBaseIncome = v.pensionBaseIncome ?? MAN * 100;
+
+  function setEmploymentType(type: 'employee' | 'self-employed') {
+    setV(prev => ({ ...prev, employmentType: type }));
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-navy-950">
@@ -574,6 +608,27 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
       </div>
 
       <div className="flex-1 px-4 pt-6 pb-4 flex flex-col gap-3 bg-slate-50">
+
+        {/* 직업 유형 */}
+        <div className="animate-fade-in bg-white rounded-2xl p-1.5 shadow-sm border border-navy-100 flex gap-1.5">
+          {([
+            { id: 'employee' as const, label: '직장인' },
+            { id: 'self-employed' as const, label: '자영업자/프리랜서' },
+          ]).map(({ id, label }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setEmploymentType(id)}
+              className={`flex-1 rounded-xl py-3 text-xs font-bold transition-all ${
+                employmentType === id
+                  ? 'bg-navy-800 text-white shadow-md'
+                  : 'bg-transparent text-navy-500 hover:bg-navy-50'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
         {/* 나이 */}
         <div className="animate-fade-in" style={{ animationDelay: '0ms', animationFillMode: 'both' }}>
@@ -603,6 +658,22 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
           />
         </div>
 
+        {isSelfEmployed && (
+          <div className="animate-fade-in" style={{ animationDelay: '140ms', animationFillMode: 'both' }}>
+            <DualInput
+              label="국민연금 납부 기준 월 소득"
+              icon={<CalendarDays size={16} />}
+              value={pensionBaseIncome}
+              min={MAN * 35} max={MAN * 617} step={MAN * 10} unit="만 원"
+              display={val => Math.floor(val / MAN).toLocaleString()}
+              parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
+              trackColor="bg-navy-500"
+              onChange={set('pensionBaseIncome')}
+              tooltip="실제 납부하고 계신 국민연금 고지서 기준 소득이에요."
+            />
+          </div>
+        )}
+
         {features.pensionStartAgeSelect && (
           <div className="animate-fade-in" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
             <DualInput
@@ -623,10 +694,26 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
           </div>
         )}
 
-        {/* 연봉 */}
+        {/* 연봉 / 월 순수입 */}
         <div className="animate-fade-in" style={{ animationDelay: '180ms', animationFillMode: 'both' }}>
-          <SalaryCard value={v.annualSalary} onChange={set('annualSalary')} />
+          <SalaryCard value={v.annualSalary} onChange={set('annualSalary')} employmentType={employmentType} />
         </div>
+
+        {isSelfEmployed && (
+          <div className="animate-fade-in" style={{ animationDelay: '210ms', animationFillMode: 'both' }}>
+            <DualInput
+              label="폐업/매각 시 예상 수령액 (권리금·보증금 등)"
+              icon={<Briefcase size={16} />}
+              value={v.businessAsset ?? 0}
+              min={0} max={MAN * 20000} step={MAN * 500} unit="만 원"
+              display={val => Math.floor(val / MAN).toLocaleString()}
+              parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
+              trackColor="bg-navy-500"
+              onChange={set('businessAsset')}
+              tooltip="가게 권리금, 보증금 반환, 장비 매각 등 은퇴 시점에 받을 수 있는 사업 자산이에요."
+            />
+          </div>
+        )}
 
         {/* 현재 보유 자금 */}
         <div className="animate-fade-in" style={{ animationDelay: '240ms', animationFillMode: 'both' }}>
@@ -680,7 +767,7 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
               <BucketCard theme={STOCK_THEME} amount={v.monthlyStock} rate={v.stockRate} onAmountChange={set('monthlyStock')} onRateChange={set('stockRate')} />
               <BucketCard theme={INS_THEME} amount={v.monthlyInsurance} rate={v.insuranceRate} onAmountChange={set('monthlyInsurance')} onRateChange={set('insuranceRate')} paymentYears={v.insurancePaymentYears ?? 10} onPaymentYearsChange={set('insurancePaymentYears')} />
 
-              {features.pension401kBucket && (
+              {features.pension401kBucket && !isSelfEmployed && (
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-2 px-1 pt-1">
                     <Landmark size={15} className="text-indigo-600" />
