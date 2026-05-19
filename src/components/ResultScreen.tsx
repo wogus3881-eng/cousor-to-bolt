@@ -64,6 +64,37 @@ const CHART_LEGEND_PROPS = {
   iconSize: 8,
 } as const;
 
+const PENSION_ANNUAL_INCREASE = 0.03;
+const LIFE_EXPECTANCY = 100;
+
+function calcTotalNetPensionTo100(
+  baseMonthlyPension: number,
+  startAge: number,
+  adjustmentRate: number,
+  healthInsuranceTriggered: boolean,
+): number {
+  const PENSION_TAX = 0.04;
+  const HEALTH_INS = 0.08;
+  const HEALTH_THRESHOLD = 20000000;
+  let total = 0;
+  for (let age = startAge; age <= LIFE_EXPECTANCY; age++) {
+    const yrs = age - startAge;
+    const grossMonthly = baseMonthlyPension * (1 + adjustmentRate)
+      * Math.pow(1 + PENSION_ANNUAL_INCREASE, yrs);
+    const annual = grossMonthly * 12;
+    const tax = annual * PENSION_TAX;
+    const hi = healthInsuranceTriggered || annual > HEALTH_THRESHOLD ? grossMonthly * HEALTH_INS * 12 : 0;
+    total += annual - tax - hi;
+  }
+  return total;
+}
+
+function formatPensionAdjustment(rate: number): string {
+  if (rate < 0) return `${Math.abs(rate * 100).toFixed(0)}% 감액`;
+  if (rate > 0) return `+${(rate * 100).toFixed(1)}% 증액`;
+  return '조정 없음';
+}
+
 
 
 function formatAxis(v: number) {
@@ -664,7 +695,41 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
     annualFinancialTaxAtRetirement,
 
+    pensionAdjustmentRate,
+
+    pensionBreakevenAge,
+
+    isaTaxSaved,
+
+    pension401kTotalTax,
+
   } = result;
+
+
+
+  const stockRateBase = liveInputs.stockRate ?? DEFAULT_STOCK_RATE;
+
+  const scenarioResults = useMemo(() => {
+    const conservativeRate = Math.max(1, stockRateBase - 2);
+    const optimisticRate = stockRateBase + 2;
+    return {
+      conservative: simulate({ ...liveInputs, stockRate: conservativeRate }),
+      current: simulate({ ...liveInputs, stockRate: stockRateBase }),
+      optimistic: simulate({ ...liveInputs, stockRate: optimisticRate }),
+    };
+  }, [liveInputs, stockRateBase]);
+
+  const pensionTotalDiffVs65 = useMemo(() => {
+    const startAge = inputs.pensionStartAge ?? 65;
+    const totalAt65 = calcTotalNetPensionTo100(pensionAtRetirement, 65, 0, healthInsuranceTriggered);
+    const totalAtStart = calcTotalNetPensionTo100(
+      pensionAtRetirement,
+      startAge,
+      pensionAdjustmentRate,
+      healthInsuranceTriggered,
+    );
+    return totalAtStart - totalAt65;
+  }, [inputs.pensionStartAge, pensionAtRetirement, pensionAdjustmentRate, healthInsuranceTriggered]);
 
 
 
@@ -1182,6 +1247,249 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
           </div>
 
         )}
+
+
+
+        {/* ── 수익률 시나리오 3종 비교 ── */}
+
+        <div className="relative rounded-2xl border border-navy-100 bg-white overflow-hidden shadow-sm">
+
+          <div className="flex items-center gap-2 px-4 pt-4 pb-3 border-b border-navy-100">
+
+            <TrendingUp size={15} className="text-blue-600" />
+
+            <p className="text-sm font-bold text-navy-900">수익률 시나리오 3종 비교</p>
+
+          </div>
+
+          <div className={`px-4 py-4 ${!features.scenarioCompare3 ? 'blur-sm pointer-events-none select-none' : ''}`}>
+
+            <p className="text-[11px] text-navy-500 mb-3">증권 수익률 ±2%p 변동 시 은퇴 자산·고갈 시점 비교</p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+              {([
+                {
+                  key: 'conservative',
+                  label: '보수적',
+                  sub: `수익률 ${Math.max(1, stockRateBase - 2).toFixed(1)}%`,
+                  border: 'border-amber-300',
+                  badge: null,
+                  data: scenarioResults.conservative,
+                },
+                {
+                  key: 'current',
+                  label: '현재',
+                  sub: `수익률 ${stockRateBase.toFixed(1)}%`,
+                  border: 'border-blue-400',
+                  badge: '현재 설정',
+                  data: scenarioResults.current,
+                },
+                {
+                  key: 'optimistic',
+                  label: '낙관적',
+                  sub: `수익률 ${(stockRateBase + 2).toFixed(1)}%`,
+                  border: 'border-emerald-400',
+                  badge: null,
+                  data: scenarioResults.optimistic,
+                },
+              ] as const).map(({ key, label, sub, border, badge, data }) => (
+
+                <div key={key} className={`rounded-xl border-2 ${border} bg-slate-50 p-3 flex flex-col gap-2`}>
+
+                  <div className="flex items-center justify-between gap-1">
+
+                    <div>
+
+                      <p className="text-xs font-bold text-navy-900">{label}</p>
+
+                      <p className="text-[10px] text-navy-400">{sub}</p>
+
+                    </div>
+
+                    {badge && (
+
+                      <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 shrink-0">{badge}</span>
+
+                    )}
+
+                  </div>
+
+                  <div className="space-y-1.5 text-[11px]">
+
+                    <div className="flex justify-between gap-2">
+
+                      <span className="text-navy-500">은퇴 자산</span>
+
+                      <span className="font-bold text-navy-900">{formatKRW(data.retirementBalance, true)}</span>
+
+                    </div>
+
+                    <div className="flex justify-between gap-2">
+
+                      <span className="text-navy-500">자산 소진</span>
+
+                      <span className="font-bold text-navy-900">{data.dignityEndAge ?? '100세+'}</span>
+
+                    </div>
+
+                    <div className="flex justify-between gap-2">
+
+                      <span className="text-navy-500">95세 추가저축</span>
+
+                      <span className="font-bold text-navy-900">
+
+                        {data.monthlySavingsNeededFor95 <= 0
+
+                          ? '충분'
+
+                          : `${formatKRW(data.monthlySavingsNeededFor95, true)}/월`}
+
+                      </span>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+              ))}
+
+            </div>
+
+          </div>
+
+          {!features.scenarioCompare3 && (
+
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/70 backdrop-blur-[2px] rounded-2xl">
+
+              <p className="text-sm font-bold text-navy-900">Plus에서 확인하세요</p>
+
+              <p className="text-[11px] text-navy-500 mt-1">수익률 시나리오 비교는 Pro Plus 전용입니다</p>
+
+            </div>
+
+          )}
+
+        </div>
+
+
+
+        {features.breakEvenAnalysis && (
+
+          <div className="rounded-2xl border border-navy-100 bg-white p-4 shadow-sm">
+
+            <div className="flex items-center gap-2 mb-3">
+
+              <CalendarDays size={15} className="text-indigo-600" />
+
+              <p className="text-sm font-bold text-navy-900">연금 수급 손익분기 분석</p>
+
+            </div>
+
+            <div className="space-y-2 text-[12px] text-navy-700 leading-relaxed">
+
+              <p>
+
+                선택하신 수급 개시 연령 기준 조정:{' '}
+
+                <strong className="text-indigo-700">{formatPensionAdjustment(pensionAdjustmentRate)}</strong>
+
+              </p>
+
+              <p>
+
+                65세 기준 대비 손익분기:{' '}
+
+                <strong className="text-indigo-700">약 {pensionBreakevenAge}세</strong>
+
+              </p>
+
+              <p>
+
+                65세 수령 대비 100세까지 총 수령액 차이:{' '}
+
+                <strong className={pensionTotalDiffVs65 >= 0 ? 'text-emerald-700' : 'text-red-600'}>
+
+                  {pensionTotalDiffVs65 >= 0 ? '+' : ''}{formatKRW(pensionTotalDiffVs65, true)}
+
+                </strong>
+
+              </p>
+
+            </div>
+
+          </div>
+
+        )}
+
+
+
+        {features.taxSavingsChart && (() => {
+
+          const yearBarScale = 5000000;
+
+          const bars = [
+
+            { label: 'ISA 절세액', value: isaTaxSaved, display: formatKRW(isaTaxSaved, true), color: 'bg-emerald-500' },
+
+            { label: '퇴직연금 절세 효과', value: pension401kTotalTax, display: formatKRW(pension401kTotalTax, true), color: 'bg-indigo-500' },
+
+            { label: '비과세 연장', value: taxFreeYearsGained * yearBarScale, display: `${taxFreeYearsGained}년`, color: 'bg-amber-500' },
+
+          ];
+
+          const maxVal = Math.max(...bars.map(b => b.value), 1);
+
+          return (
+
+            <div className="rounded-2xl border border-navy-100 bg-white p-4 shadow-sm">
+
+              <div className="flex items-center gap-2 mb-4">
+
+                <Shield size={15} className="text-emerald-600" />
+
+                <p className="text-sm font-bold text-navy-900">절세·세금 효과 비교</p>
+
+              </div>
+
+              <div className="space-y-4">
+
+                {bars.map(bar => (
+
+                  <div key={bar.label}>
+
+                    <div className="flex justify-between items-baseline mb-1.5">
+
+                      <span className="text-[11px] font-medium text-navy-600">{bar.label}</span>
+
+                      <span className="text-[12px] font-bold text-navy-900">{bar.display}</span>
+
+                    </div>
+
+                    <div className="h-2.5 rounded-full bg-navy-100 overflow-hidden">
+
+                      <div
+
+                        className={`h-full rounded-full ${bar.color} transition-all duration-500`}
+
+                        style={{ width: `${Math.max(4, (bar.value / maxVal) * 100)}%` }}
+
+                      />
+
+                    </div>
+
+                  </div>
+
+                ))}
+
+              </div>
+
+            </div>
+
+          );
+
+        })()}
 
 
 
