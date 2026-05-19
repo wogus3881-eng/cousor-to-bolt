@@ -12,9 +12,13 @@ const STORAGE_KEY = 'pro_access_code';
 
 /** Supabase 미연결·마이그레이션 전 Bolt 등에서 사용 (시드와 동일) */
 const FALLBACK_ACCESS_CODES: AccessCodeRecord[] = [
-  { code: 'BASIC-TEST01', agent_name: '테스트 설계사 A', tier: 'basic', is_active: true },
-  { code: 'PLUS-TEST01', agent_name: '테스트 설계사 B', tier: 'plus', is_active: true },
-  { code: 'PLUS-TEST02', agent_name: '테스트 설계사 C', tier: 'plus', is_active: true },
+  { code: 'BASIC-TEST01', agent_name: '테스트 Basic', tier: 'basic', is_active: true },
+  { code: 'PLUS-TEST01', agent_name: '테스트 설계사 1', tier: 'plus', is_active: true },
+  { code: 'PLUS-TEST02', agent_name: '테스트 설계사 2', tier: 'plus', is_active: true },
+  { code: 'PLUS-TEST03', agent_name: '테스트 설계사 3', tier: 'plus', is_active: true },
+  { code: 'PLUS-TEST04', agent_name: '테스트 설계사 4', tier: 'plus', is_active: true },
+  { code: 'PLUS-TEST05', agent_name: '테스트 설계사 5', tier: 'plus', is_active: true },
+  { code: 'HENRY', agent_name: 'Henry', tier: 'plus', is_active: true },
 ];
 
 function verifyFallbackCode(code: string, tier: ProTier): AccessCodeRecord | null {
