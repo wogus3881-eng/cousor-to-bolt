@@ -1,8 +1,13 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import LiteFlow from './LiteFlow';
 import LiteFlowV2 from './LiteFlowV2';
 import ProApp from './ProApp';
 import BlockedPage from './pages/BlockedPage';
+
+function ProPlusRedirect() {
+  const { search } = useLocation();
+  return <Navigate to={`/pro/plus${search}`} replace />;
+}
 
 export default function App() {
   return (
@@ -15,7 +20,7 @@ export default function App() {
         <Route path="/blocked" element={<BlockedPage />} />
         <Route path="/pro/basic" element={<ProApp tier="basic" />} />
         <Route path="/pro/plus" element={<ProApp tier="plus" />} />
-        <Route path="/pro" element={<Navigate to="/pro/plus" replace />} />
+        <Route path="/pro" element={<ProPlusRedirect />} />
         <Route path="*" element={<Navigate to="/v2" replace />} />
       </Routes>
     </BrowserRouter>
