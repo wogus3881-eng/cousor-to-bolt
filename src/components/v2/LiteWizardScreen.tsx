@@ -1,9 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import type { LiteInputValues } from '../../lib/liteToSimulator';
 import { LITE_DEFAULTS } from '../../lib/liteToSimulator';
-import { stashLiteValuesForPro } from '../../lib/liteProHandoff';
 import { LiteLegalDisclaimerCompact } from '../LiteLegalDisclaimer';
 import { LITE_COLUMN_CLASS } from '../liteLayout';
 import LiteWizardField from './LiteWizardField';
@@ -317,13 +315,6 @@ export default function LiteWizardScreen({ onSubmit, initialValues }: Props) {
           <div className="mt-1.5 px-0.5">
             <LiteLegalDisclaimerCompact />
           </div>
-          <Link
-            to="/pro"
-            onClick={() => stashLiteValuesForPro(values)}
-            className="mt-1.5 block text-center text-[11px] font-medium text-toss-sub underline decoration-toss-line underline-offset-4 hover:text-toss-ink"
-          >
-            설계사 전용 · 상세 진단
-          </Link>
         </div>
       </div>
     </div>

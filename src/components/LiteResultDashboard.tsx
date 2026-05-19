@@ -202,7 +202,7 @@ export default function LiteResultDashboard({ result }: Props) {
           <TrendingUp size={14} className="mt-0.5 shrink-0 text-amber-300" />
           <p className="text-[11px] leading-relaxed text-navy-100/90">
             숫자만으로 결정하지 마시고, <strong className="text-white">무료 상담</strong>에서 가족·세금·상품까지 한 번에
-            짚어보세요. 설계사 전용 화면으로 이어져도 입력값은 그대로 넘어가요.
+            짚어보세요.
           </p>
         </div>
       </section>
