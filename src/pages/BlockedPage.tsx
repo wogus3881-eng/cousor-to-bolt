@@ -12,6 +12,9 @@ export default function BlockedPage() {
         <p className="mt-3 text-sm leading-relaxed text-slate-600">
           담당 설계사에게 문의해 주세요.
         </p>
+        <p className="mt-2 text-[11px] leading-relaxed text-slate-400">
+          Pro는 설계사가 전달한 링크(<span className="font-mono">?code=코드</span>)로 접속해야 합니다.
+        </p>
         <Link
           to="/v2"
           className="mt-6 inline-block rounded-2xl bg-navy-800 px-6 py-3 text-sm font-bold text-white transition hover:bg-navy-700"
