@@ -16,6 +16,9 @@ export interface SimulatorInputs {
   /** @deprecated expectedReturn → stockRate 로 대체 */
   expectedReturn?: number;
   annualSalary: number;
+  employmentType?: 'employee' | 'self-employed';
+  pensionBaseIncome?: number;
+  businessAsset?: number;
   monthlyExpense: number;
   activeEndAge: number;
   medicalCostEnabled: boolean;
@@ -114,6 +117,7 @@ const ISA_TAX_RATE = 0.099;
 const ISA_MAX_MONTHLY = 2000000;
 const DEFAULT_ISA_TERM_YEARS = 5;
 const DEFAULT_PENSION_START_AGE = 65;
+const DEFAULT_PENSION_BASE_INCOME = 1000000;
 
 const FINANCIAL_INCOME_TAX = 0.154;
 const FINANCIAL_HI_THRESHOLD = 20000000;
@@ -246,7 +250,16 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     isaMonthly: Math.min(inputs.isaMonthly ?? 0, ISA_MAX_MONTHLY),
     isaRate: inputs.isaRate ?? (inputs.stockRate ?? (inputs.expectedReturn ?? DEFAULT_STOCK_RATE)),
     isaTermYears: Math.min(inputs.isaTermYears ?? DEFAULT_ISA_TERM_YEARS, DEFAULT_ISA_TERM_YEARS),
+    employmentType: inputs.employmentType ?? 'employee',
+    pensionBaseIncome: inputs.pensionBaseIncome ?? DEFAULT_PENSION_BASE_INCOME,
+    businessAsset: inputs.businessAsset ?? 0,
   };
+
+  const employmentType = norm.employmentType ?? 'employee';
+  const isSelfEmployed = employmentType === 'self-employed';
+  const businessAsset = norm.businessAsset ?? 0;
+  const pensionBaseIncome = norm.pensionBaseIncome ?? DEFAULT_PENSION_BASE_INCOME;
+  const effectiveMonthlyPension401k = isSelfEmployed ? 0 : (norm.monthlyPension401k ?? 0);
 
   const {
     currentAge, retirementAge, pensionYears,
@@ -296,7 +309,7 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
 
   const pension401kPayYears = Math.min(pension401kPaymentYears, yearsToRetirement);
   const retirementBalancePension401k = fv(0, pension401kR, yearsToRetirement)
-    + fvAnnuity(monthlyPension401k, pension401kR, pension401kPayYears);
+    + fvAnnuity(effectiveMonthlyPension401k, pension401kR, pension401kPayYears);
 
   const isaContributionYears = Math.min(isaTermYears, yearsToRetirement);
   const isaMatureBalance = isaContributionYears > 0
@@ -314,7 +327,7 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
   const retirementBalanceStock = fv(currentSavings * stockRatio, stockR, yearsToRetirement)
     + fvAnnuity(monthlyStock, stockR, yearsToRetirement)
     + isaRetirementBalance;
-  const retirementBalance = retirementBalanceBank + retirementBalanceStock + retirementBalanceInsurance;
+  const retirementBalance = retirementBalanceBank + retirementBalanceStock + retirementBalanceInsurance + businessAsset;
 
   // 비교선: 전액 과세(증권 수익률), 전액 비과세(보험 수익률)
   const totalContrib = monthlyBank + monthlyStock + monthlyInsurance;
@@ -325,11 +338,13 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
 
   const inflationAdjustedMonthlyExpense = fv(monthlyExpense, INFLATION, yearsToRetirement);
 
+  const pensionAnnualForEstimate = isSelfEmployed ? pensionBaseIncome * 12 : annualSalary;
+
   const { pensionAtRetirement, pensionUncapped, replacementRate, pensionCapped } =
-    estimatePensionAtRetirement(annualSalary, pensionYears, yearsToRetirement);
+    estimatePensionAtRetirement(pensionAnnualForEstimate, pensionYears, yearsToRetirement);
 
   const weakPension = pensionYears < 25;
-  const highIncome = annualSalary > PENSION_INCOME_CAP_ANNUAL;
+  const highIncome = pensionAnnualForEstimate > PENSION_INCOME_CAP_ANNUAL;
 
   const HEALTH_INS_THRESHOLD_ANNUAL = 20000000;
   const HEALTH_INS_RATE = 0.08;
@@ -383,7 +398,7 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
           const yearsFromNow = (age - currentAge) + (m + 1) / 12;
           const insContrib = yearsFromNow < insPayYears ? monthlyInsurance : 0;
           aIns = aIns * (1 + insMR) + insContrib;
-          const pension401kContrib = yearsFromNow < pension401kPayYears ? monthlyPension401k : 0;
+          const pension401kContrib = yearsFromNow < pension401kPayYears ? effectiveMonthlyPension401k : 0;
           a401k = a401k * (1 + pension401kMR) + pension401kContrib;
         }
       }
@@ -391,7 +406,7 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
   }
 
   const yearRows: YearRow[] = [];
-  let bBank = retirementBalanceBank;
+  let bBank = retirementBalanceBank + businessAsset;
   let bStock = retirementBalanceStock;
   let bIns = retirementBalanceInsurance;
   let b401k = retirementBalancePension401k;
