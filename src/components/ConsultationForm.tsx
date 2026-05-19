@@ -15,16 +15,17 @@ const TIME_OPTIONS = [
   '오후 5시 ~ 7시',
 ];
 
-const MIN_CONSULTATION_AGE = 25;
+const MIN_CONSULTATION_AGE = 29;
 
 const INELIGIBLE_MESSAGE =
-  '본 상담은 만 25세 이상을 대상으로 합니다. 아래 진단은 참고용으로 활용해 주세요.';
+  '본 상담은 만 29세 이상을 대상으로 합니다. 아래 진단은 참고용으로 활용해 주세요.';
 
 /** 구글 앱스 스크립트 웹앱 exec URL */
 const GOOGLE_SHEET_WEBAPP_EXEC =
   'https://script.google.com/macros/s/AKfycbyWWLcp84IIMZKT4Ev8uqZ1Z071ZloDuQXiZhoIgvb9LvizwkMjSHT0aPD0pp7C3x37NA/exec';
 
-function parseManAgeFromBirthDate(raw: string): number | null {
+/** 출생연도 기준 만 나이: 올해 − 출생연도 (생일 전후 보정 없음) */
+function parseYearBasedAgeFromBirthDate(raw: string): number | null {
   const digits = raw.replace(/\D/g, '');
   if (digits.length !== 6 && digits.length !== 8) return null;
 
@@ -46,10 +47,7 @@ function parseManAgeFromBirthDate(raw: string): number | null {
   if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) return null;
   if (month < 1 || month > 12 || day < 1 || day > 31) return null;
 
-  const today = new Date();
-  let age = today.getFullYear() - year;
-  const monthDiff = today.getMonth() + 1 - month;
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < day)) age -= 1;
+  const age = new Date().getFullYear() - year;
   return age >= 0 && age <= 120 ? age : null;
 }
 
@@ -67,11 +65,11 @@ export default function ConsultationForm({ inputs }: Props) {
   const [showSuccess, setShowSuccess] = useState(false);
   const [error, setError] = useState('');
 
-  const birthDateAge = useMemo(() => parseManAgeFromBirthDate(birthDate.trim()), [birthDate]);
+  const birthYearAge = useMemo(() => parseYearBasedAgeFromBirthDate(birthDate.trim()), [birthDate]);
   const diagnosisAge = inputs.currentAge;
-  const isUnder25FromDiagnosis = diagnosisAge > 0 && diagnosisAge < MIN_CONSULTATION_AGE;
-  const isUnder25FromBirthDate = birthDateAge !== null && birthDateAge < MIN_CONSULTATION_AGE;
-  const isIneligible = isUnder25FromDiagnosis || isUnder25FromBirthDate;
+  const isUnderMinAgeFromDiagnosis = diagnosisAge > 0 && diagnosisAge < MIN_CONSULTATION_AGE;
+  const isUnderMinAgeFromBirthDate = birthYearAge !== null && birthYearAge < MIN_CONSULTATION_AGE;
+  const isIneligible = isUnderMinAgeFromDiagnosis || isUnderMinAgeFromBirthDate;
 
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => e.preventDefault();
@@ -114,7 +112,7 @@ export default function ConsultationForm({ inputs }: Props) {
       return;
     }
 
-    const ageFromBirth = parseManAgeFromBirthDate(birthDate.trim());
+    const ageFromBirth = parseYearBasedAgeFromBirthDate(birthDate.trim());
     if (ageFromBirth !== null && ageFromBirth < MIN_CONSULTATION_AGE) {
       setError(INELIGIBLE_MESSAGE);
       return;
@@ -192,11 +190,11 @@ export default function ConsultationForm({ inputs }: Props) {
             <div className="text-[12px] leading-relaxed text-amber-900">
               <p className="font-bold">상담 신청 대상이 아닙니다</p>
               <p className="mt-1">{INELIGIBLE_MESSAGE}</p>
-              {isUnder25FromDiagnosis && (
+              {isUnderMinAgeFromDiagnosis && (
                 <p className="mt-1 text-[11px] text-amber-800">진단에 입력하신 나이: 만 {diagnosisAge}세</p>
               )}
-              {isUnder25FromBirthDate && birthDateAge !== null && (
-                <p className="mt-1 text-[11px] text-amber-800">생년월일 기준: 만 {birthDateAge}세</p>
+              {isUnderMinAgeFromBirthDate && birthYearAge !== null && (
+                <p className="mt-1 text-[11px] text-amber-800">출생연도 기준: 만 {birthYearAge}세</p>
               )}
             </div>
           </div>
@@ -297,7 +295,7 @@ export default function ConsultationForm({ inputs }: Props) {
             disabled={loading || isIneligible}
             className="w-full rounded-2xl bg-toss-blue py-4 text-sm font-bold text-white shadow-lg shadow-toss-blue/25 transition-all hover:bg-toss-bluePress disabled:opacity-40"
           >
-            {loading ? '접수 중...' : isIneligible ? '만 25세 이상 대상' : '이기적인 은퇴설계 상담 신청'}
+            {loading ? '접수 중...' : isIneligible ? '만 29세 이상 대상' : '이기적인 은퇴설계 상담 신청'}
           </button>
         </form>
 
