@@ -106,8 +106,7 @@ function buildAdvisorCopy(result: SimulationResult, band: LiteReadinessBand): st
 export default function LiteResultDashboard({ result }: Props) {
   const readiness = computeLiteReadiness(result);
   const flow = computeRetirementIncomeFlow(result);
-  const { retirementBalance, dignityEndAge, extraNeeded, inputs } = result;
-  const { retirementAge } = inputs;
+  const { retirementBalance, dignityEndAge, extraNeeded } = result;
   const monthlyGap = flow.fromAssets;
 
   const shortageLabel =

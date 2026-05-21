@@ -47,8 +47,6 @@ interface Props {
 
 
 
-const NAVY   = '#162d6b';
-
 const BLUE   = '#3b82f6';
 
 const RED    = '#ef4444';

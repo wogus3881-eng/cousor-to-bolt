@@ -93,9 +93,9 @@ export default function LiteResultCharts({ result }: Props) {
                   fontSize: 12,
                   boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
                 }}
-                formatter={(value: number, _name: string, item: { payload?: { balance?: number } }) => {
-                  const bal = item?.payload?.balance;
-                  const won = bal ?? Number(value) * 1e8;
+                formatter={(value, _name, item) => {
+                  const bal = (item as { payload?: { balance?: number } })?.payload?.balance;
+                  const won = bal ?? Number(value ?? 0) * 1e8;
                   return [formatKRW(won), '예상 자산'];
                 }}
                 labelFormatter={(age) => `${age}세`}
@@ -131,7 +131,7 @@ export default function LiteResultCharts({ result }: Props) {
               />
               <YAxis type="category" dataKey="name" width={112} tick={{ fontSize: 10, fill: '#191f28' }} />
               <Tooltip
-                formatter={(v: number) => formatKRW(v)}
+                formatter={(v) => formatKRW(Number(v ?? 0))}
                 contentStyle={{
                   borderRadius: 12,
                   border: '1px solid #e5e8eb',

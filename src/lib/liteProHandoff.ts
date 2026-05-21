@@ -16,7 +16,7 @@ function parseSimulatorInputs(raw: unknown): SimulatorInputs | null {
     typeof raw.retirementAge === 'number' && Number.isFinite(raw.retirementAge) ? raw.retirementAge : NaN;
   if (!Number.isFinite(currentAge) || !Number.isFinite(retirementAge)) return null;
   if (retirementAge <= currentAge) return null;
-  return raw as SimulatorInputs;
+  return raw as unknown as SimulatorInputs;
 }
 
 /** 설계사 전용(/pro)으로 넘길 시뮬레이터 입력을 세션에 저장 (동일 탭에서만 유효) */

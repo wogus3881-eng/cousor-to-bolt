@@ -267,11 +267,15 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     monthlyStock, stockRate: stockRatePct,
     monthlyInsurance, insuranceRate: insRatePct,
     insurancePaymentYears,
-    monthlyPension401k, pension401kRate: pension401kRatePct, pension401kPaymentYears,
-    isaMonthly, isaRate: isaRatePct, isaTermYears,
     annualSalary, monthlyExpense,
     activeEndAge, medicalCostEnabled, monthlyMedicalCost,
   } = norm;
+
+  const pension401kRatePct = norm.pension401kRate ?? DEFAULT_PENSION401K_RATE;
+  const pension401kPaymentYears = norm.pension401kPaymentYears ?? yearsToRetirementPre;
+  const isaMonthly = norm.isaMonthly ?? 0;
+  const isaRatePct = norm.isaRate ?? (norm.stockRate ?? DEFAULT_STOCK_RATE);
+  const isaTermYears = norm.isaTermYears ?? DEFAULT_ISA_TERM_YEARS;
 
   let pensionStartAge = Math.min(70, Math.max(60, norm.pensionStartAge ?? DEFAULT_PENSION_START_AGE));
   if (pensionStartAge < retirementAge) pensionStartAge = retirementAge;
@@ -503,7 +507,6 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     // 수령 우선순위: ①배당 ②국민연금 ③퇴직연금 ④부족분 원금 인출
     const incomeBeforePrincipal = yearlyDividend + yearlyPensionNet + yearly401kNet;
     const principalNeeded = Math.max(0, yearlyExpense - incomeBeforePrincipal);
-    const yearlyStockGrowth = posStock * CAPITAL_GROWTH; // 자본성장 부분
     const surplusForReinvest = Math.max(0, incomeBeforePrincipal - yearlyExpense);
 
     let stockW = 0;
