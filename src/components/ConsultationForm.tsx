@@ -130,6 +130,20 @@ export default function ConsultationForm({ inputs }: Props) {
     const timeLabel = preferredTimes.join(', ');
 
     try {
+      let pdfBase64 = '';
+      let pdfFileName = '';
+      try {
+        const { generateResultPdfBase64 } = await import('../lib/generateResultPdf');
+        const pdfJson = await generateResultPdfBase64(name.trim() || '고객');
+        if (pdfJson) {
+          const parsed = JSON.parse(pdfJson);
+          pdfBase64 = parsed.base64;
+          pdfFileName = parsed.fileName;
+        }
+      } catch {
+        // PDF 실패해도 접수는 진행
+      }
+
       await fetch(agentConfig.googleSheetWebAppUrl, {
         method: 'POST',
         mode: 'no-cors',
@@ -141,6 +155,8 @@ export default function ConsultationForm({ inputs }: Props) {
           location: location.trim(),
           source: agentConfig.sourceLabel,
           agentId: agentConfig.agentId,
+          pdfBase64,
+          pdfFileName,
         }),
       });
 
