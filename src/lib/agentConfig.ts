@@ -12,7 +12,7 @@ export const DEFAULT_AGENT_ID = 'default';
 
 /** 기본(공용) 리드 수신 URL — agent 파라미터 없을 때 사용 */
 export const DEFAULT_GOOGLE_SHEET_WEBAPP_EXEC =
-  'https://script.google.com/macros/s/AKfycbwuhv7aXmCoyUtVKh7U71IToDfIGq1Rf1oFx_Km7ebrD07O3rlH5rZTpfwZM2HTLcSzLQ/exec';
+  'https://script.google.com/macros/s/AKfycbwU6JAHrxDtau6Av7rmKV1kn_5mpjwtWahdKO7ryAzKZsTb0B2Z1YyRUhvNCMkzlrnCsw/exec';
 
 const DEFAULT_CONFIG: AgentLeadConfig = {
   agentId: DEFAULT_AGENT_ID,
