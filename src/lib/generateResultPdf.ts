@@ -4,7 +4,10 @@ import jsPDF from 'jspdf';
 export async function generateResultPdfBase64(customerName: string): Promise<string | null> {
   try {
     const el = document.getElementById('lite-result-capture');
-    if (!el) return null;
+    if (!el) {
+      console.warn('[PDF] id="lite-result-capture" 요소를 찾을 수 없음');
+      return null;
+    }
 
     window.scrollTo(0, 0);
     await new Promise((r) => setTimeout(r, 300));
@@ -50,7 +53,7 @@ export async function generateResultPdfBase64(customerName: string): Promise<str
 
     return JSON.stringify({ base64: pureBase64, fileName });
   } catch (err) {
-    console.error('PDF 생성 실패:', err);
+    console.error('[PDF] 생성 실패:', err);
     return null;
   }
 }

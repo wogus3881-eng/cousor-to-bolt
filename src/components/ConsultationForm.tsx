@@ -126,59 +126,94 @@ export default function ConsultationForm({ inputs }: Props) {
 
     setError('');
     setLoading(true);
+
     const formattedPhone = formatPhoneNumber(phone.trim());
     const timeLabel = preferredTimes.join(', ');
 
+    // 1. PDF 생성
+    let pdfBase64 = '';
+    let pdfFileName = '';
     try {
-      let pdfBase64 = '';
-      let pdfFileName = '';
-      try {
-        const { generateResultPdfBase64 } = await import('../lib/generateResultPdf');
-        const pdfJson = await generateResultPdfBase64(name.trim() || '고객');
-        if (pdfJson) {
-          const parsed = JSON.parse(pdfJson);
-          pdfBase64 = parsed.base64;
-          pdfFileName = parsed.fileName;
-        }
-      } catch {
-        // PDF 실패해도 접수는 진행
+      const { generateResultPdfBase64 } = await import('../lib/generateResultPdf');
+      const pdfJson = await generateResultPdfBase64(name.trim() || '고객');
+      if (pdfJson) {
+        const parsed = JSON.parse(pdfJson);
+        pdfBase64 = parsed.base64;
+        pdfFileName = parsed.fileName;
+        console.log('[상담신청] PDF 생성 성공:', pdfFileName);
       }
+    } catch (pdfErr) {
+      console.warn('[상담신청] PDF 생성 실패 (접수는 계속 진행):', pdfErr);
+    }
 
-      await fetch(agentConfig.googleSheetWebAppUrl, {
+    const payload = {
+      name: name.trim(),
+      birthDate: birthDate.trim(),
+      phone: formattedPhone,
+      time: timeLabel,
+      location: location.trim(),
+      source: agentConfig.sourceLabel,
+      agentId: agentConfig.agentId,
+      pdfBase64,
+      pdfFileName,
+    };
+
+    console.log('[상담신청] 전송 시작 - agentId:', agentConfig.agentId);
+    console.log('[상담신청] GAS URL:', agentConfig.googleSheetWebAppUrl);
+
+    // 2. Google Sheets 전송
+    let sheetSuccess = false;
+    try {
+      const res = await fetch(agentConfig.googleSheetWebAppUrl, {
         method: 'POST',
-        mode: 'no-cors',
-        body: JSON.stringify({
-          name: name.trim(),
-          birthDate: birthDate.trim(),
-          phone: formattedPhone,
-          time: timeLabel,
-          location: location.trim(),
-          source: agentConfig.sourceLabel,
-          agentId: agentConfig.agentId,
-          pdfBase64,
-          pdfFileName,
-        }),
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload),
       });
-
-      if (supabase) {
-        try {
-          await supabase.from('consultations').insert({
-            name: name.trim(),
-            phone: formattedPhone,
-            preferred_time: timeLabel,
-            current_age: inputs.currentAge,
-            retirement_age: inputs.retirementAge,
-            annual_salary: inputs.annualSalary,
-            monthly_expense: inputs.monthlyExpense,
-            birth_date: birthDate.trim(),
-            location: location.trim(),
-            agent_id: supabaseAgentId(agentConfig),
-          });
-        } catch {
-          // 시트 접수는 성공했으므로 Supabase 스키마 미반영 시에도 사용자 흐름 유지
-        }
+      console.log('[상담신청] fetch 응답 status:', res.status);
+      const text = await res.text();
+      console.log('[상담신청] fetch 응답 body:', text);
+      sheetSuccess = true;
+    } catch (fetchErr) {
+      console.warn('[상담신청] fetch 실패, no-cors 재시도:', fetchErr);
+      try {
+        await fetch(agentConfig.googleSheetWebAppUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          body: JSON.stringify(payload),
+        });
+        console.log('[상담신청] no-cors 재시도 완료');
+        sheetSuccess = true;
+      } catch (noCorsErr) {
+        console.error('[상담신청] no-cors도 실패:', noCorsErr);
+        sheetSuccess = false;
       }
+    }
 
+    // 3. Supabase 저장
+    if (supabase) {
+      try {
+        const { error: sbErr } = await supabase.from('consultations').insert({
+          name: name.trim(),
+          phone: formattedPhone,
+          preferred_time: timeLabel,
+          current_age: inputs.currentAge,
+          retirement_age: inputs.retirementAge,
+          annual_salary: inputs.annualSalary,
+          monthly_expense: inputs.monthlyExpense,
+          birth_date: birthDate.trim(),
+          location: location.trim(),
+          agent_id: supabaseAgentId(agentConfig),
+        });
+        if (sbErr) console.warn('[상담신청] Supabase 오류:', sbErr);
+        else console.log('[상담신청] Supabase 저장 성공');
+      } catch (sbEx) {
+        console.warn('[상담신청] Supabase 예외:', sbEx);
+      }
+    }
+
+    setLoading(false);
+
+    if (sheetSuccess) {
       setShowSuccess(true);
       setName('');
       setPhone('');
@@ -186,10 +221,8 @@ export default function ConsultationForm({ inputs }: Props) {
       setLocation('');
       setAgreed(false);
       setPreferredTimes([]);
-    } catch {
-      setError('접수 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
-    } finally {
-      setLoading(false);
+    } else {
+      setError('접수 중 오류가 발생했습니다. 잠시 후 다시 시도하거나 직접 연락 주세요.');
     }
   }
 
