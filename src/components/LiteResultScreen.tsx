@@ -50,44 +50,46 @@ export default function LiteResultScreen({ result, onBack }: Props) {
       </header>
 
       <div className={`${LITE_COLUMN_CLASS} flex flex-1 flex-col gap-3 px-3 py-4`}>
-        <LiteResultDashboard result={result} />
+        <div id="lite-result-capture" className="flex flex-col gap-3">
+          <LiteResultDashboard result={result} />
 
-        {weakPension && (
-          <div className="flex gap-2.5 rounded-2xl border border-amber-100 bg-amber-50/90 p-3.5">
-            <AlertTriangle size={18} className="mt-0.5 shrink-0 text-amber-500" />
-            <p className="text-[12px] leading-relaxed text-amber-900">
-              국민연금 가입 기간이 짧게 반영되었습니다. 개인 준비 비중이 더 중요할 수 있습니다.
+          {weakPension && (
+            <div className="flex gap-2.5 rounded-2xl border border-amber-100 bg-amber-50/90 p-3.5">
+              <AlertTriangle size={18} className="mt-0.5 shrink-0 text-amber-500" />
+              <p className="text-[12px] leading-relaxed text-amber-900">
+                국민연금 가입 기간이 짧게 반영되었습니다. 개인 준비 비중이 더 중요할 수 있습니다.
+              </p>
+            </div>
+          )}
+
+          <LiteResultCharts result={result} />
+
+          <div className="space-y-1.5 rounded-2xl border border-toss-line bg-white px-3.5 py-2.5 text-[10px] leading-relaxed text-toss-sub">
+            <p>
+              <strong className="text-toss-ink">간편 진단 가정:</strong> 월 저축 합계는 입력하신 개인연금 월 납입(있을
+              경우)을 반영한 뒤, 나머지를 은행·증권 비율({Math.round(LITE_BUCKET_RATIO.bank * 100)}% :{' '}
+              {Math.round(LITE_BUCKET_RATIO.stock * 100)}%)로 나누었습니다. 개인연금·보험 적립 부분은 시뮬레이터의 연금/보험
+              버킷에 반영됩니다. 활동 종료 나이·의료비 등은 표준값을 사용했습니다.
             </p>
-          </div>
-        )}
-
-        <LiteResultCharts result={result} />
-
-        <div className="space-y-1.5 rounded-2xl border border-toss-line bg-white px-3.5 py-2.5 text-[10px] leading-relaxed text-toss-sub">
-          <p>
-            <strong className="text-toss-ink">간편 진단 가정:</strong> 월 저축 합계는 입력하신 개인연금 월 납입(있을
-            경우)을 반영한 뒤, 나머지를 은행·증권 비율({Math.round(LITE_BUCKET_RATIO.bank * 100)}% :{' '}
-            {Math.round(LITE_BUCKET_RATIO.stock * 100)}%)로 나누었습니다. 개인연금·보험 적립 부분은 시뮬레이터의 연금/보험
-            버킷에 반영됩니다. 활동 종료 나이·의료비 등은 표준값을 사용했습니다.
-          </p>
-          <p>
-            은행 연 {DEFAULT_BANK_RATE}%, 개인연금/보험연금 연 {DEFAULT_INS_RATE}%, 증권은 장기 투자형 가정 연{' '}
-            {DEFAULT_STOCK_RATE}%로 단순 계산했으며, 실제 상품·시장 수익률과 다를 수 있어요.
-          </p>
-          <p>준비 점수·그래프는 참고용 휴리스틱이며, 세부 비교는 무료 상담 시 함께 확인할 수 있어요.</p>
-        </div>
-
-        <div id="lite-consult" className="scroll-mt-6">
-          <div className="mb-2.5 rounded-2xl border border-toss-blue/25 bg-gradient-to-r from-blue-50 to-sky-50 px-3.5 py-3 text-center shadow-sm ring-1 ring-toss-blue/10">
-            <p className="text-[12px] font-bold text-toss-ink">1분이면 접수 끝 — 먼저 연락드릴게요</p>
-            <p className="mt-1 text-[10px] leading-relaxed text-toss-sub">
-              위 진단 숫자를 바탕으로, 빈칸만 채워 주세요. 부담 없이 가능한 범위부터 상담해 드려요.
+            <p>
+              은행 연 {DEFAULT_BANK_RATE}%, 개인연금/보험연금 연 {DEFAULT_INS_RATE}%, 증권은 장기 투자형 가정 연{' '}
+              {DEFAULT_STOCK_RATE}%로 단순 계산했으며, 실제 상품·시장 수익률과 다를 수 있어요.
             </p>
+            <p>준비 점수·그래프는 참고용 휴리스틱이며, 세부 비교는 무료 상담 시 함께 확인할 수 있어요.</p>
           </div>
-          <ConsultationForm inputs={inputs} />
-        </div>
 
-        <LiteLegalDisclaimer />
+          <LiteLegalDisclaimer />
+        </div>
+      </div>
+
+      <div id="lite-consult" className={`${LITE_COLUMN_CLASS} scroll-mt-6 px-3 pb-6`}>
+        <div className="mb-2.5 rounded-2xl border border-toss-blue/25 bg-gradient-to-r from-blue-50 to-sky-50 px-3.5 py-3 text-center shadow-sm ring-1 ring-toss-blue/10">
+          <p className="text-[12px] font-bold text-toss-ink">1분이면 접수 끝 — 먼저 연락드릴게요</p>
+          <p className="mt-1 text-[10px] leading-relaxed text-toss-sub">
+            위 진단 숫자를 바탕으로, 빈칸만 채워 주세요. 부담 없이 가능한 범위부터 상담해 드려요.
+          </p>
+        </div>
+        <ConsultationForm inputs={inputs} />
       </div>
     </div>
   );
