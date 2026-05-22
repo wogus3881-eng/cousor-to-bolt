@@ -519,7 +519,11 @@ const DEFAULT_INPUTS: SimulatorInputs = {
   currentAge: 35,
   retirementAge: 60,
   pensionYears: 25,
-  currentSavings: MAN * 5000,
+  savingsBank: 0,
+  savingsStock: 0,
+  savingsInsurance: 0,
+  savingsPension401k: 0,
+  savingsIsa: 0,
   monthlyBank: MAN * 30,
   bankRate: DEFAULT_BANK_RATE,
   monthlyStock: MAN * 50,
@@ -715,13 +719,66 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
           </div>
         )}
 
-        {/* 현재 보유 자금 */}
-        <div className="animate-fade-in" style={{ animationDelay: '240ms', animationFillMode: 'both' }}>
+        {/* 현재 준비 현황 */}
+        <div className="animate-fade-in flex flex-col gap-3" style={{ animationDelay: '240ms', animationFillMode: 'both' }}>
+          <div className="flex items-center gap-2 px-1">
+            <PiggyBank size={16} className="text-navy-600" />
+            <p className="text-xs font-bold text-navy-800">현재 준비 현황</p>
+          </div>
           <DualInput
-            label="현재 보유 자금" sublabel="투자·예금 포함 총 자산" icon={<PiggyBank size={16} />}
-            value={v.currentSavings} min={0} max={MAN * 100000} step={MAN * 500} unit="만 원"
-            display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
-            trackColor="bg-navy-500" onChange={set('currentSavings')}
+            label="은행·CMA 보유액"
+            sublabel="예금·적금·파킹통장 합산"
+            value={v.savingsBank ?? 0}
+            min={0} max={MAN * 50000} step={MAN * 100} unit="만 원"
+            display={val => Math.floor(val / MAN).toLocaleString()}
+            parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
+            trackColor="bg-blue-400"
+            onChange={set('savingsBank')}
+            tooltip="모르시면 0으로 두셔도 됩니다. 대략적인 금액만 입력해도 충분해요."
+          />
+          <DualInput
+            label="증권·ETF 보유액"
+            sublabel="주식·펀드·ETF 평가액"
+            value={v.savingsStock ?? 0}
+            min={0} max={MAN * 50000} step={MAN * 100} unit="만 원"
+            display={val => Math.floor(val / MAN).toLocaleString()}
+            parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
+            trackColor="bg-green-500"
+            onChange={set('savingsStock')}
+            tooltip="모르시면 0으로 두셔도 됩니다. 평가액 기준으로 입력해주세요."
+          />
+          <DualInput
+            label="보험 해지환급금"
+            sublabel="현재 해지 시 받을 수 있는 금액"
+            value={v.savingsInsurance ?? 0}
+            min={0} max={MAN * 30000} step={MAN * 100} unit="만 원"
+            display={val => Math.floor(val / MAN).toLocaleString()}
+            parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
+            trackColor="bg-purple-400"
+            onChange={set('savingsInsurance')}
+            tooltip="현재 보험을 해지할 경우 받을 수 있는 금액입니다. 보험증권이나 앱에서 확인 가능해요."
+          />
+          <DualInput
+            label="IRP·연금저축 적립금"
+            sublabel="퇴직연금·개인연금 합산"
+            value={v.savingsPension401k ?? 0}
+            min={0} max={MAN * 50000} step={MAN * 100} unit="만 원"
+            display={val => Math.floor(val / MAN).toLocaleString()}
+            parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
+            trackColor="bg-orange-400"
+            onChange={set('savingsPension401k')}
+            tooltip="IRP·연금저축·퇴직연금 전체 합산 금액입니다."
+          />
+          <DualInput
+            label="ISA 적립금"
+            sublabel="개인종합자산관리계좌"
+            value={v.savingsIsa ?? 0}
+            min={0} max={MAN * 20000} step={MAN * 100} unit="만 원"
+            display={val => Math.floor(val / MAN).toLocaleString()}
+            parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
+            trackColor="bg-teal-400"
+            onChange={set('savingsIsa')}
+            tooltip="ISA 계좌 보유액입니다. 없으시면 0으로 두세요."
           />
         </div>
 
