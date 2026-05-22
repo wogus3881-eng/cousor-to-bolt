@@ -41,6 +41,8 @@ export interface SimulatorInputs {
   isaMonthly?: number;
   isaRate?: number;
   isaTermYears?: number;
+  /** 현재 월 보장성 보험료 합계 */
+  monthlyProtectionInsurance?: number;
 }
 
 export interface YearRow {
@@ -103,6 +105,18 @@ export interface SimulationResult {
   pensionBreakevenAge: number;
   isaRetirementBalance: number;
   isaTaxSaved: number;
+  /** 치료비 리스크 분석 */
+  medicalRisk: {
+    monthlyCostAfter80: number;
+    cancerRiskCost: number;
+    strokeRiskCost: number;
+    heartRiskCost: number;
+    dementiaCost: number;
+    totalRiskCost: number;
+    monthlyProtectionInsurance: number;
+    uncoveredRisk: number;
+    coverageScore: number;
+  };
 }
 
 const INFLATION = 0.03;
@@ -680,6 +694,17 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
       ? shortfall95 / monthsToRetirement
       : shortfall95 * blendedMonthlyRate / (Math.pow(1 + blendedMonthlyRate, monthsToRetirement) - 1);
 
+  const monthlyProtection = norm.monthlyProtectionInsurance ?? 0;
+
+  const cancerExpected = 40000000 * 0.37;
+  const strokeExpected = 35000000 * 0.19;
+  const heartExpected = 30000000 * 0.16;
+  const totalRiskCost = cancerExpected + strokeExpected + heartExpected;
+
+  const estimatedCoverage = monthlyProtection * 12 * Math.max(1, yearsToRetirement) * 0.6;
+  const uncoveredRisk = Math.max(0, totalRiskCost - estimatedCoverage);
+  const coverageScore = Math.min(100, Math.round((estimatedCoverage / totalRiskCost) * 100));
+
   return {
     inputs: norm,
     retirementBalance,
@@ -714,6 +739,17 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     pensionBreakevenAge,
     isaRetirementBalance,
     isaTaxSaved,
+    medicalRisk: {
+      monthlyCostAfter80: 800000,
+      cancerRiskCost: 40000000,
+      strokeRiskCost: 35000000,
+      heartRiskCost: 30000000,
+      dementiaCost: 120000000,
+      totalRiskCost,
+      monthlyProtectionInsurance: monthlyProtection,
+      uncoveredRisk,
+      coverageScore,
+    },
   };
 }
 
