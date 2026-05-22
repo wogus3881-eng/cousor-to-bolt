@@ -8,7 +8,7 @@ function doPost(e) {
 
     var raw = e.postData && e.postData.contents ? String(e.postData.contents).trim() : '';
     var name = '', birthDate = '', phone = '', time = '', location = '', source = '', agentId = '';
-    var pdfBase64 = '', pdfFileName = '';
+    var pdfBase64 = '', pdfFileName = '', thirdPartyAgreed = '미동의';
 
     if (raw && raw.charAt(0) === '{') {
       try {
@@ -22,6 +22,7 @@ function doPost(e) {
         agentId     = (j.agentId     || '').toString();
         pdfBase64   = (j.pdfBase64   || '').toString();
         pdfFileName = (j.pdfFileName || '').toString();
+        thirdPartyAgreed = (j.thirdPartyAgreed ? '동의' : '미동의').toString();
       } catch (ignore) {}
     }
 
@@ -53,6 +54,7 @@ function doPost(e) {
       location,
       source,
       agentId,
+      thirdPartyAgreed,
       pdfLink,
     ]);
 
