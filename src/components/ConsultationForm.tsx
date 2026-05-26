@@ -3,7 +3,6 @@ import { CheckCircle, X, ShieldAlert, Check } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { resolveAgentConfig, supabaseAgentId } from '../lib/agentConfig';
 import { useAgentId } from '../lib/useAgentId';
-import { trackMetaLead, trackNaverLead } from '../lib/trackingEvents';
 import type { SimulatorInputs } from '../lib/calculator';
 
 interface Props {
@@ -63,7 +62,6 @@ export default function ConsultationForm({ inputs }: Props) {
   const [location, setLocation] = useState('');
   const [preferredTimes, setPreferredTimes] = useState<string[]>([]);
   const [agreed, setAgreed] = useState(false);
-  const [agreedThirdParty, setAgreedThirdParty] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -126,11 +124,6 @@ export default function ConsultationForm({ inputs }: Props) {
       return;
     }
 
-    if (!agreedThirdParty) {
-      setError('개인정보 제3자 제공에 동의해주세요.');
-      return;
-    }
-
     setError('');
     setLoading(true);
 
@@ -161,7 +154,6 @@ export default function ConsultationForm({ inputs }: Props) {
       location: location.trim(),
       source: agentConfig.sourceLabel,
       agentId: agentConfig.agentId,
-      thirdPartyAgreed: agreedThirdParty,
       pdfBase64,
       pdfFileName,
     };
@@ -222,15 +214,12 @@ export default function ConsultationForm({ inputs }: Props) {
     setLoading(false);
 
     if (sheetSuccess) {
-      trackMetaLead({ name: name.trim(), agentId: agentConfig.agentId });
-      trackNaverLead();
       setShowSuccess(true);
       setName('');
       setPhone('');
       setBirthDate('');
       setLocation('');
       setAgreed(false);
-      setAgreedThirdParty(false);
       setPreferredTimes([]);
     } else {
       setError('접수 중 오류가 발생했습니다. 잠시 후 다시 시도하거나 직접 연락 주세요.');
@@ -352,22 +341,6 @@ export default function ConsultationForm({ inputs }: Props) {
             <label htmlFor="agree" className="cursor-pointer text-[11px] leading-snug text-slate-500">
               (필수) 개인정보 수집 및 이용에 동의합니다. <br />
               <span className="text-[10px] text-slate-400">상담 목적 이외에 사용되지 않습니다.</span>
-            </label>
-          </div>
-
-          <div className="flex items-start gap-2 py-1">
-            <input
-              type="checkbox"
-              id="agreeThirdParty"
-              checked={agreedThirdParty}
-              onChange={(e) => setAgreedThirdParty(e.target.checked)}
-              className="mt-1 h-4 w-4 rounded border-toss-line text-toss-blue accent-toss-blue"
-            />
-            <label htmlFor="agreeThirdParty" className="cursor-pointer text-[11px] leading-snug text-slate-500">
-              (필수) 개인정보 제3자 제공에 동의합니다.<br />
-              <span className="text-[10px] text-slate-400">
-                수집된 정보는 보험 상담 목적으로 제휴 설계사에게 제공될 수 있습니다.
-              </span>
             </label>
           </div>
 

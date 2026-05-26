@@ -7,7 +7,6 @@ import {
 import type { SimulatorInputs } from '../lib/calculator';
 import { DEFAULT_BANK_RATE, DEFAULT_STOCK_RATE, DEFAULT_INS_RATE } from '../lib/calculator';
 import { proFeatures, type ProTier } from '../lib/proTier';
-import { getProtectionInsuranceHints } from '../lib/protectionInsuranceHint';
 import ProUpgradePrompt from './ProUpgradePrompt';
 
 interface Props {
@@ -520,11 +519,7 @@ const DEFAULT_INPUTS: SimulatorInputs = {
   currentAge: 35,
   retirementAge: 60,
   pensionYears: 25,
-  savingsBank: 0,
-  savingsStock: 0,
-  savingsInsurance: 0,
-  savingsPension401k: 0,
-  savingsIsa: 0,
+  currentSavings: MAN * 5000,
   monthlyBank: MAN * 30,
   bankRate: DEFAULT_BANK_RATE,
   monthlyStock: MAN * 50,
@@ -532,7 +527,6 @@ const DEFAULT_INPUTS: SimulatorInputs = {
   monthlyInsurance: MAN * 20,
   insuranceRate: DEFAULT_INS_RATE,
   insurancePaymentYears: 10,
-  monthlyProtectionInsurance: MAN * 30,
   annualSalary: MAN * 5000,
   monthlyExpense: MAN * 300,
   activeEndAge: 78,
@@ -721,66 +715,13 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
           </div>
         )}
 
-        {/* 현재 준비 현황 */}
-        <div className="animate-fade-in flex flex-col gap-3" style={{ animationDelay: '240ms', animationFillMode: 'both' }}>
-          <div className="flex items-center gap-2 px-1">
-            <PiggyBank size={16} className="text-navy-600" />
-            <p className="text-xs font-bold text-navy-800">현재 준비 현황</p>
-          </div>
+        {/* 현재 보유 자금 */}
+        <div className="animate-fade-in" style={{ animationDelay: '240ms', animationFillMode: 'both' }}>
           <DualInput
-            label="은행·CMA 보유액"
-            sublabel="예금·적금·파킹통장 합산"
-            value={v.savingsBank ?? 0}
-            min={0} max={MAN * 50000} step={MAN * 100} unit="만 원"
-            display={val => Math.floor(val / MAN).toLocaleString()}
-            parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
-            trackColor="bg-blue-400"
-            onChange={set('savingsBank')}
-            tooltip="모르시면 0으로 두셔도 됩니다. 대략적인 금액만 입력해도 충분해요."
-          />
-          <DualInput
-            label="증권·ETF 보유액"
-            sublabel="주식·펀드·ETF 평가액"
-            value={v.savingsStock ?? 0}
-            min={0} max={MAN * 50000} step={MAN * 100} unit="만 원"
-            display={val => Math.floor(val / MAN).toLocaleString()}
-            parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
-            trackColor="bg-green-500"
-            onChange={set('savingsStock')}
-            tooltip="모르시면 0으로 두셔도 됩니다. 평가액 기준으로 입력해주세요."
-          />
-          <DualInput
-            label="보험 해지환급금"
-            sublabel="현재 해지 시 받을 수 있는 금액"
-            value={v.savingsInsurance ?? 0}
-            min={0} max={MAN * 30000} step={MAN * 100} unit="만 원"
-            display={val => Math.floor(val / MAN).toLocaleString()}
-            parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
-            trackColor="bg-purple-400"
-            onChange={set('savingsInsurance')}
-            tooltip="현재 보험을 해지할 경우 받을 수 있는 금액입니다. 보험증권이나 앱에서 확인 가능해요."
-          />
-          <DualInput
-            label="IRP·연금저축 적립금"
-            sublabel="퇴직연금·개인연금 합산"
-            value={v.savingsPension401k ?? 0}
-            min={0} max={MAN * 50000} step={MAN * 100} unit="만 원"
-            display={val => Math.floor(val / MAN).toLocaleString()}
-            parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
-            trackColor="bg-orange-400"
-            onChange={set('savingsPension401k')}
-            tooltip="IRP·연금저축·퇴직연금 전체 합산 금액입니다."
-          />
-          <DualInput
-            label="ISA 적립금"
-            sublabel="개인종합자산관리계좌"
-            value={v.savingsIsa ?? 0}
-            min={0} max={MAN * 20000} step={MAN * 100} unit="만 원"
-            display={val => Math.floor(val / MAN).toLocaleString()}
-            parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
-            trackColor="bg-teal-400"
-            onChange={set('savingsIsa')}
-            tooltip="ISA 계좌 보유액입니다. 없으시면 0으로 두세요."
+            label="현재 보유 자금" sublabel="투자·예금 포함 총 자산" icon={<PiggyBank size={16} />}
+            value={v.currentSavings} min={0} max={MAN * 100000} step={MAN * 500} unit="만 원"
+            display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
+            trackColor="bg-navy-500" onChange={set('currentSavings')}
           />
         </div>
 
@@ -825,44 +766,6 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
               <BucketCard theme={BANK_THEME} amount={v.monthlyBank} rate={v.bankRate} onAmountChange={set('monthlyBank')} onRateChange={set('bankRate')} />
               <BucketCard theme={STOCK_THEME} amount={v.monthlyStock} rate={v.stockRate} onAmountChange={set('monthlyStock')} onRateChange={set('stockRate')} />
               <BucketCard theme={INS_THEME} amount={v.monthlyInsurance} rate={v.insuranceRate} onAmountChange={set('monthlyInsurance')} onRateChange={set('insuranceRate')} paymentYears={v.insurancePaymentYears ?? 10} onPaymentYearsChange={set('insurancePaymentYears')} />
-
-              <DualInput
-                label="월 보장성 보험료"
-                sublabel="실손·암·종신 등 보장성 합계"
-                tooltip="현재 내고 계신 보장성 보험료 전체 합산 금액입니다. 저축성 보험은 제외하고 순수 보장성만 입력해주세요."
-                value={v.monthlyProtectionInsurance ?? 0}
-                min={0}
-                max={MAN * 200}
-                step={MAN * 5}
-                unit="만 원"
-                display={val => Math.floor(val / MAN).toLocaleString()}
-                parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
-                trackColor="bg-rose-500"
-                onChange={set('monthlyProtectionInsurance')}
-              />
-
-              {(() => {
-                const hints = getProtectionInsuranceHints(v.currentAge);
-                return (
-                  <div className="mt-1.5 rounded-xl bg-slate-50 px-3 py-2 space-y-1">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[10px] font-bold text-slate-400 shrink-0">💡 나이대별 평균</span>
-                      {hints.map((h) => (
-                        <span
-                          key={h.label}
-                          className="inline-flex items-center gap-1 rounded-full bg-white border border-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-600"
-                        >
-                          {h.label}
-                          <span className="text-toss-blue font-bold">{h.avg}만원</span>
-                        </span>
-                      ))}
-                    </div>
-                    <p className="text-[10px] text-slate-400">
-                      모르시면 0으로 두고 상담 시 확인해도 됩니다
-                    </p>
-                  </div>
-                );
-              })()}
 
               {features.pension401kBucket && !isSelfEmployed && (
                 <div className="flex flex-col gap-3">

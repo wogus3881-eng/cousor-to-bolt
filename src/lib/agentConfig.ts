@@ -25,31 +25,12 @@ const DEFAULT_CONFIG: AgentLeadConfig = {
  * 새 설계사 추가 시 agentId 키와 googleSheetWebAppUrl을 등록하세요.
  */
 const AGENT_REGISTRY: Record<string, AgentLeadConfig> = {
-  insta: {
-    agentId: 'insta',
-    googleSheetWebAppUrl: DEFAULT_GOOGLE_SHEET_WEBAPP_EXEC,
-    sourceLabel: '이기적인 은퇴설계 · 인스타그램',
-  },
-  facebook: {
-    agentId: 'facebook',
-    googleSheetWebAppUrl: DEFAULT_GOOGLE_SHEET_WEBAPP_EXEC,
-    sourceLabel: '이기적인 은퇴설계 · 페이스북',
-  },
-  naver: {
-    agentId: 'naver',
-    googleSheetWebAppUrl: DEFAULT_GOOGLE_SHEET_WEBAPP_EXEC,
-    sourceLabel: '이기적인 은퇴설계 · 네이버',
-  },
-  youtube: {
-    agentId: 'youtube',
-    googleSheetWebAppUrl: DEFAULT_GOOGLE_SHEET_WEBAPP_EXEC,
-    sourceLabel: '이기적인 은퇴설계 · 유튜브',
-  },
-  kakao: {
-    agentId: 'kakao',
-    googleSheetWebAppUrl: DEFAULT_GOOGLE_SHEET_WEBAPP_EXEC,
-    sourceLabel: '이기적인 은퇴설계 · 카카오',
-  },
+  // 예시:
+  // abc123: {
+  //   agentId: 'abc123',
+  //   googleSheetWebAppUrl: 'https://script.google.com/macros/s/.../exec',
+  //   sourceLabel: '이기적인 은퇴설계 · abc123',
+  // },
 };
 
 export function resolveAgentConfig(agentParam: string | null | undefined): AgentLeadConfig {

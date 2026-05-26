@@ -16,29 +16,8 @@
     <meta property="og:image:height" content="630" />
     
     <meta property="og:url" content="https://retirement-asset-lon-tj05.bolt.host/index.html" />
-
-    <!-- Meta Pixel -->
-    <script>
-    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-    n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
-    document,'script','https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', 'YOUR_PIXEL_ID'); /* ← Meta 픽셀 ID로 교체 */
-    fbq('track', 'PageView');
-    </script>
-
-    <!-- 네이버 공통 스크립트 -->
-    <script type="text/javascript" src="//wcs.naver.net/wcslog.js"></script>
-    <script type="text/javascript">
-    if(!wcs_add) var wcs_add = {};
-    wcs_add["wa"] = "YOUR_NAVER_ID"; /* ← 네이버 공통키로 교체 */
-    if(window.wcs) { wcs.inflow(); wcs_do(); }
-    </script>
   </head>
   <body>
-    <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"/></noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

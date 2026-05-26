@@ -2,18 +2,7 @@ export interface SimulatorInputs {
   currentAge: number;
   retirementAge: number;
   pensionYears: number;
-  /** @deprecated savings* 계좌별 필드 사용 권장. 미설정 시 월납 비율로 savings*에 배분 */
-  currentSavings?: number;
-  /** 현재 은행/CMA 보유액 */
-  savingsBank?: number;
-  /** 현재 증권/ETF 보유액 */
-  savingsStock?: number;
-  /** 현재 보험 해지환급금 */
-  savingsInsurance?: number;
-  /** 현재 IRP/연금저축 적립금 */
-  savingsPension401k?: number;
-  /** 현재 ISA 적립금 */
-  savingsIsa?: number;
+  currentSavings: number;
   // 3-bucket monthly contributions + individual rates
   monthlyBank: number;         // 은행 적립 (과세)
   bankRate: number;            // 은행 수익률 % (기본 2.5)
@@ -41,8 +30,6 @@ export interface SimulatorInputs {
   isaMonthly?: number;
   isaRate?: number;
   isaTermYears?: number;
-  /** 현재 월 보장성 보험료 합계 */
-  monthlyProtectionInsurance?: number;
 }
 
 export interface YearRow {
@@ -105,18 +92,6 @@ export interface SimulationResult {
   pensionBreakevenAge: number;
   isaRetirementBalance: number;
   isaTaxSaved: number;
-  /** 치료비 리스크 분석 */
-  medicalRisk: {
-    monthlyCostAfter80: number;
-    cancerRiskCost: number;
-    strokeRiskCost: number;
-    heartRiskCost: number;
-    dementiaCost: number;
-    totalRiskCost: number;
-    monthlyProtectionInsurance: number;
-    uncoveredRisk: number;
-    coverageScore: number;
-  };
 }
 
 const INFLATION = 0.03;
@@ -288,7 +263,7 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
 
   const {
     currentAge, retirementAge, pensionYears,
-    monthlyBank, bankRate: bankRatePct,
+    currentSavings, monthlyBank, bankRate: bankRatePct,
     monthlyStock, stockRate: stockRatePct,
     monthlyInsurance, insuranceRate: insRatePct,
     insurancePaymentYears,
@@ -319,25 +294,17 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
   const MEDICAL_COST = medicalCostEnabled ? (monthlyMedicalCost ?? 400000) : 0;
   const yearsToRetirement = Math.max(0, retirementAge - currentAge);
 
-  // 현재 자산: 계좌별 직접 입력 우선, 없으면 legacy currentSavings를 월납 비율로 배분
+  // 현재 자산을 월납 비율로 3버킷 배분
   const totalMonthly = monthlyBank + monthlyStock + monthlyInsurance || 1;
   const bankRatio = monthlyBank / totalMonthly;
   const stockRatio = monthlyStock / totalMonthly;
   const insRatio = monthlyInsurance / totalMonthly;
 
-  const legacySavings = norm.currentSavings ?? 0;
-  const savingsBank = norm.savingsBank ?? (legacySavings * bankRatio);
-  const savingsStock = norm.savingsStock ?? (legacySavings * stockRatio);
-  const savingsInsurance = norm.savingsInsurance ?? (legacySavings * insRatio);
-  const savingsPension401k = norm.savingsPension401k ?? 0;
-  const savingsIsa = norm.savingsIsa ?? 0;
-  const totalCurrentAssets = savingsBank + savingsStock + savingsInsurance + savingsPension401k + savingsIsa;
-
-  const retirementBalanceBank = fv(savingsBank, bankR, yearsToRetirement)
+  const retirementBalanceBank = fv(currentSavings * bankRatio, bankR, yearsToRetirement)
     + fvAnnuity(monthlyBank, bankR, yearsToRetirement);
   // 보험: 납입기간(insurancePaymentYears)만 납입 후 은퇴까지 복리 증식
   const insPayYears = Math.min(insurancePaymentYears, yearsToRetirement);
-  const insBalanceAtPaymentEnd = fv(savingsInsurance, insR, insPayYears)
+  const insBalanceAtPaymentEnd = fv(currentSavings * insRatio, insR, insPayYears)
     + fvAnnuity(monthlyInsurance, insR, insPayYears);
   const yearsCompoundAfterPayment = yearsToRetirement - insPayYears;
   const retirementBalanceInsurance = fv(insBalanceAtPaymentEnd, insR, yearsCompoundAfterPayment);
@@ -345,14 +312,14 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
   const insurancePaymentEndAge = currentAge + insPayYears;
 
   const pension401kPayYears = Math.min(pension401kPaymentYears, yearsToRetirement);
-  const retirementBalancePension401k = fv(savingsPension401k, pension401kR, yearsToRetirement)
+  const retirementBalancePension401k = fv(0, pension401kR, yearsToRetirement)
     + fvAnnuity(effectiveMonthlyPension401k, pension401kR, pension401kPayYears);
 
   const isaContributionYears = Math.min(isaTermYears, yearsToRetirement);
   const isaMatureBalance = isaContributionYears > 0
-    ? fv(savingsIsa, isaR, isaContributionYears) + fvAnnuity(isaMonthly, isaR, isaContributionYears)
-    : savingsIsa;
-  const isaContributions = savingsIsa + isaMonthly * 12 * isaContributionYears;
+    ? fvAnnuity(isaMonthly, isaR, isaContributionYears)
+    : 0;
+  const isaContributions = isaMonthly * 12 * isaContributionYears;
   const isaInterest = Math.max(0, isaMatureBalance - isaContributions);
   const isaTax = Math.max(0, isaInterest - ISA_TAX_FREE_GAIN_LIMIT) * ISA_TAX_RATE;
   const regularAccountTax = isaInterest * FINANCIAL_INCOME_TAX;
@@ -361,16 +328,16 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     ? fv(isaMatureBalance, stockR, yearsToRetirement - isaTermYears)
     : isaMatureBalance;
 
-  const retirementBalanceStock = fv(savingsStock, stockR, yearsToRetirement)
+  const retirementBalanceStock = fv(currentSavings * stockRatio, stockR, yearsToRetirement)
     + fvAnnuity(monthlyStock, stockR, yearsToRetirement)
     + isaRetirementBalance;
   const retirementBalance = retirementBalanceBank + retirementBalanceStock + retirementBalanceInsurance + businessAsset;
 
   // 비교선: 전액 과세(증권 수익률), 전액 비과세(보험 수익률)
   const totalContrib = monthlyBank + monthlyStock + monthlyInsurance;
-  const retirementBalanceGrossOnly = fv(totalCurrentAssets, stockR, yearsToRetirement)
+  const retirementBalanceGrossOnly = fv(currentSavings, stockR, yearsToRetirement)
     + fvAnnuity(totalContrib, stockR, yearsToRetirement);
-  const retirementBalanceInsOnly = fv(totalCurrentAssets, insR, yearsToRetirement)
+  const retirementBalanceInsOnly = fv(currentSavings, insR, yearsToRetirement)
     + fvAnnuity(totalContrib, insR, yearsToRetirement);
 
   const inflationAdjustedMonthlyExpense = fv(monthlyExpense, INFLATION, yearsToRetirement);
@@ -415,10 +382,10 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
   // 보험: 납입기간 내만 월납, 이후 은퇴까지 복리만 증식
   const accRows: Array<{ age: number; bal: number; balBank: number; balStock: number; balIns: number; bal401k: number }> = [];
   {
-    let aBank = savingsBank;
-    let aStock = savingsStock;
-    let aIns = savingsInsurance;
-    let a401k = savingsPension401k;
+    let aBank = currentSavings * bankRatio;
+    let aStock = currentSavings * stockRatio;
+    let aIns = currentSavings * insRatio;
+    let a401k = 0;
     const bankMR = bankR / 12;
     const stockMR = stockR / 12;
     const insMR = insR / 12;
@@ -694,17 +661,6 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
       ? shortfall95 / monthsToRetirement
       : shortfall95 * blendedMonthlyRate / (Math.pow(1 + blendedMonthlyRate, monthsToRetirement) - 1);
 
-  const monthlyProtection = norm.monthlyProtectionInsurance ?? 0;
-
-  const cancerExpected = 40000000 * 0.37;
-  const strokeExpected = 35000000 * 0.19;
-  const heartExpected = 30000000 * 0.16;
-  const totalRiskCost = cancerExpected + strokeExpected + heartExpected;
-
-  const estimatedCoverage = monthlyProtection * 12 * Math.max(1, yearsToRetirement) * 0.6;
-  const uncoveredRisk = Math.max(0, totalRiskCost - estimatedCoverage);
-  const coverageScore = Math.min(100, Math.round((estimatedCoverage / totalRiskCost) * 100));
-
   return {
     inputs: norm,
     retirementBalance,
@@ -739,17 +695,6 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     pensionBreakevenAge,
     isaRetirementBalance,
     isaTaxSaved,
-    medicalRisk: {
-      monthlyCostAfter80: 800000,
-      cancerRiskCost: 40000000,
-      strokeRiskCost: 35000000,
-      heartRiskCost: 30000000,
-      dementiaCost: 120000000,
-      totalRiskCost,
-      monthlyProtectionInsurance: monthlyProtection,
-      uncoveredRisk,
-      coverageScore,
-    },
   };
 }
 
