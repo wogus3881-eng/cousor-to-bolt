@@ -2167,6 +2167,89 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
           </button>
         </div>
 
+        {/* ── 치료비 리스크 분석 ── */}
+        {result.medicalRisk && (
+          <div className="rounded-2xl border border-navy-100 bg-white p-4 space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50">
+                <Shield size={16} className="text-rose-500" />
+              </div>
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-rose-400">치료비 리스크</p>
+                <p className="text-[14px] font-bold text-navy-900">평생 의료비 보장 분석</p>
+              </div>
+            </div>
+            <div className="rounded-xl bg-slate-50 p-3 space-y-1.5">
+              <p className="text-[10px] font-bold uppercase text-slate-400 mb-2">한국 60세 이후 발생확률</p>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: '암 진단', pct: '37%', cost: '4,000만원', color: 'text-red-600' },
+                  { label: '뇌혈관', pct: '19%', cost: '3,500만원', color: 'text-orange-600' },
+                  { label: '심장질환', pct: '16%', cost: '3,000만원', color: 'text-amber-600' },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-lg bg-white p-2 text-center border border-slate-100">
+                    <p className={`text-[13px] font-extrabold ${item.color}`}>{item.pct}</p>
+                    <p className="text-[10px] font-semibold text-navy-700">{item.label}</p>
+                    <p className="text-[9px] text-slate-400 mt-0.5">{item.cost}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2.5">
+              <div>
+                <p className="text-[11px] font-semibold text-navy-700">80세 이후 월 의료비 추정</p>
+                <p className="text-[10px] text-slate-400">건강보험공단 통계 기준</p>
+              </div>
+              <p className="text-[15px] font-extrabold text-rose-600">{formatKRW(result.medicalRisk.monthlyCostAfter80)}</p>
+            </div>
+            <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2.5">
+              <div>
+                <p className="text-[11px] font-semibold text-navy-700">치매 요양비 (5년 기준)</p>
+                <p className="text-[10px] text-slate-400">국민건강보험 2023</p>
+              </div>
+              <p className="text-[15px] font-extrabold text-rose-600">{formatKRW(result.medicalRisk.dementiaCost)}</p>
+            </div>
+            {(() => {
+              const { coverageScore, uncoveredRisk, monthlyProtectionInsurance } = result.medicalRisk;
+              const coverageColor = coverageScore >= 70 ? 'text-emerald-600' : coverageScore >= 40 ? 'text-amber-600' : 'text-red-600';
+              const coverageBg = coverageScore >= 70 ? 'bg-emerald-50 border-emerald-200' : coverageScore >= 40 ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200';
+              return (
+                <>
+                  <div className={`rounded-xl border p-3 ${coverageBg}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[12px] font-bold text-navy-800">현재 보장 커버리지</p>
+                      <p className={`text-[18px] font-extrabold ${coverageColor}`}>{coverageScore}점</p>
+                    </div>
+                    <div className="h-2.5 rounded-full bg-white/80 overflow-hidden">
+                      <div className={`h-full rounded-full transition-all duration-700 ${coverageScore >= 70 ? 'bg-emerald-500' : coverageScore >= 40 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${coverageScore}%` }} />
+                    </div>
+                    <div className="mt-2 flex justify-between text-[10px]">
+                      <span className="text-slate-500">월 보장성 보험료: {formatKRW(monthlyProtectionInsurance)}</span>
+                      <span className={`font-bold ${coverageColor}`}>{coverageScore >= 70 ? '양호' : coverageScore >= 40 ? '보완 필요' : '위험'}</span>
+                    </div>
+                  </div>
+                  {uncoveredRisk > 0 && (
+                    <div className="rounded-xl border border-red-200 bg-red-50 p-3">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle size={16} className="text-red-500 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-[12px] font-bold text-red-800">미보장 리스크 추정액</p>
+                          <p className="text-[20px] font-extrabold text-red-600 mt-1">{formatKRW(uncoveredRisk)}</p>
+                          <p className="text-[10px] text-red-500 mt-1">현재 보장 수준으로는 3대 질병 발생 시 이 금액이 본인 부담이 될 수 있습니다. 전문가 상담을 통해 보장 구조를 점검해 보세요.</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+            <div className="rounded-xl border border-navy-100 bg-navy-50 px-3 py-2.5">
+              <p className="text-[11px] font-bold text-navy-700 leading-relaxed">한국 노인 자살률 OECD 1위 — 주요 원인 1위 생활비, 2위 치료비</p>
+              <p className="text-[10px] text-navy-500 mt-1 leading-relaxed">은퇴설계는 현금흐름과 의료비 보장, 두 가지를 함께 준비해야 완성됩니다.</p>
+            </div>
+          </div>
+        )}
+
         {/* ── 법적 면책 문구 (고정) ── */}
         <div className="bg-slate-800 rounded-2xl p-4 border border-slate-700">
           <p className="text-[10px] text-slate-300 leading-relaxed space-y-1">

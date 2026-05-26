@@ -715,14 +715,49 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
           </div>
         )}
 
-        {/* 현재 보유 자금 */}
+        {/* 현재 준비 현황 */}
         <div className="animate-fade-in" style={{ animationDelay: '240ms', animationFillMode: 'both' }}>
-          <DualInput
-            label="현재 보유 자금" sublabel="투자·예금 포함 총 자산" icon={<PiggyBank size={16} />}
-            value={v.currentSavings} min={0} max={MAN * 100000} step={MAN * 500} unit="만 원"
-            display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
-            trackColor="bg-navy-500" onChange={set('currentSavings')}
-          />
+          <div className="mb-2 flex items-center gap-2">
+            <PiggyBank size={16} className="text-navy-500" />
+            <p className="text-xs font-bold text-navy-800">현재 준비 현황</p>
+          </div>
+          <div className="space-y-3">
+            <DualInput
+              label="은행·CMA 보유액" sublabel="예금·적금·파킹통장 합산"
+              tooltip="모르시면 0으로 두셔도 됩니다. 대략적인 금액만 입력해도 충분해요."
+              value={v.savingsBank ?? 0} min={0} max={MAN * 50000} step={MAN * 100} unit="만 원"
+              display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
+              trackColor="bg-blue-400" onChange={set('savingsBank')}
+            />
+            <DualInput
+              label="증권·ETF 보유액" sublabel="주식·펀드·ETF 평가액"
+              tooltip="모르시면 0으로 두셔도 됩니다. 평가액 기준으로 입력해주세요."
+              value={v.savingsStock ?? 0} min={0} max={MAN * 50000} step={MAN * 100} unit="만 원"
+              display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
+              trackColor="bg-green-500" onChange={set('savingsStock')}
+            />
+            <DualInput
+              label="보험 해지환급금" sublabel="현재 해지 시 받을 수 있는 금액"
+              tooltip="현재 보험을 해지할 경우 받을 수 있는 금액입니다. 보험증권이나 앱에서 확인 가능해요."
+              value={v.savingsInsurance ?? 0} min={0} max={MAN * 30000} step={MAN * 100} unit="만 원"
+              display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
+              trackColor="bg-purple-400" onChange={set('savingsInsurance')}
+            />
+            <DualInput
+              label="IRP·연금저축 적립금" sublabel="퇴직연금·개인연금 합산"
+              tooltip="IRP·연금저축·퇴직연금 전체 합산 금액입니다."
+              value={v.savingsPension401k ?? 0} min={0} max={MAN * 50000} step={MAN * 100} unit="만 원"
+              display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
+              trackColor="bg-orange-400" onChange={set('savingsPension401k')}
+            />
+            <DualInput
+              label="ISA 적립금" sublabel="개인종합자산관리계좌"
+              tooltip="ISA 계좌 보유액입니다. 없으시면 0으로 두세요."
+              value={v.savingsIsa ?? 0} min={0} max={MAN * 20000} step={MAN * 100} unit="만 원"
+              display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
+              trackColor="bg-teal-400" onChange={set('savingsIsa')}
+            />
+          </div>
         </div>
 
         {/* ── 자산별 정밀 배분 ── */}
@@ -854,6 +889,39 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
               </div>
             </div>
           )}
+        </div>
+
+        {/* 월 보장성 보험료 */}
+        <div className="animate-fade-in" style={{ animationDelay: '355ms', animationFillMode: 'both' }}>
+          <DualInput
+            label="월 보장성 보험료" sublabel="실손·암·종신 등 보장성 합계"
+            tooltip="현재 내고 계신 보장성 보험료 전체 합산 금액입니다. 저축성 보험은 제외하고 순수 보장성만 입력해주세요."
+            value={v.monthlyProtectionInsurance ?? 0} min={0} max={MAN * 200} step={MAN * 5} unit="만 원"
+            display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
+            trackColor="bg-rose-500" onChange={set('monthlyProtectionInsurance')}
+          />
+          {(() => {
+            const age = v.currentAge;
+            const hints =
+              age < 30 ? [{ label: '30대', avg: 18 }] :
+              age < 40 ? [{ label: '30대', avg: 18 }, { label: '40대', avg: 26 }] :
+              age < 50 ? [{ label: '40대', avg: 26 }, { label: '50대', avg: 35 }] :
+              age < 60 ? [{ label: '50대', avg: 35 }, { label: '60대', avg: 42 }] :
+              [{ label: '60대', avg: 42 }];
+            return (
+              <div className="mt-1.5 rounded-xl bg-slate-50 px-3 py-2 space-y-1">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[10px] font-bold text-slate-400 shrink-0">💡 나이대별 평균</span>
+                  {hints.map((h) => (
+                    <span key={h.label} className="inline-flex items-center gap-1 rounded-full bg-white border border-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
+                      {h.label} <span className="text-toss-blue font-bold">{h.avg}만원</span>
+                    </span>
+                  ))}
+                </div>
+                <p className="text-[10px] text-slate-400">모르시면 0으로 두고 상담 시 확인해도 됩니다</p>
+              </div>
+            );
+          })()}
         </div>
 
         {/* 품격 유지 월 생활비 */}
