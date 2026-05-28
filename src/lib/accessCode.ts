@@ -60,7 +60,7 @@ export function clearStoredAccess(): void {
 }
 
 export async function verifyAccessCode(code: string, tier: ProTier): Promise<AccessCodeRecord | null> {
-  const trimmed = code.trim();
+  const trimmed = code.trim().toUpperCase();
   if (!trimmed) return null;
 
   if (!supabase) return verifyFallbackCode(trimmed, tier);
