@@ -1373,7 +1373,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
 
 
-        {features.breakEvenAnalysis && (
+        {features.breakEvenAnalysis ? (
 
           <div className="rounded-2xl border border-navy-100 bg-white p-4 shadow-sm">
 
@@ -1419,11 +1419,16 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
           </div>
 
+        ) : (
+          <ProUpgradePrompt
+            title="연금 수급 손익분기 분석은 Pro Plus"
+            description="수급 개시 연령별 손익분기 시점과 100세까지 총 수령액 차이를 분석하려면 Plus가 필요합니다."
+          />
         )}
 
 
 
-        {features.taxSavingsChart && (() => {
+        {features.taxSavingsChart ? (() => {
 
           const yearBarScale = 5000000;
 
@@ -1487,7 +1492,12 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
           );
 
-        })()}
+        })() : (
+          <ProUpgradePrompt
+            title="절세·세금 효과 비교는 Pro Plus"
+            description="ISA 절세액, 퇴직연금 절세 효과, 비과세 연장 효과를 한눈에 확인하려면 Plus가 필요합니다."
+          />
+        )}
 
 
 
@@ -2033,7 +2043,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
         )}
 
         {/* ── 해결책 박스 (Plus) ── */}
-        {features.solutionInsightBox && (
+        {features.solutionInsightBox ? (
         <div
           className="rounded-3xl text-white p-6 shadow-xl border border-gold-600/30"
           style={{ background: 'linear-gradient(135deg, #0f2057 0%, #162d6b 100%)' }}
@@ -2061,6 +2071,11 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
             ))}
           </div>
         </div>
+        ) : (
+          <ProUpgradePrompt
+            title="절세 인사이트 상세는 Pro Plus"
+            description="비과세 계좌 활용 전략과 세금·건보료 방어 플랜 상세 내용은 Plus에서 확인할 수 있습니다."
+          />
         )}
 
         {/* ── 95세 목표 섹션 ── */}
