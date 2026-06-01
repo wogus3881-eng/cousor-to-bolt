@@ -24,6 +24,11 @@ const FALLBACK_ACCESS_CODES: AccessCodeRecord[] = [
   { code: 'PLUS-TEST03', agent_name: '테스트 설계사 3', tier: 'plus', is_active: true },
   { code: 'PLUS-TEST04', agent_name: '테스트 설계사 4', tier: 'plus', is_active: true },
   { code: 'PLUS-TEST05', agent_name: '테스트 설계사 5', tier: 'plus', is_active: true },
+  { code: 'PLUS-TEST06', agent_name: '테스트 설계사 6', tier: 'plus', is_active: true },
+  { code: 'PLUS-TEST07', agent_name: '테스트 설계사 7', tier: 'plus', is_active: true },
+  { code: 'PLUS-TEST08', agent_name: '테스트 설계사 8', tier: 'plus', is_active: true },
+  { code: 'PLUS-TEST09', agent_name: '테스트 설계사 9', tier: 'plus', is_active: true },
+  { code: 'PLUS-TEST10', agent_name: '테스트 설계사 10', tier: 'plus', is_active: true },
   { code: 'HENRY', agent_name: 'Henry', tier: 'plus', is_active: true },
 ];
 
