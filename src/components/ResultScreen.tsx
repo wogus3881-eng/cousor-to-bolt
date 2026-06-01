@@ -950,93 +950,6 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
 
 
-
-        {/* ── 3가지 준비 시나리오 비교 ── */}
-        {(() => {
-          const noInsInputs = { ...liveInputs, monthlyInsurance: 0, savingsInsurance: 0 };
-          const noInsResult = simulate(noInsInputs);
-          const bankOnlyInputs = { ...liveInputs, monthlyInsurance: 0, savingsInsurance: 0, monthlyStock: 0, savingsStock: 0, monthlyPension401k: 0, savingsPension401k: 0, isaMonthly: 0, savingsIsa: 0 };
-          const bankOnlyResult = simulate(bankOnlyInputs);
-
-          const s1Age = dignityEndAge === null ? 100 : dignityEndAge;
-          const s2Age = noInsResult.dignityEndAge === null ? 100 : noInsResult.dignityEndAge;
-          const s3Age = bankOnlyResult.dignityEndAge === null ? 100 : bankOnlyResult.dignityEndAge;
-          const s1Safe = dignityEndAge === null;
-          const s2Safe = noInsResult.dignityEndAge === null;
-          const s3Safe = bankOnlyResult.dignityEndAge === null;
-
-          const scenarios = [
-            {
-              label: '현재 설계 기준',
-              sub: '보험 + 절세계좌 + 은행',
-              age: s1Age, safe: s1Safe, diff: null,
-              color: s1Safe ? 'border-emerald-400 bg-emerald-50' : 'border-navy-300 bg-white',
-              ageColor: s1Safe ? 'text-emerald-600' : 'text-navy-800',
-              badge: s1Safe ? '100세 안전' : null,
-            },
-            {
-              label: '절세계좌만 활용',
-              sub: 'ISA·IRP·증권 + 은행 (보험 제외)',
-              age: s2Age, safe: s2Safe, diff: s2Age - s1Age,
-              color: s2Safe ? 'border-blue-200 bg-blue-50' : 'border-amber-200 bg-amber-50',
-              ageColor: s2Safe ? 'text-blue-600' : 'text-amber-700',
-              badge: null,
-            },
-            {
-              label: '은행 예금만',
-              sub: '예·적금·CMA만 (보험·투자 제외)',
-              age: s3Age, safe: s3Safe, diff: s3Age - s1Age,
-              color: s3Safe ? 'border-slate-200 bg-slate-50' : 'border-red-200 bg-red-50',
-              ageColor: s3Safe ? 'text-slate-600' : 'text-red-600',
-              badge: null,
-            },
-          ];
-
-          return (
-            <div className="rounded-2xl bg-white border border-navy-100 shadow-sm overflow-hidden">
-              <div className="px-5 pt-5 pb-3">
-                <p className="text-[10px] font-bold tracking-[0.15em] uppercase text-navy-400 mb-1">준비 방식별 시뮬레이션</p>
-                <p className="text-sm font-extrabold text-navy-900">어떻게 준비하느냐에 따라<br />노후가 이렇게 달라집니다</p>
-              </div>
-              <div className="px-4 pb-5 flex flex-col gap-3">
-                {scenarios.map((s, i) => (
-                  <div key={i} className={`rounded-xl border-2 p-4 ${s.color}`}>
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="text-[10px] font-bold text-navy-400">시나리오 {i + 1}</span>
-                          {s.badge && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">{s.badge}</span>
-                          )}
-                        </div>
-                        <p className="text-[13px] font-bold text-navy-900">{s.label}</p>
-                        <p className="text-[11px] text-navy-400 mt-0.5">{s.sub}</p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className={`text-[28px] font-extrabold leading-none ${s.ageColor}`}>
-                          {s.safe ? '100+' : s.age}
-                        </p>
-                        <p className="text-[10px] text-navy-400 mt-0.5">세까지 유지</p>
-                        {s.diff !== null && !s.safe && s.diff < 0 && (
-                          <p className="text-[11px] font-bold text-red-500 mt-1">
-                            현재 대비 {Math.abs(s.diff)}년 단축
-                          </p>
-                        )}
-                        {s.diff !== null && s.safe && (
-                          <p className="text-[11px] font-bold text-emerald-600 mt-1">100세 안전</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="px-5 pb-4">
-                <p className="text-[10px] text-navy-400 leading-relaxed">※ 입력하신 현재 자산·납입액·수익률 기준 시뮬레이션 결과이며, 실제 수익률·세법 변경에 따라 달라질 수 있습니다.</p>
-              </div>
-            </div>
-          );
-        })()}
-
         {/* ── Key Metrics ── */}
 
         <div className="grid grid-cols-2 gap-3">
@@ -1460,7 +1373,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
 
 
-        {features.breakEvenAnalysis ? (
+        {features.breakEvenAnalysis && (
 
           <div className="rounded-2xl border border-navy-100 bg-white p-4 shadow-sm">
 
@@ -1506,16 +1419,11 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
           </div>
 
-        ) : (
-          <ProUpgradePrompt
-            title="연금 수급 손익분기 분석은 Pro Plus"
-            description="수급 개시 연령별 손익분기 시점과 100세까지 총 수령액 차이를 분석하려면 Plus가 필요합니다."
-          />
         )}
 
 
 
-        {features.taxSavingsChart ? (() => {
+        {features.taxSavingsChart && (() => {
 
           const yearBarScale = 5000000;
 
@@ -1579,12 +1487,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
           );
 
-        })() : (
-          <ProUpgradePrompt
-            title="절세·세금 효과 비교는 Pro Plus"
-            description="ISA 절세액, 퇴직연금 절세 효과, 비과세 연장 효과를 한눈에 확인하려면 Plus가 필요합니다."
-          />
-        )}
+        })()}
 
 
 
@@ -2130,7 +2033,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
         )}
 
         {/* ── 해결책 박스 (Plus) ── */}
-        {features.solutionInsightBox ? (
+        {features.solutionInsightBox && (
         <div
           className="rounded-3xl text-white p-6 shadow-xl border border-gold-600/30"
           style={{ background: 'linear-gradient(135deg, #0f2057 0%, #162d6b 100%)' }}
@@ -2158,11 +2061,6 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
             ))}
           </div>
         </div>
-        ) : (
-          <ProUpgradePrompt
-            title="절세 인사이트 상세는 Pro Plus"
-            description="비과세 계좌 활용 전략과 세금·건보료 방어 플랜 상세 내용은 Plus에서 확인할 수 있습니다."
-          />
         )}
 
         {/* ── 95세 목표 섹션 ── */}
