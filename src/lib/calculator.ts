@@ -185,10 +185,36 @@ function fv(pv: number, rate: number, years: number): number {
   return pv * Math.pow(1 + rate, years);
 }
 
+// 금융소득 종합과세 세율 (2,000만원 초과 시)
+// 과세표준 구간별 소득세율 (지방세 10% 포함)
+function getComprehensiveTaxRate(totalFinancialIncome: number): number {
+  if (totalFinancialIncome <= 20_000_000) return FINANCIAL_INCOME_TAX; // 15.4% 분리과세
+  // 2,000만원 초과분은 종합과세 (다른 소득 없다고 가정, 금융소득만 기준)
+  // 초과분 구간별 세율 (지방소득세 10% 포함)
+  const excess = totalFinancialIncome - 20_000_000;
+  if (excess <= 14_000_000) return 0.154;       // 14% + 지방세 (1,200만~4,600만)
+  if (excess <= 50_000_000) return 0.275;       // 25% + 지방세 (4,600만~8,800만)
+  if (excess <= 88_000_000) return 0.385;       // 35% + 지방세 (8,800만~1.5억)
+  if (excess <= 150_000_000) return 0.418;      // 38% + 지방세 (1.5억~3억)
+  if (excess <= 300_000_000) return 0.44;       // 40% + 지방세 (3억~5억)
+  return 0.495;                                  // 45% + 지방세 (5억 초과)
+}
+
 function applyTaxOnReturn(balance: number, rate: number): { netBalance: number; taxPaid: number } {
   if (balance <= 0) return { netBalance: 0, taxPaid: 0 };
   const annualReturn = balance * rate;
-  const tax = annualReturn * FINANCIAL_INCOME_TAX;
+  // 금융소득 2,000만원 이하: 15.4% 분리과세
+  // 2,000만원 초과: 종합과세 (초과분에 누진세율 적용)
+  let tax: number;
+  if (annualReturn <= 20_000_000) {
+    tax = annualReturn * FINANCIAL_INCOME_TAX;
+  } else {
+    // 2,000만원까지는 14% 원천징수, 초과분은 종합과세
+    const base = 20_000_000 * 0.14; // 원천징수분
+    const excessRate = getComprehensiveTaxRate(annualReturn);
+    const excessTax = (annualReturn - 20_000_000) * excessRate;
+    tax = base + excessTax;
+  }
   const hi = annualReturn > FINANCIAL_HI_THRESHOLD
     ? (annualReturn - FINANCIAL_HI_THRESHOLD) * FINANCIAL_HI_RATE
     : 0;
