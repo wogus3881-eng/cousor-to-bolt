@@ -317,16 +317,17 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
   const MEDICAL_COST = medicalCostEnabled ? (monthlyMedicalCost ?? 400000) : 0;
   const yearsToRetirement = Math.max(0, retirementAge - currentAge);
 
-  // 현재 자산을 월납 비율로 3버킷 배분
-  const totalMonthly = monthlyBank + monthlyStock + monthlyInsurance || 1;
-  const bankRatio = monthlyBank / totalMonthly;
-  const stockRatio = monthlyStock / totalMonthly;
-  const insRatio = monthlyInsurance / totalMonthly;
+  // 계좌별 현재 자산 (직접 입력 우선, 없으면 전액 은행)
+  // 월납 비율로 나누면 보험만 납입 시 현재 자산 전액이 보험으로 배분되는 버그 발생
+  const savingsBank = norm.savingsBank ?? currentSavings;
+  const savingsStock = norm.savingsStock ?? 0;
+  const savingsInsurance = norm.savingsInsurance ?? 0;
 
-  // 계좌별 현재 자산 (직접 입력 우선, 없으면 비율 배분)
-  const savingsBank = norm.savingsBank ?? (currentSavings * bankRatio);
-  const savingsStock = norm.savingsStock ?? (currentSavings * stockRatio);
-  const savingsInsurance = norm.savingsInsurance ?? (currentSavings * insRatio);
+  // 축적기 그래프용 비율 (직접 입력된 자산 기준)
+  const totalSavings = savingsBank + savingsStock + savingsInsurance || 1;
+  const bankRatio = savingsBank / totalSavings;
+  const stockRatio = savingsStock / totalSavings;
+  const insRatio = savingsInsurance / totalSavings;
   const savingsPension401k = norm.savingsPension401k ?? 0;
   const savingsIsa = norm.savingsIsa ?? 0;
 
