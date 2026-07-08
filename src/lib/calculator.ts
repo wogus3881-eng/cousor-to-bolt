@@ -29,6 +29,15 @@ export interface SimulatorInputs {
   monthlyPensionSavings?: number;     // 연금저축펀드 월 납입
   pensionSavingsRate?: number;        // 연금저축펀드 수익률
   savingsPensionSavings?: number;     // 현재 연금저축펀드 적립금
+
+  // 달러 종신보험
+  usdInsuranceCurrentUSD?: number;        // 현재 해지환급금 (USD)
+  usdInsuranceMonthlyUSD?: number;        // 월 납입 (USD)
+  usdInsurancePaymentYears?: number;      // 납입 기간 (년)
+  usdInsuranceRate?: number;             // 수익률 %
+  currentExchangeRate?: number;          // 현재 환율 (원/달러)
+  usdInsuranceMaturityExchangeRate?: number; // 만기 환율 가정
+  usdInsuranceMaturityReinvest?: 'stock' | 'bank' | 'keep'; // 만기 재투자
   pensionStartAge?: number;
   isaMonthly?: number;
   isaRate?: number;
@@ -277,6 +286,13 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     monthlyPensionSavings: inputs.monthlyPensionSavings ?? 0,
     pensionSavingsRate: inputs.pensionSavingsRate ?? DEFAULT_STOCK_RATE,
     savingsPensionSavings: inputs.savingsPensionSavings ?? 0,
+    usdInsuranceCurrentUSD: inputs.usdInsuranceCurrentUSD ?? 0,
+    usdInsuranceMonthlyUSD: inputs.usdInsuranceMonthlyUSD ?? 0,
+    usdInsurancePaymentYears: inputs.usdInsurancePaymentYears ?? 10,
+    usdInsuranceRate: inputs.usdInsuranceRate ?? 4.0,
+    currentExchangeRate: inputs.currentExchangeRate ?? 1350,
+    usdInsuranceMaturityExchangeRate: inputs.usdInsuranceMaturityExchangeRate ?? 1400,
+    usdInsuranceMaturityReinvest: inputs.usdInsuranceMaturityReinvest ?? 'stock',
     pensionStartAge: inputs.pensionStartAge ?? DEFAULT_PENSION_START_AGE,
     isaMonthly: Math.min(inputs.isaMonthly ?? 0, ISA_MAX_MONTHLY),
     isaRate: inputs.isaRate ?? (inputs.stockRate ?? (inputs.expectedReturn ?? DEFAULT_STOCK_RATE)),
@@ -340,9 +356,25 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
   const monthlyPensionSavings = norm.monthlyPensionSavings ?? 0;
   const pensionSavingsRatePct = norm.pensionSavingsRate ?? DEFAULT_STOCK_RATE;
   const pensionSavingsR = pensionSavingsRatePct / 100;
+
+  // 달러 보험
+  const currentExRate = norm.currentExchangeRate ?? 1350;
+  const maturityExRate = norm.usdInsuranceMaturityExchangeRate ?? 1400;
+  const usdCurrentKRW = (norm.usdInsuranceCurrentUSD ?? 0) * currentExRate;
+  const usdMonthlyKRW = (norm.usdInsuranceMonthlyUSD ?? 0) * currentExRate;
+  const usdPayYears = Math.min(norm.usdInsurancePaymentYears ?? 10, yearsToRetirement);
+  const usdRate = (norm.usdInsuranceRate ?? 4.0) / 100;
+  const usdReinvest = norm.usdInsuranceMaturityReinvest ?? 'stock';
+  // 달러보험 만기 시점 = 현재나이 + 납입기간 + 거치 (납입 후 은퇴까지)
+  const usdMaturityAge = Math.min(currentAge + (norm.usdInsurancePaymentYears ?? 10) * 2, retirementAge);
+  // 은퇴 시점 달러보험 잔고 (원화)
+  const usdInsAtPayEnd = fvAnnuity(usdMonthlyKRW, usdRate, usdPayYears);
+  const usdInsCompoundYears = Math.max(0, yearsToRetirement - usdPayYears);
+  const usdInsRetirementKRW = (usdCurrentKRW + fv(usdInsAtPayEnd, usdRate, usdInsCompoundYears))
+    * (maturityExRate / currentExRate); // 환율 변동 반영
   const savingsIsa = norm.savingsIsa ?? 0;
 
-  const retirementBalanceBank = fv(savingsBank, bankR, yearsToRetirement)
+  const retirementBalanceBank = fv(savingsBank, bankR, yearsToRetirement) + usdToBank
     + fvAnnuity(monthlyBank, bankR, yearsToRetirement);
   // 보험: 납입기간(insurancePaymentYears)만 납입 후 은퇴까지 복리 증식
   const insPayYears = Math.min(insurancePaymentYears, yearsToRetirement);
@@ -361,6 +393,11 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
   const retirementBalancePensionSavings = fv(savingsPensionSavings, pensionSavingsR, yearsToRetirement)
     + fvAnnuity(monthlyPensionSavings, pensionSavingsR, yearsToRetirement);
 
+  // 달러보험 → 만기 후 재투자 방식에 따라 해당 자산에 합산
+  const usdToStock = usdReinvest === 'stock' ? usdInsRetirementKRW : 0;
+  const usdToBank = usdReinvest === 'bank' ? usdInsRetirementKRW : 0;
+  const usdToIns = usdReinvest === 'keep' ? usdInsRetirementKRW : 0;
+
   const isaContributionYears = Math.min(isaTermYears, yearsToRetirement);
   const isaFromMonthly = isaContributionYears > 0
     ? fvAnnuity(isaMonthly, isaR, isaContributionYears)
@@ -375,7 +412,7 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     ? fv(isaMatureBalance, stockR, yearsToRetirement - isaTermYears)
     : isaMatureBalance;
 
-  const retirementBalanceStock = fv(savingsStock, stockR, yearsToRetirement)
+  const retirementBalanceStock = fv(savingsStock, stockR, yearsToRetirement) + usdToStock
     + fvAnnuity(monthlyStock, stockR, yearsToRetirement)
     + isaRetirementBalance;
   const retirementBalance = retirementBalanceBank + retirementBalanceStock + retirementBalanceInsurance + businessAsset;
