@@ -288,7 +288,7 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     savingsPensionSavings: inputs.savingsPensionSavings ?? 0,
     usdInsuranceCurrentUSD: inputs.usdInsuranceCurrentUSD ?? 0,
     usdInsuranceMonthlyUSD: inputs.usdInsuranceMonthlyUSD ?? 0,
-    usdInsurancePaymentYears: inputs.usdInsurancePaymentYears ?? 10,
+    usdInsurancePaymentYears: inputs.usdInsurancePaymentYears ?? 120,
     usdInsuranceRate: inputs.usdInsuranceRate ?? 4.0,
     currentExchangeRate: inputs.currentExchangeRate ?? 1350,
     usdInsuranceMaturityExchangeRate: inputs.usdInsuranceMaturityExchangeRate ?? 1400,
@@ -362,7 +362,8 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
   const maturityExRate = norm.usdInsuranceMaturityExchangeRate ?? 1400;
   const usdCurrentKRW = (norm.usdInsuranceCurrentUSD ?? 0) * currentExRate;
   const usdMonthlyKRW = (norm.usdInsuranceMonthlyUSD ?? 0) * currentExRate;
-  const usdPayYears = Math.min(norm.usdInsurancePaymentYears ?? 10, yearsToRetirement);
+  // usdInsurancePaymentYears는 개월 단위 → 년으로 변환
+  const usdPayYears = Math.min((norm.usdInsurancePaymentYears ?? 120) / 12, yearsToRetirement);
   const usdRate = (norm.usdInsuranceRate ?? 4.0) / 100;
   const usdReinvest = norm.usdInsuranceMaturityReinvest ?? 'stock';
   // 달러보험 만기 시점 = 현재나이 + 납입기간 + 거치 (납입 후 은퇴까지)
@@ -377,7 +378,9 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
   const retirementBalanceBank = fv(savingsBank, bankR, yearsToRetirement) + usdToBank
     + fvAnnuity(monthlyBank, bankR, yearsToRetirement);
   // 보험: 납입기간(insurancePaymentYears)만 납입 후 은퇴까지 복리 증식
-  const insPayYears = Math.min(insurancePaymentYears, yearsToRetirement);
+  // insurancePaymentYears는 개월 단위 → 년으로 변환
+  const insurancePaymentYearsActual = (insurancePaymentYears) / 12;
+  const insPayYears = Math.min(insurancePaymentYearsActual, yearsToRetirement);
   const insBalanceAtPaymentEnd = fv(savingsInsurance, insR, insPayYears)
     + fvAnnuity(monthlyInsurance, insR, insPayYears);
   const yearsCompoundAfterPayment = yearsToRetirement - insPayYears;
