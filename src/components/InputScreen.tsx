@@ -376,7 +376,43 @@ function SalaryCard({
 }
 
 
-// ── SectionHeader: 그룹 제목 ─────────────────────────────────────────────────
+// ── CollapsibleSection: 접기/펼치기 섹션 ─────────────────────────────────────
+function CollapsibleSection({
+  icon, title, subtitle, children, defaultOpen = true
+}: {
+  icon: React.ReactNode;
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="flex flex-col gap-3">
+      <button
+        type="button"
+        onClick={() => setOpen(p => !p)}
+        className="flex items-center justify-between px-1 pt-2 pb-1 w-full"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-navy-800 flex items-center justify-center shrink-0">
+            <span className="text-gold-400 text-sm">{icon}</span>
+          </div>
+          <div className="text-left">
+            <p className="text-sm font-extrabold text-navy-900">{title}</p>
+            {subtitle && <p className="text-[10px] text-navy-400">{subtitle}</p>}
+          </div>
+        </div>
+        <div className={`w-6 h-6 rounded-full bg-navy-100 flex items-center justify-center transition-transform ${open ? 'rotate-180' : ''}`}>
+          <span className="text-navy-500 text-xs">▼</span>
+        </div>
+      </button>
+      {open && children}
+    </div>
+  );
+}
+
+// ── SectionHeader: 그룹 제목 (하위 호환) ──────────────────────────────────────
 function SectionHeader({ icon, title, subtitle }: { icon: React.ReactNode; title: string; subtitle?: string }) {
   return (
     <div className="flex items-center gap-3 px-1 pt-2 pb-1">
@@ -672,8 +708,7 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
         {/* 섹션 1: 기본 정보 */}
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-        <div className="flex flex-col gap-3">
-          <SectionHeader icon="👤" title="기본 정보" subtitle="나이·은퇴·국민연금" />
+        <CollapsibleSection icon="👤" title="기본 정보" subtitle="나이·은퇴·국민연금" defaultOpen={true}>
 
           {/* 직업 유형 */}
           <div className="animate-fade-in bg-white rounded-2xl p-1.5 shadow-sm border border-navy-100 flex gap-1.5">
@@ -773,13 +808,12 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
               />
             </div>
           )}
-        </div>
+        </CollapsibleSection>
 
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
         {/* 섹션 2: 현재 자산 */}
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-        <div className="flex flex-col gap-3">
-          <SectionHeader icon="💰" title="현재 자산" subtitle="지금 가지고 있는 돈" />
+        <CollapsibleSection icon="💰" title="현재 자산" subtitle="지금 가지고 있는 돈" defaultOpen={true}>
 
           <div className="bg-white rounded-2xl p-4 shadow-sm border border-navy-100 flex flex-col gap-3">
             <DualInput
@@ -873,13 +907,12 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
               </div>
             </details>
           </div>
-        </div>
+        </CollapsibleSection>
 
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
         {/* 섹션 3: 매월 저축 */}
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-        <div className="flex flex-col gap-3">
-          <SectionHeader icon="📈" title="매월 저축" subtitle="앞으로 넣을 돈" />
+        <CollapsibleSection icon="📈" title="매월 저축" subtitle="앞으로 넣을 돈" defaultOpen={true}>
 
           <div className="bg-white rounded-2xl p-4 shadow-sm border border-navy-100 flex flex-col gap-3">
             <BucketCard theme={BANK_THEME} amount={v.monthlyBank} rate={v.bankRate ?? DEFAULT_BANK_RATE * 100} onAmountChange={set('monthlyBank')} onRateChange={set('bankRate')} />
@@ -1070,13 +1103,12 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
               </p>
             </div>
           </div>
-        </div>
+        </CollapsibleSection>
 
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
         {/* 섹션 4: 생활비 설정 */}
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-        <div className="flex flex-col gap-3">
-          <SectionHeader icon="🏠" title="생활비 설정" subtitle="은퇴 후 필요한 돈" />
+        <CollapsibleSection icon="🏠" title="생활비 설정" subtitle="은퇴 후 필요한 돈" defaultOpen={true}>
 
           <div className="animate-fade-in" style={{ animationDelay: '355ms', animationFillMode: 'both' }}>
             <DualInput
@@ -1123,7 +1155,7 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
               description="활동 종료 나이, 80세 이후 의료비 설정 기능입니다."
             />
           )}
-        </div>
+        </CollapsibleSection>
 
         {/* 안내 */}
         <div className="rounded-2xl bg-navy-50 border border-navy-100 p-4 flex gap-2.5 mt-1 animate-fade-in" style={{ animationDelay: '440ms', animationFillMode: 'both' }}>
