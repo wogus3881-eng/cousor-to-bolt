@@ -65,7 +65,10 @@ function DualInput({
   const [raw, setRaw] = useState('');
   const [editing, setEditing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const pct = Math.min(100, Math.max(0, ((value - min) / (max - min)) * 100));
+
+  // 동적 max: 입력값이 기본 max 초과 시 입력값의 2배로 자동 확장
+  const dynamicMax = value > max ? value * 2 : max;
+  const pct = Math.min(100, Math.max(0, ((value - min) / (dynamicMax - min)) * 100));
   const warning = warningFn ? warningFn(value) : null;
 
   function commitRaw(s: string) {
@@ -129,7 +132,7 @@ function DualInput({
       <div className="relative h-1.5 mt-3">
         <div className="absolute inset-0 rounded-full bg-navy-100" />
         <div className={`absolute h-full rounded-full ${trackColor} transition-all`} style={{ width: `${pct}%` }} />
-        <input type="range" min={min} max={Math.max(max, value)} step={step} value={value}
+        <input type="range" min={min} max={dynamicMax} step={step} value={value}
           onChange={e => onChange(Number(e.target.value))}
           className="absolute inset-0 w-full opacity-0 cursor-pointer" />
         <div className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full ${trackColor} border-2 border-white shadow-md pointer-events-none transition-all`}
@@ -137,7 +140,7 @@ function DualInput({
       </div>
       <div className="flex justify-between mt-1.5">
         <span className="text-[10px] text-navy-300">{display(min)}{unit}</span>
-        <span className="text-[10px] text-navy-300">{display(Math.max(max, value))}{unit}</span>
+        <span className="text-[10px] text-navy-300">{display(dynamicMax)}{unit}</span>
       </div>
 
       {/* 경고 */}
@@ -166,7 +169,10 @@ function InlineField({
   const [raw, setRaw] = useState('');
   const [editing, setEditing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const pct = Math.min(100, Math.max(0, ((value - min) / (max - min)) * 100));
+
+  // 동적 max: 입력값이 기본 max 초과 시 입력값의 2배로 자동 확장
+  const dynamicMax = value > max ? value * 2 : max;
+  const pct = Math.min(100, Math.max(0, ((value - min) / (dynamicMax - min)) * 100));
   const warning = warningFn ? warningFn(value) : null;
 
   function commitRaw(s: string) {
@@ -213,7 +219,7 @@ function InlineField({
       <div className="relative h-1.5">
         <div className="absolute inset-0 rounded-full bg-navy-100" />
         <div className={`absolute h-full rounded-full ${trackColor} transition-all`} style={{ width: `${pct}%` }} />
-        <input type="range" min={min} max={Math.max(max, value)} step={step} value={value}
+        <input type="range" min={min} max={dynamicMax} step={step} value={value}
           onChange={e => onChange(Number(e.target.value))}
           className="absolute inset-0 w-full opacity-0 cursor-pointer" />
         <div className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full ${thumbColor} border-2 border-white shadow-md pointer-events-none`}
@@ -707,7 +713,7 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
               label="폐업/매각 시 예상 수령액 (권리금·보증금 등)"
               icon={<Briefcase size={16} />}
               value={v.businessAsset ?? 0}
-              min={0} max={MAN * 20000} step={MAN * 500} unit="만 원"
+              min={0} max={MAN * 10000} step={MAN * 500} unit="만 원"
               display={val => Math.floor(val / MAN).toLocaleString()}
               parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
               trackColor="bg-navy-500"
@@ -727,35 +733,35 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
             <DualInput
               label="은행·CMA 보유액" sublabel="예금·적금·파킹통장 합산"
               tooltip="모르시면 0으로 두셔도 됩니다. 대략적인 금액만 입력해도 충분해요."
-              value={v.savingsBank ?? 0} min={0} max={MAN * 50000} step={MAN * 100} unit="만 원"
+              value={v.savingsBank ?? 0} min={0} max={MAN * 10000} step={MAN * 100} unit="만 원"
               display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
               trackColor="bg-blue-400" onChange={set('savingsBank')}
             />
             <DualInput
               label="증권·ETF 보유액" sublabel="주식·펀드·ETF 평가액"
               tooltip="모르시면 0으로 두셔도 됩니다. 평가액 기준으로 입력해주세요."
-              value={v.savingsStock ?? 0} min={0} max={MAN * 50000} step={MAN * 100} unit="만 원"
+              value={v.savingsStock ?? 0} min={0} max={MAN * 10000} step={MAN * 100} unit="만 원"
               display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
               trackColor="bg-green-500" onChange={set('savingsStock')}
             />
             <DualInput
               label="보험 해지환급금" sublabel="현재 해지 시 받을 수 있는 금액"
               tooltip="현재 보험을 해지할 경우 받을 수 있는 금액입니다. 보험증권이나 앱에서 확인 가능해요."
-              value={v.savingsInsurance ?? 0} min={0} max={MAN * 30000} step={MAN * 100} unit="만 원"
+              value={v.savingsInsurance ?? 0} min={0} max={MAN * 10000} step={MAN * 100} unit="만 원"
               display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
               trackColor="bg-purple-400" onChange={set('savingsInsurance')}
             />
             <DualInput
               label="IRP·연금저축 적립금" sublabel="퇴직연금·개인연금 합산"
               tooltip="IRP·연금저축·퇴직연금 전체 합산 금액입니다."
-              value={v.savingsPension401k ?? 0} min={0} max={MAN * 50000} step={MAN * 100} unit="만 원"
+              value={v.savingsPension401k ?? 0} min={0} max={MAN * 10000} step={MAN * 100} unit="만 원"
               display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
               trackColor="bg-orange-400" onChange={set('savingsPension401k')}
             />
             <DualInput
               label="ISA 적립금" sublabel="개인종합자산관리계좌"
               tooltip="ISA 계좌 보유액입니다. 없으시면 0으로 두세요."
-              value={v.savingsIsa ?? 0} min={0} max={MAN * 20000} step={MAN * 100} unit="만 원"
+              value={v.savingsIsa ?? 0} min={0} max={MAN * 10000} step={MAN * 100} unit="만 원"
               display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
               trackColor="bg-teal-400" onChange={set('savingsIsa')}
             />
@@ -813,7 +819,7 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
                   <DualInput
                     label="월 납입액"
                     value={v.monthlyPension401k ?? 0}
-                    min={0} max={MAN * 200} step={MAN * 10} unit="만 원"
+                    min={0} max={MAN * 50} step={MAN * 5} unit="만 원"
                     display={val => Math.floor(val / MAN).toLocaleString()}
                     parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
                     trackColor="bg-indigo-500"
@@ -851,7 +857,7 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
                   <DualInput
                     label="월 납입액"
                     value={v.isaMonthly ?? 0}
-                    min={0} max={MAN * 200} step={MAN * 10} unit="만 원"
+                    min={0} max={MAN * 50} step={MAN * 5} unit="만 원"
                     display={val => Math.floor(val / MAN).toLocaleString()}
                     parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
                     trackColor="bg-emerald-500"
