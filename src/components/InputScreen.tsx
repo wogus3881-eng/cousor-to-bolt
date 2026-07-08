@@ -543,6 +543,9 @@ const DEFAULT_INPUTS: SimulatorInputs = {
   monthlyPension401k: 0,
   pension401kRate: 3.0,
   pension401kPaymentYears: 25,
+  monthlyPensionSavings: 0,
+  pensionSavingsRate: 5.0,
+  savingsPensionSavings: 0,
   pensionStartAge: 65,
   isaMonthly: 0,
   isaRate: DEFAULT_STOCK_RATE,
@@ -752,11 +755,18 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
               trackColor="bg-purple-400" onChange={set('savingsInsurance')}
             />
             <DualInput
-              label="IRP·연금저축 적립금" sublabel="퇴직연금·개인연금 합산"
-              tooltip="IRP·연금저축·퇴직연금 전체 합산 금액입니다."
+              label="IRP 적립금" sublabel="퇴직연금·IRP 합산"
+              tooltip="IRP·퇴직연금 합산 금액입니다. 연금저축펀드는 아래에 별도 입력하세요."
               value={v.savingsPension401k ?? 0} min={0} max={MAN * 10000} step={MAN * 100} unit="만 원"
               display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
               trackColor="bg-orange-400" onChange={set('savingsPension401k')}
+            />
+            <DualInput
+              label="연금저축펀드 적립금" sublabel="연금저축계좌 (펀드형)"
+              tooltip="연금저축펀드 보유액입니다. IRP와 별도로 운용되는 계좌예요."
+              value={v.savingsPensionSavings ?? 0} min={0} max={MAN * 10000} step={MAN * 100} unit="만 원"
+              display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
+              trackColor="bg-yellow-400" onChange={set('savingsPensionSavings')}
             />
             <DualInput
               label="ISA 적립금" sublabel="개인종합자산관리계좌"
@@ -885,6 +895,38 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
                   />
                 </div>
               )}
+
+              {/* ── 연금저축펀드 ── */}
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2 px-1 pt-1">
+                  <TrendingUp size={15} className="text-yellow-500" />
+                  <div>
+                    <p className="text-xs font-bold text-navy-800">연금저축펀드</p>
+                    <p className="text-[10px] text-navy-400">연금저축계좌 (펀드형) · 세액공제 연 600만원 한도</p>
+                  </div>
+                </div>
+                <DualInput
+                  label="월 납입액"
+                  value={v.monthlyPensionSavings ?? 0}
+                  min={0} max={MAN * 50} step={MAN * 5} unit="만 원"
+                  display={val => Math.floor(val / MAN).toLocaleString()}
+                  parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
+                  trackColor="bg-yellow-400"
+                  onChange={set('monthlyPensionSavings')}
+                  tooltip="연금저축펀드 월 납입액입니다. 연 600만원 한도로 세액공제 16.5%가 적용돼요."
+                />
+                <DualInput
+                  label="운용 수익률"
+                  value={v.pensionSavingsRate ?? 5.0}
+                  min={1.0} max={15} step={0.5} unit="%"
+                  display={val => val.toFixed(1)}
+                  parse={parseFloat}
+                  trackColor="bg-yellow-400"
+                  onChange={set('pensionSavingsRate')}
+                  decimalPlaces={1}
+                  tooltip="펀드 투자 시 기대 수익률입니다. 인덱스 펀드 기준 5~8% 수준이에요."
+                />
+              </div>
 
               <div className="rounded-2xl bg-gold-50 border border-gold-200 p-4 flex gap-2.5">
                 <div className="shrink-0 w-4 h-4 rounded-full bg-gold-500 flex items-center justify-center mt-0.5">
