@@ -471,11 +471,12 @@ function BucketCard({ theme, amount, rate, onAmountChange, onRateChange, payment
             <InlineField
               label="납입 기간"
               value={paymentYears}
-              min={5} max={20} step={1}
-              display={v => `${v}년`}
-              parse={v => parseInt(v)}
+              min={1} max={360} step={1}
+              display={v => `${v}개월 (${Math.floor(v/12)}년 ${v%12}개월)`}
+              parse={v => parseInt(v.replace(/[^0-9]/g, ''))}
               trackColor={theme.trackAmount} thumbColor={theme.thumbAmount}
               onChange={onPaymentYearsChange}
+              tooltip="총 납입 개월 수입니다. 예: 84개월(7년), 120개월(10년)"
             />
             <div className="flex items-start gap-2 bg-gold-50 rounded-xl px-3 py-2.5 border border-gold-200">
               <span className="text-gold-600 mt-0.5 shrink-0">
@@ -483,7 +484,7 @@ function BucketCard({ theme, amount, rate, onAmountChange, onRateChange, payment
               </span>
               <p className="text-[10px] text-gold-900 leading-relaxed">
                 납입 종료 후 은퇴까지 <strong>{rate.toFixed(1)}% 수익률</strong>로 스스로 복리 증식됩니다.
-                {paymentYears <= 10 && <><br /><span className="text-gold-700 font-semibold">집중 납입 → 장기 복리 전략</span>이 적용됩니다.</>}
+                {paymentYears <= 120 && <><br /><span className="text-gold-700 font-semibold">집중 납입 → 장기 복리 전략</span>이 적용됩니다.</>}
               </p>
             </div>
           </>
@@ -534,7 +535,7 @@ const DEFAULT_INPUTS: SimulatorInputs = {
   stockRate: DEFAULT_STOCK_RATE,
   monthlyInsurance: MAN * 20,
   insuranceRate: DEFAULT_INS_RATE,
-  insurancePaymentYears: 10,
+  insurancePaymentYears: 120,
   annualSalary: MAN * 5000,
   monthlyExpense: MAN * 300,
   activeEndAge: 78,
@@ -1034,11 +1035,13 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
                 {/* 납입 기간 */}
                 <DualInput
                   label="납입 기간"
-                  value={v.usdInsurancePaymentYears ?? 10}
-                  min={1} max={30} step={1} unit="년"
-                  display={String} parse={parseInt}
+                  value={v.usdInsurancePaymentYears ?? 120}
+                  min={1} max={360} step={1} unit="개월"
+                  display={val => `${val}개월 (${Math.floor(val/12)}년 ${val%12}개월)`}
+                  parse={s => parseInt(s.replace(/[^0-9]/g, ''))}
                   trackColor="bg-blue-400"
                   onChange={val => setV(prev => ({ ...prev, usdInsurancePaymentYears: val }))}
+                  tooltip="총 납입 개월 수입니다. 예: 84개월(7년), 120개월(10년)"
                 />
                 {/* 수익률 */}
                 <DualInput
