@@ -23,9 +23,12 @@ export interface SimulatorInputs {
   activeEndAge: number;
   medicalCostEnabled: boolean;
   monthlyMedicalCost: number;
-  monthlyPension401k?: number;
+  monthlyPension401k?: number;        // IRP 월 납입
   pension401kRate?: number;
   pension401kPaymentYears?: number;
+  monthlyPensionSavings?: number;     // 연금저축펀드 월 납입
+  pensionSavingsRate?: number;        // 연금저축펀드 수익률
+  savingsPensionSavings?: number;     // 현재 연금저축펀드 적립금
   pensionStartAge?: number;
   isaMonthly?: number;
   isaRate?: number;
@@ -36,7 +39,7 @@ export interface SimulatorInputs {
   savingsStock?: number;
   /** 현재 보험 해지환급금 */
   savingsInsurance?: number;
-  /** 현재 IRP/연금저축 적립금 */
+  /** 현재 IRP 적립금 */
   savingsPension401k?: number;
   /** 현재 ISA 적립금 */
   savingsIsa?: number;
@@ -100,6 +103,8 @@ export interface SimulationResult {
   retirementBalancePension401k: number;
   pension401kAnnuityMonthly: number;
   pension401kTotalTax: number;
+  pensionSavingsAnnuityMonthly: number;
+  pensionSavingsTotalTax: number;
   pensionAdjustmentRate: number;
   pensionBreakevenAge: number;
   isaRetirementBalance: number;
@@ -269,6 +274,9 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     monthlyPension401k: inputs.monthlyPension401k ?? 0,
     pension401kRate: inputs.pension401kRate ?? DEFAULT_PENSION401K_RATE,
     pension401kPaymentYears: inputs.pension401kPaymentYears ?? yearsToRetirementPre,
+    monthlyPensionSavings: inputs.monthlyPensionSavings ?? 0,
+    pensionSavingsRate: inputs.pensionSavingsRate ?? DEFAULT_STOCK_RATE,
+    savingsPensionSavings: inputs.savingsPensionSavings ?? 0,
     pensionStartAge: inputs.pensionStartAge ?? DEFAULT_PENSION_START_AGE,
     isaMonthly: Math.min(inputs.isaMonthly ?? 0, ISA_MAX_MONTHLY),
     isaRate: inputs.isaRate ?? (inputs.stockRate ?? (inputs.expectedReturn ?? DEFAULT_STOCK_RATE)),
@@ -328,6 +336,10 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
   const savingsStock = norm.savingsStock ?? (currentSavings * stockRatio);
   const savingsInsurance = norm.savingsInsurance ?? (currentSavings * insRatio);
   const savingsPension401k = norm.savingsPension401k ?? 0;
+  const savingsPensionSavings = norm.savingsPensionSavings ?? 0;
+  const monthlyPensionSavings = norm.monthlyPensionSavings ?? 0;
+  const pensionSavingsRatePct = norm.pensionSavingsRate ?? DEFAULT_STOCK_RATE;
+  const pensionSavingsR = pensionSavingsRatePct / 100;
   const savingsIsa = norm.savingsIsa ?? 0;
 
   const retirementBalanceBank = fv(savingsBank, bankR, yearsToRetirement)
@@ -344,6 +356,10 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
   const pension401kPayYears = Math.min(pension401kPaymentYears, yearsToRetirement);
   const retirementBalancePension401k = fv(savingsPension401k, pension401kR, yearsToRetirement)
     + fvAnnuity(effectiveMonthlyPension401k, pension401kR, pension401kPayYears);
+
+  // 연금저축펀드 은퇴 시점 잔고
+  const retirementBalancePensionSavings = fv(savingsPensionSavings, pensionSavingsR, yearsToRetirement)
+    + fvAnnuity(monthlyPensionSavings, pensionSavingsR, yearsToRetirement);
 
   const isaContributionYears = Math.min(isaTermYears, yearsToRetirement);
   const isaFromMonthly = isaContributionYears > 0
@@ -402,6 +418,7 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
 
   const insAnnuityMonthly = calcAnnuityMonthly(retirementBalanceInsurance, insRatePct, retirementAge);
   const pension401kAnnuityMonthly = calcAnnuityMonthly(retirementBalancePension401k, pension401kRatePct, retirementAge);
+  const pensionSavingsAnnuityMonthly = calcAnnuityMonthly(retirementBalancePensionSavings, pensionSavingsRatePct * 100, retirementAge);
   const pensionBreakevenAge = calcPensionBreakevenAge(
     pensionAtRetirement,
     pensionStartAge,
@@ -435,6 +452,8 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
           aIns = aIns * (1 + insMR) + insContrib;
           const pension401kContrib = yearsFromNow < pension401kPayYears ? effectiveMonthlyPension401k : 0;
           a401k = a401k * (1 + pension401kMR) + pension401kContrib;
+          // 연금저축펀드도 별도 추적 (aStock에 합산)
+          aStock += monthlyPensionSavings * (1 + pensionSavingsR / 12);
         }
       }
     }
@@ -732,6 +751,8 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     retirementBalancePension401k,
     pension401kAnnuityMonthly,
     pension401kTotalTax,
+    pensionSavingsAnnuityMonthly,
+    pensionSavingsTotalTax: 0,
     pensionAdjustmentRate,
     pensionBreakevenAge,
     isaRetirementBalance,
