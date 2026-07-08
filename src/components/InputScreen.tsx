@@ -70,7 +70,8 @@ function DualInput({
 
   function commitRaw(s: string) {
     const parsed = parse(s);
-    if (!isNaN(parsed)) onChange(Math.min(max, Math.max(min, parsed)));
+    // 직접 입력 시 max 제한 없음 (고액자산가 대응)
+    if (!isNaN(parsed) && parsed >= min) onChange(parsed);
     setEditing(false);
   }
 
@@ -128,7 +129,7 @@ function DualInput({
       <div className="relative h-1.5 mt-3">
         <div className="absolute inset-0 rounded-full bg-navy-100" />
         <div className={`absolute h-full rounded-full ${trackColor} transition-all`} style={{ width: `${pct}%` }} />
-        <input type="range" min={min} max={max} step={step} value={value}
+        <input type="range" min={min} max={Math.max(max, value)} step={step} value={value}
           onChange={e => onChange(Number(e.target.value))}
           className="absolute inset-0 w-full opacity-0 cursor-pointer" />
         <div className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full ${trackColor} border-2 border-white shadow-md pointer-events-none transition-all`}
@@ -136,7 +137,7 @@ function DualInput({
       </div>
       <div className="flex justify-between mt-1.5">
         <span className="text-[10px] text-navy-300">{display(min)}{unit}</span>
-        <span className="text-[10px] text-navy-300">{display(max)}{unit}</span>
+        <span className="text-[10px] text-navy-300">{display(Math.max(max, value))}{unit}</span>
       </div>
 
       {/* 경고 */}
@@ -170,7 +171,8 @@ function InlineField({
 
   function commitRaw(s: string) {
     const parsed = parse(s);
-    if (!isNaN(parsed)) onChange(Math.min(max, Math.max(min, parsed)));
+    // 직접 입력 시 max 제한 없음 (고액자산가 대응)
+    if (!isNaN(parsed) && parsed >= min) onChange(parsed);
     setEditing(false);
   }
 
@@ -211,7 +213,7 @@ function InlineField({
       <div className="relative h-1.5">
         <div className="absolute inset-0 rounded-full bg-navy-100" />
         <div className={`absolute h-full rounded-full ${trackColor} transition-all`} style={{ width: `${pct}%` }} />
-        <input type="range" min={min} max={max} step={step} value={value}
+        <input type="range" min={min} max={Math.max(max, value)} step={step} value={value}
           onChange={e => onChange(Number(e.target.value))}
           className="absolute inset-0 w-full opacity-0 cursor-pointer" />
         <div className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full ${thumbColor} border-2 border-white shadow-md pointer-events-none`}
