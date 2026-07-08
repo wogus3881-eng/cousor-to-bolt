@@ -181,7 +181,7 @@ const MAN_R = 10000;
 
 function CompactSlider({
 
-  label, value, min, max, step, display, track, thumb, onChange, markers,
+  label, value, min, max, step, display, track, thumb, onChange,
 
 }: {
 
@@ -190,7 +190,6 @@ function CompactSlider({
   display: (v: number) => string; track: string; thumb: string;
 
   onChange: (v: number) => void;
-  markers?: Array<{ value: number; label: string }>;
 
 }) {
 
@@ -225,30 +224,6 @@ function CompactSlider({
           style={{ left: `calc(${pct}% - 8px)` }} />
 
       </div>
-
-      {markers && markers.length > 0 && (
-
-        <div className="relative mt-1.5">
-
-          {markers.map((m) => {
-            const mPct = Math.min(100, Math.max(0, ((m.value - min) / (max - min)) * 100));
-            return (
-              <button
-                key={m.value}
-                onClick={() => onChange(m.value)}
-                className="absolute -translate-x-1/2 text-[8px] text-slate-400 hover:text-slate-600 whitespace-nowrap"
-                style={{ left: `${mPct}%` }}
-              >
-                ↑{m.label}
-              </button>
-            );
-          })}
-
-          <div className="h-3" />
-
-        </div>
-
-      )}
 
     </div>
 
@@ -319,10 +294,6 @@ function LivePensionSlider({
   const totalMonthly = monthlyBank + monthlyStock + monthlyInsurance;
 
   const showTaxWarning = stockR >= 8;
-  // 고액자산가 판단: 증권 자산의 연 금융소득이 2,000만원 초과 시
-  const estimatedStockAsset = (inputs.savingsStock ?? 0) + (inputs.monthlyStock ?? 0) * 12 * 10;
-  const estimatedAnnualReturn = estimatedStockAsset * (stockR / 100);
-  const isHighNetWorth = estimatedAnnualReturn > 20_000_000;
 
 
 
@@ -470,12 +441,7 @@ function LivePensionSlider({
 
               track="bg-red-400" thumb="bg-red-500"
 
-              onChange={(v) => onChange({ ...inputs, stockRate: v })}
-              markers={[
-                { value: 5, label: '기본' },
-                { value: 8, label: '코스피' },
-                { value: 10.7, label: 'S&P500' },
-              ]} />
+              onChange={(v) => onChange({ ...inputs, stockRate: v })} />
 
           </div>
 
@@ -494,32 +460,6 @@ function LivePensionSlider({
                 {' '}비과세 계좌의 가치가 더 높아지는 시점입니다.
 
               </p>
-
-            </div>
-
-          )}
-
-          {/* 고액자산가 종합과세 경고 */}
-
-          {isHighNetWorth && (
-
-            <div className="mx-3 mb-3 bg-amber-50 border border-amber-200 rounded-lg p-2.5 flex gap-2">
-
-              <AlertCircle size={13} className="text-amber-600 shrink-0 mt-0.5" />
-
-              <div>
-
-                <p className="text-[10px] text-amber-800 font-bold mb-0.5">금융소득 종합과세 구간 진입</p>
-
-                <p className="text-[10px] text-amber-700 leading-relaxed">
-
-                  연 금융소득 2,000만원 초과 시 최대 49.5% 종합과세가 적용됩니다.
-
-                  {' '}<strong>비과세 연금보험의 절세 효과가 극대화되는 구간입니다.</strong>
-
-                </p>
-
-              </div>
 
             </div>
 
