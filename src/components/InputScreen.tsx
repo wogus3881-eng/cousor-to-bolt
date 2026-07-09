@@ -567,7 +567,6 @@ const DEFAULT_INPUTS: SimulatorInputs = {
   currentExchangeRate: 1350,
   usdInsuranceMaturityExchangeRate: 1400,
   usdInsuranceMaturityReinvest: 'stock' as const,
-  lifeEvents: [] as Array<{ age: number; amount: number; label: string; source: 'bank' | 'stock' | 'insurance' | 'auto' }>,
   annualSalary: MAN * 5000,
   monthlyExpense: MAN * 300,
   activeEndAge: 78,
@@ -1120,73 +1119,6 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
         </div>
 
         {/* ── 생애주기 설정 (Plus) ── */}
-        </CollapsibleSection>
-
-        <CollapsibleSection icon="🎯" title="목적자금 이벤트" subtitle="결혼·주택·교육비 등 목돈 지출">
-          <div className="bg-white rounded-2xl p-4 shadow-sm border border-navy-100 flex flex-col gap-3">
-            <p className="text-[10px] text-navy-400 leading-relaxed">
-              은퇴 전 큰 지출이 예상되는 시점을 추가하면 더 현실적인 노후 시뮬레이션이 가능해요.
-            </p>
-
-            {/* 이벤트 목록 */}
-            {(v.lifeEvents ?? []).map((ev, i) => (
-              <div key={i} className="flex items-center gap-2 bg-amber-50 rounded-xl p-3 border border-amber-100">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-bold text-amber-800">{ev.age}세</span>
-                    <span className="text-[11px] text-amber-700">{ev.label}</span>
-                  </div>
-                  <p className="text-[10px] text-amber-600 mt-0.5">
-                    -{Math.floor(ev.amount / MAN / 10000).toLocaleString()}억
-                    {Math.floor((ev.amount / MAN) % 10000) > 0 ? ` ${Math.floor((ev.amount / MAN) % 10000).toLocaleString()}만원` : ''}
-                    {' '}({ev.source === 'bank' ? '은행' : ev.source === 'stock' ? '증권' : ev.source === 'insurance' ? '보험' : '자동'})
-                  </p>
-                </div>
-                <button
-                  onClick={() => setV(prev => ({ ...prev, lifeEvents: (prev.lifeEvents ?? []).filter((_, j) => j !== i) }))}
-                  className="w-6 h-6 rounded-full bg-amber-200 text-amber-700 flex items-center justify-center text-xs font-bold shrink-0">
-                  ✕
-                </button>
-              </div>
-            ))}
-
-            {/* 이벤트 추가 버튼 */}
-            <button
-              onClick={() => {
-                const age = parseInt(prompt('몇 세에 지출하나요? (예: 35)') ?? '0');
-                const amountStr = prompt('얼마인가요? (만원 단위, 예: 5000)') ?? '0';
-                const amount = parseFloat(amountStr.replace(/,/g, '')) * MAN;
-                const label = prompt('이름을 입력하세요 (예: 결혼자금, 주택, 자녀교육비)') ?? '목돈지출';
-                if (age > 0 && amount > 0) {
-                  setV(prev => ({
-                    ...prev,
-                    lifeEvents: [...(prev.lifeEvents ?? []), { age, amount, label, source: 'auto' as const }].sort((a, b) => a.age - b.age)
-                  }));
-                }
-              }}
-              className="w-full text-xs text-amber-600 border-2 border-dashed border-amber-300 rounded-xl py-3 font-bold hover:bg-amber-50 transition-colors">
-              + 목적자금 추가
-            </button>
-
-            {/* 빠른 추가 버튼들 */}
-            <div className="flex flex-wrap gap-2">
-              {[
-                { label: '결혼자금', age: 32, amount: 5000 * MAN },
-                { label: '주택마련', age: 38, amount: 30000 * MAN },
-                { label: '자녀교육', age: 45, amount: 5000 * MAN },
-                { label: '자녀결혼', age: 55, amount: 5000 * MAN },
-              ].map(preset => (
-                <button key={preset.label}
-                  onClick={() => setV(prev => ({
-                    ...prev,
-                    lifeEvents: [...(prev.lifeEvents ?? []), { age: preset.age, amount: preset.amount, label: preset.label, source: 'auto' as const }].sort((a, b) => a.age - b.age)
-                  }))}
-                  className="text-[10px] px-3 py-1.5 rounded-full bg-amber-100 text-amber-700 font-bold border border-amber-200 hover:bg-amber-200 transition-colors">
-                  {preset.label} ({preset.age}세)
-                </button>
-              ))}
-            </div>
-          </div>
         </CollapsibleSection>
 
         <CollapsibleSection icon="🏠" title="생활비 설정" subtitle="은퇴 후 필요한 돈">
