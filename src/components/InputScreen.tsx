@@ -397,6 +397,59 @@ function CollapsibleSection({ icon, title, subtitle, children, defaultOpen = tru
   );
 }
 
+// ── AddLifeEventForm ─────────────────────────────────────────────────────────
+function AddLifeEventForm({ minAge, maxAge, onAdd }: {
+  minAge: number; maxAge: number;
+  onAdd: (ev: { age: number; amount: number; label: string; source: 'auto' }) => void;
+}) {
+  const [age, setAge] = useState(minAge + 5);
+  const [amount, setAmount] = useState(0);
+  const [label, setLabel] = useState('');
+  const MAN = 10000;
+
+  return (
+    <div className="bg-amber-50 rounded-xl p-3 border border-amber-200 flex flex-col gap-2">
+      <p className="text-[10px] font-bold text-amber-800">직접 추가</p>
+      <div className="flex gap-2">
+        <div className="flex flex-col gap-1 flex-1">
+          <p className="text-[9px] text-amber-600">나이</p>
+          <input type="number" min={minAge} max={maxAge} value={age}
+            onChange={e => setAge(Number(e.target.value))}
+            className="w-full text-sm font-bold text-navy-900 border border-amber-200 rounded-lg px-2 py-1.5 bg-white text-center"
+          />
+        </div>
+        <div className="flex flex-col gap-1 flex-[2]">
+          <p className="text-[9px] text-amber-600">금액 (만원)</p>
+          <input type="number" min={0} placeholder="5000"
+            value={amount === 0 ? '' : Math.floor(amount / MAN)}
+            onChange={e => setAmount(Number(e.target.value) * MAN)}
+            className="w-full text-sm font-bold text-navy-900 border border-amber-200 rounded-lg px-2 py-1.5 bg-white"
+          />
+        </div>
+      </div>
+      <div className="flex flex-col gap-1">
+        <p className="text-[9px] text-amber-600">이름</p>
+        <input type="text" placeholder="예: 결혼자금, 주택마련"
+          value={label}
+          onChange={e => setLabel(e.target.value)}
+          className="w-full text-sm text-navy-900 border border-amber-200 rounded-lg px-2 py-1.5 bg-white"
+        />
+      </div>
+      <button
+        onClick={() => {
+          if (age > 0 && amount > 0 && label.trim()) {
+            onAdd({ age, amount, label: label.trim(), source: 'auto' });
+            setAmount(0);
+            setLabel('');
+          }
+        }}
+        className="w-full bg-amber-500 text-white text-xs font-bold py-2 rounded-lg hover:bg-amber-600 transition-colors">
+        + 추가하기
+      </button>
+    </div>
+  );
+}
+
 // ── BucketCard ─────────────────────────────────────────────────────────────────
 interface BucketTheme {
   label: string; sublabel: string; taxLabel: string; tooltip: string;
@@ -1151,13 +1204,14 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
                 </button>
               ))}
             </div>
-            <DualInput label="나이" value={v.currentAge} min={v.currentAge} max={v.retirementAge - 1} step={1} unit="세"
-              display={String} parse={parseInt} trackColor="bg-amber-400"
-              onChange={age => {
-                const amount = parseInt(prompt('금액 (만원)?') ?? '0') * MAN;
-                const label = prompt('이름?') ?? '목돈지출';
-                if (amount > 0) setV(prev => ({ ...prev, lifeEvents: [...(prev.lifeEvents ?? []), { age, amount, label, source: 'auto' as const }].sort((a, b) => a.age - b.age) }));
-              }}
+            {/* 직접 추가 폼 */}
+            <AddLifeEventForm
+              minAge={v.currentAge}
+              maxAge={90}
+              onAdd={(ev) => setV(prev => ({
+                ...prev,
+                lifeEvents: [...(prev.lifeEvents ?? []), ev].sort((a, b) => a.age - b.age)
+              }))}
             />
           </div>
         </CollapsibleSection>
