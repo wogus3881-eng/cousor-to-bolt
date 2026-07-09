@@ -599,7 +599,7 @@ function BucketCard({ theme, amount, rate, onAmountChange, onRateChange, payment
                 ]).map(opt => (
                   <button key={opt.key}
                     type="button"
-                    onClick={() => setV((prev: SimulatorInputs) => ({ ...prev, insuranceMaturityReinvest: opt.key }))}
+                    onClick={() => setV(prev => ({ ...prev, insuranceMaturityReinvest: opt.key }))}
                     className={`flex-1 py-2 rounded-lg text-[9px] font-bold transition-colors text-center
                       ${(v.insuranceMaturityReinvest ?? 'keep') === opt.key
                         ? 'bg-navy-800 text-white'
