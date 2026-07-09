@@ -507,9 +507,9 @@ function LivePensionSlider({
 
             <CompactSlider label="납입 기간"
 
-              value={inputs.insurancePaymentYears ?? 10} min={5} max={20} step={1}
+              value={inputs.insurancePaymentYears ?? 120} min={1} max={240} step={1}
 
-              display={(v) => `${v}년`}
+              display={(v) => `${v}개월 (${Math.floor(v/12)}년 ${v%12 > 0 ? v%12 + '개월' : ''})`}
 
               track="bg-amber-300" thumb="bg-amber-500"
 
