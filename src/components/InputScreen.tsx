@@ -572,7 +572,7 @@ function BucketCard({ theme, amount, rate, onAmountChange, onRateChange, payment
             <InlineField
               label="납입 기간"
               value={paymentYears}
-              min={1} max={360} step={1}
+              min={1} max={240} step={1}
               display={v => `${v}개월 (${Math.floor(v/12)}년 ${v%12}개월)`}
               parse={v => parseInt(v.replace(/[^0-9]/g, ''))}
               trackColor={theme.trackAmount} thumbColor={theme.thumbAmount}
