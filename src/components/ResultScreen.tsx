@@ -750,7 +750,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
 
 
-  const { retirementAge, monthlyExpense } = inputs;
+  const { retirementAge, currentAge, monthlyExpense } = inputs;
 
   const isSafe = dignityEndAge === null;
 
@@ -956,6 +956,42 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
         )}
 
 
+
+        {/* ── 인플레이션 체감 카드 ── */}
+        {(() => {
+          const yearsToRet = retirementAge - currentAge;
+          const expAtRet = Math.round(monthlyExpense * Math.pow(1.03, yearsToRet) / 10000) * 10000;
+          const ratio = expAtRet / monthlyExpense;
+          return (
+            <div className="rounded-2xl bg-gradient-to-r from-red-900 to-red-800 p-4 border border-red-700">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-red-300 text-sm">📈</span>
+                <p className="text-[10px] font-bold text-red-300 tracking-wide uppercase">인플레이션 경고</p>
+              </div>
+              <p className="text-white text-sm font-extrabold leading-snug mb-2">
+                지금 {Math.floor(monthlyExpense / 10000).toLocaleString()}만원 생활비가
+                <br />
+                <span className="text-red-300">{retirementAge}세엔 {Math.floor(expAtRet / 10000).toLocaleString()}만원</span>이 필요합니다
+              </p>
+              <div className="bg-red-950/50 rounded-xl p-3 flex items-center justify-between">
+                <div className="text-center">
+                  <p className="text-[9px] text-red-400">지금</p>
+                  <p className="text-base font-bold text-white">{Math.floor(monthlyExpense / 10000).toLocaleString()}만원</p>
+                </div>
+                <div className="text-red-400 text-lg font-bold">→</div>
+                <div className="text-center">
+                  <p className="text-[9px] text-red-400">{retirementAge}세</p>
+                  <p className="text-base font-bold text-red-300">{Math.floor(expAtRet / 10000).toLocaleString()}만원</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-[9px] text-red-400">증가</p>
+                  <p className="text-base font-bold text-amber-300">×{ratio.toFixed(1)}</p>
+                </div>
+              </div>
+              <p className="text-[9px] text-red-400 mt-2">※ 연 3% 물가상승률 기준</p>
+            </div>
+          );
+        })()}
 
         {/* ── Key Metrics ── */}
 
