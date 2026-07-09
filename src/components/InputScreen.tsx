@@ -587,6 +587,29 @@ function BucketCard({ theme, amount, rate, onAmountChange, onRateChange, payment
                 {paymentYears <= 10 && <><br /><span className="text-gold-700 font-semibold">집중 납입 → 장기 복리 전략</span>이 적용됩니다.</>}
               </p>
             </div>
+
+            {/* 만기 환급금 재투자 전략 */}
+            <div className="bg-white rounded-xl border border-navy-100 p-3">
+              <p className="text-[10px] font-bold text-navy-800 mb-2">만기 환급금 활용 전략</p>
+              <div className="flex gap-1.5">
+                {([
+                  { key: 'keep' as const, label: '종신연금 유지', desc: '평생 월 지급' },
+                  { key: 'stock' as const, label: '증권 재투자', desc: `${rate.toFixed(1)}% 운용` },
+                  { key: 'bank' as const, label: '은행 이체', desc: '2.5% 안전' },
+                ]).map(opt => (
+                  <button key={opt.key}
+                    type="button"
+                    onClick={() => setV((prev: SimulatorInputs) => ({ ...prev, insuranceMaturityReinvest: opt.key }))}
+                    className={`flex-1 py-2 rounded-lg text-[9px] font-bold transition-colors text-center
+                      ${(v.insuranceMaturityReinvest ?? 'keep') === opt.key
+                        ? 'bg-navy-800 text-white'
+                        : 'bg-slate-50 text-navy-600 border border-slate-200'}`}>
+                    <p>{opt.label}</p>
+                    <p className="font-normal opacity-70 mt-0.5">{opt.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
           </>
         )}
 
@@ -647,6 +670,7 @@ const DEFAULT_INPUTS: SimulatorInputs = {
   usdInsuranceMaturityExchangeRate: 1400,
   usdInsuranceMaturityReinvest: 'stock' as const,
   lifeEvents: [] as Array<{ age: number; amount: number; label: string; source: 'bank' | 'stock' | 'insurance' | 'auto' }>,
+  insuranceMaturityReinvest: 'keep' as const,
   annualSalary: MAN * 5000,
   monthlyExpense: MAN * 300,
   activeEndAge: 78,
