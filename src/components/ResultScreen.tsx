@@ -757,27 +757,11 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
 
   // 자산 추이 그래프용: 현재 나이부터 전체
-  // 시나리오 2: 보험 제외 (절세계좌만)
-  const noInsResult = useMemo(() => simulate({
-    ...liveInputs,
-    monthlyInsurance: 0,
-    savingsInsurance: 0,
-  }), [liveInputs]);
 
-  // 시나리오 3: 은행만
-  const bankOnlyResult = useMemo(() => simulate({
-    ...liveInputs,
-    monthlyInsurance: 0,
-    savingsInsurance: 0,
-    monthlyStock: 0,
-    savingsStock: 0,
-    monthlyPension401k: 0,
-    savingsPension401k: 0,
-    isaMonthly: 0,
-    savingsIsa: 0,
-  }), [liveInputs]);
-
-  // 시나리오별 yearRows를 age 기준으로 매핑
+  // 시나리오2: 보험 제외
+  const noInsResult = useMemo(() => simulate({ ...liveInputs, monthlyInsurance: 0, savingsInsurance: 0 }), [liveInputs]);
+  // 시나리오3: 은행만
+  const bankOnlyResult = useMemo(() => simulate({ ...liveInputs, monthlyInsurance: 0, savingsInsurance: 0, monthlyStock: 0, savingsStock: 0, monthlyPension401k: 0, savingsPension401k: 0, isaMonthly: 0, savingsIsa: 0 }), [liveInputs]);
   const noInsRowMap = new Map(noInsResult.yearRows.map(r => [r.age, r]));
   const bankRowMap = new Map(bankOnlyResult.yearRows.map(r => [r.age, r]));
 
@@ -1671,14 +1655,14 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
 
 
-              {/* 시나리오2: 절세계좌만 (보험 제외) */}
+              {/* 시나리오2: 절세계좌만 */}
+
               {!compactChart && (
                 <Area type="monotone" dataKey="절세계좌만"
                   stroke={GOLD} strokeWidth={1.5} strokeDasharray="5 3"
                   fill="url(#grossGrad)" dot={false} name="절세계좌만 (보험 제외)" connectNulls />
               )}
 
-              {/* 시나리오3: 은행만 */}
               {!compactChart && (
                 <Area type="monotone" dataKey="은행만"
                   stroke={EMERALD} strokeWidth={1.5} strokeDasharray="4 2"
@@ -1708,13 +1692,13 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
                 <ReferenceLine x={depletionAge} stroke={RED} strokeDasharray="4 3" strokeWidth={2}
                   label={compactChart ? undefined : { value: `${depletionAge}세 고갈`, position: 'top', fill: RED, fontSize: 10, fontWeight: 700 }} />
               )}
-              {!compactChart && noInsResult.dignityEndAge && noInsResult.dignityEndAge !== dignityEndAge && (
-                <ReferenceLine x={noInsResult.dignityEndAge} stroke={GOLD} strokeDasharray="3 2" strokeWidth={1.5}
-                  label={{ value: `절세만 ${noInsResult.dignityEndAge}세`, position: 'insideTopLeft', fill: GOLD, fontSize: 9 }} />
+              {features.taxScenarioCompare && !compactChart && depletionAgeGross && depletionAgeGross !== depletionAge && (
+                <ReferenceLine x={depletionAgeGross} stroke={GOLD} strokeDasharray="3 2" strokeWidth={1.5}
+                  label={{ value: `과세 ${depletionAgeGross}세`, position: 'insideTopLeft', fill: GOLD, fontSize: 9 }} />
               )}
-              {!compactChart && bankOnlyResult.dignityEndAge && bankOnlyResult.dignityEndAge !== dignityEndAge && (
-                <ReferenceLine x={bankOnlyResult.dignityEndAge} stroke={EMERALD} strokeDasharray="3 2" strokeWidth={1.5}
-                  label={{ value: `은행만 ${bankOnlyResult.dignityEndAge}세`, position: 'insideTopRight', fill: EMERALD, fontSize: 9 }} />
+              {features.taxScenarioCompare && !compactChart && dignityEndAgeInsOnly && dignityEndAgeInsOnly !== depletionAge && (
+                <ReferenceLine x={dignityEndAgeInsOnly} stroke={EMERALD} strokeDasharray="3 2" strokeWidth={1.5}
+                  label={{ value: `비과세 ${dignityEndAgeInsOnly}세`, position: 'insideTopRight', fill: EMERALD, fontSize: 9 }} />
               )}
               <ReferenceLine x={retirementAge} stroke={SLATE} strokeDasharray="3 3" strokeWidth={1}
                 label={compactChart ? undefined : { value: `${retirementAge}세 은퇴`, position: 'insideTopRight', fill: SLATE, fontSize: 9 }} />
@@ -1784,7 +1768,15 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
             )}
           </div>
 
-
+          {!features.taxScenarioCompare && (
+            <div className="mt-3">
+              <ProUpgradePrompt
+                compact
+                title="과세 vs 비과세 시나리오 비교는 Plus"
+                description="전액 과세·전액 비과세 그래프로 세금·건보료 영향을 한눈에 보여주는 기능입니다."
+              />
+            </div>
+          )}
 
           {/* 종신연금 강조 인사이트 */}
           {inputs.monthlyInsurance > 0 && (
