@@ -740,7 +740,7 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
         </div>
       </div>
 
-      <div className="flex-1 px-4 pt-6 pb-4 flex flex-col gap-3 bg-slate-50">
+      <div className="flex-1 px-4 pt-6 pb-28 flex flex-col gap-3 bg-slate-50">
 
         {/* 직업 유형 */}
         <div className="animate-fade-in bg-white rounded-2xl p-1.5 shadow-sm border border-navy-100 flex gap-1.5">
@@ -1348,7 +1348,7 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
         </div>
       </div>
 
-      <div className="sticky bottom-0 px-4 pb-10 pt-3 bg-white/95 backdrop-blur border-t border-navy-100">
+      <div className="sticky bottom-0 z-10 px-4 pb-10 pt-3 bg-white/95 backdrop-blur border-t border-navy-100">
         <button onClick={() => onSimulate(v)}
           className="w-full bg-gradient-to-r from-navy-800 to-navy-700 hover:from-navy-700 hover:to-navy-600 active:scale-[0.98] text-white font-bold text-base rounded-2xl py-4 flex items-center justify-center gap-2 transition-all shadow-xl shadow-navy-900/30 border border-gold-600/30">
           <span className="text-gold-400">▶</span>
