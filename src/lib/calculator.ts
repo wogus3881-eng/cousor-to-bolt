@@ -36,6 +36,14 @@ export interface SimulatorInputs {
   currentExchangeRate?: number;
   usdInsuranceMaturityExchangeRate?: number;
   usdInsuranceMaturityReinvest?: 'stock' | 'bank' | 'keep';
+
+  // 목적자금 이벤트
+  lifeEvents?: Array<{
+    age: number;
+    amount: number;
+    label: string;
+    source: 'bank' | 'stock' | 'insurance' | 'auto';
+  }>;
   pensionStartAge?: number;
   isaMonthly?: number;
   isaRate?: number;
@@ -289,6 +297,7 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     currentExchangeRate: inputs.currentExchangeRate ?? 1350,
     usdInsuranceMaturityExchangeRate: inputs.usdInsuranceMaturityExchangeRate ?? 1400,
     usdInsuranceMaturityReinvest: inputs.usdInsuranceMaturityReinvest ?? 'stock',
+    lifeEvents: inputs.lifeEvents ?? [],
     pensionStartAge: inputs.pensionStartAge ?? DEFAULT_PENSION_START_AGE,
     isaMonthly: Math.min(inputs.isaMonthly ?? 0, ISA_MAX_MONTHLY),
     isaRate: inputs.isaRate ?? (inputs.stockRate ?? (inputs.expectedReturn ?? DEFAULT_STOCK_RATE)),
@@ -471,6 +480,20 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
           aIns = aIns * (1 + insMR) + insContrib;
           const pension401kContrib = yearsFromNow < pension401kPayYears ? effectiveMonthlyPension401k : 0;
           a401k = a401k * (1 + pension401kMR) + pension401kContrib;
+
+          // 목적자금 이벤트 차감
+          for (const ev of (norm.lifeEvents ?? [])) {
+            if (acc.age === ev.age) {
+              const amt = ev.amount;
+              if (ev.source === 'bank' || ev.source === 'auto') {
+                aBank = Math.max(0, aBank - amt);
+              } else if (ev.source === 'stock') {
+                aStock = Math.max(0, aStock - amt);
+              } else if (ev.source === 'insurance') {
+                aIns = Math.max(0, aIns - amt);
+              }
+            }
+          }
         }
       }
     }
