@@ -65,15 +65,12 @@ function DualInput({
   const [raw, setRaw] = useState('');
   const [editing, setEditing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // 동적 max: 입력값이 기본 max 초과 시 입력값의 2배로 자동 확장
   const dynamicMax = value > max ? value * 2 : max;
   const pct = Math.min(100, Math.max(0, ((value - min) / (dynamicMax - min)) * 100));
   const warning = warningFn ? warningFn(value) : null;
 
   function commitRaw(s: string) {
     const parsed = parse(s);
-    // 직접 입력 시 max 제한 없음 (고액자산가 대응)
     if (!isNaN(parsed) && parsed >= min) onChange(parsed);
     setEditing(false);
   }
@@ -140,7 +137,7 @@ function DualInput({
       </div>
       <div className="flex justify-between mt-1.5">
         <span className="text-[10px] text-navy-300">{display(min)}{unit}</span>
-        <span className="text-[10px] text-navy-300">{display(dynamicMax)}{unit}</span>
+        <span className="text-[10px] text-navy-300">{display(max)}{unit}</span>
       </div>
 
       {/* 경고 */}
@@ -169,15 +166,12 @@ function InlineField({
   const [raw, setRaw] = useState('');
   const [editing, setEditing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // 동적 max: 입력값이 기본 max 초과 시 입력값의 2배로 자동 확장
   const dynamicMax = value > max ? value * 2 : max;
   const pct = Math.min(100, Math.max(0, ((value - min) / (dynamicMax - min)) * 100));
   const warning = warningFn ? warningFn(value) : null;
 
   function commitRaw(s: string) {
     const parsed = parse(s);
-    // 직접 입력 시 max 제한 없음 (고액자산가 대응)
     if (!isNaN(parsed) && parsed >= min) onChange(parsed);
     setEditing(false);
   }
@@ -376,38 +370,29 @@ function SalaryCard({
 }
 
 
-// ── CollapsibleSection: 접기/펼치기 섹션 ─────────────────────────────────────
-function CollapsibleSection({
-  icon, title, subtitle, children, defaultOpen = true
-}: {
-  icon: React.ReactNode;
-  title: string;
-  subtitle?: string;
-  children: React.ReactNode;
-  defaultOpen?: boolean;
+// ── CollapsibleSection ──────────────────────────────────────────────────────
+function CollapsibleSection({ icon, title, subtitle, children, defaultOpen = true }: {
+  icon: string; title: string; subtitle?: string; children: React.ReactNode; defaultOpen?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="flex flex-col gap-3">
-      <button
-        type="button"
-        onClick={() => setOpen(p => !p)}
-        className="flex items-center justify-between px-1 pt-2 pb-1 w-full"
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-navy-800 flex items-center justify-center shrink-0">
-            <span className="text-gold-400 text-sm">{icon}</span>
+      <button type="button" onClick={() => setOpen(p => !p)}
+        className="flex items-center justify-between px-1 pt-1 pb-1 w-full">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-xl bg-navy-800 flex items-center justify-center shrink-0">
+            <span className="text-gold-400 text-xs">{icon}</span>
           </div>
           <div className="text-left">
             <p className="text-sm font-extrabold text-navy-900">{title}</p>
             {subtitle && <p className="text-[10px] text-navy-400">{subtitle}</p>}
           </div>
         </div>
-        <div className={`w-6 h-6 rounded-full bg-navy-100 flex items-center justify-center transition-transform duration-200 ${open ? 'rotate-180' : ''}`}>
-          <span className="text-navy-500 text-xs">▼</span>
+        <div className={`w-5 h-5 rounded-full bg-navy-100 flex items-center justify-center transition-transform duration-200 ${open ? 'rotate-180' : ''}`}>
+          <span className="text-navy-500 text-[10px]">▼</span>
         </div>
       </button>
-      {open && <div className="flex flex-col gap-3">{children}</div>}
+      {open && <>{children}</>}
     </div>
   );
 }
@@ -513,7 +498,6 @@ function BucketCard({ theme, amount, rate, onAmountChange, onRateChange, payment
               parse={v => parseInt(v.replace(/[^0-9]/g, ''))}
               trackColor={theme.trackAmount} thumbColor={theme.thumbAmount}
               onChange={onPaymentYearsChange}
-              tooltip="총 납입 개월 수입니다. 예: 84개월(7년), 120개월(10년)"
             />
             <div className="flex items-start gap-2 bg-gold-50 rounded-xl px-3 py-2.5 border border-gold-200">
               <span className="text-gold-600 mt-0.5 shrink-0">
@@ -521,7 +505,7 @@ function BucketCard({ theme, amount, rate, onAmountChange, onRateChange, payment
               </span>
               <p className="text-[10px] text-gold-900 leading-relaxed">
                 납입 종료 후 은퇴까지 <strong>{rate.toFixed(1)}% 수익률</strong>로 스스로 복리 증식됩니다.
-                {paymentYears <= 120 && <><br /><span className="text-gold-700 font-semibold">집중 납입 → 장기 복리 전략</span>이 적용됩니다.</>}
+                {paymentYears <= 10 && <><br /><span className="text-gold-700 font-semibold">집중 납입 → 장기 복리 전략</span>이 적용됩니다.</>}
               </p>
             </div>
           </>
@@ -573,6 +557,16 @@ const DEFAULT_INPUTS: SimulatorInputs = {
   monthlyInsurance: MAN * 20,
   insuranceRate: DEFAULT_INS_RATE,
   insurancePaymentYears: 120,
+  monthlyPensionSavings: 0,
+  pensionSavingsRate: 5.0,
+  savingsPensionSavings: 0,
+  usdInsuranceCurrentUSD: 0,
+  usdInsuranceMonthlyUSD: 0,
+  usdInsurancePaymentMonths: 120,
+  usdInsuranceRate: 4.0,
+  currentExchangeRate: 1350,
+  usdInsuranceMaturityExchangeRate: 1400,
+  usdInsuranceMaturityReinvest: 'stock' as const,
   annualSalary: MAN * 5000,
   monthlyExpense: MAN * 300,
   activeEndAge: 78,
@@ -581,16 +575,6 @@ const DEFAULT_INPUTS: SimulatorInputs = {
   monthlyPension401k: 0,
   pension401kRate: 3.0,
   pension401kPaymentYears: 25,
-  monthlyPensionSavings: 0,
-  pensionSavingsRate: 5.0,
-  savingsPensionSavings: 0,
-  usdInsuranceCurrentUSD: 0,
-  usdInsuranceMonthlyUSD: 0,
-  usdInsurancePaymentYears: 10,
-  usdInsuranceRate: 4.0,
-  currentExchangeRate: 1350,
-  usdInsuranceMaturityExchangeRate: 1400,
-  usdInsuranceMaturityReinvest: 'stock' as const,
   pensionStartAge: 65,
   isaMonthly: 0,
   isaRate: DEFAULT_STOCK_RATE,
@@ -609,29 +593,17 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
   const features = proFeatures(tier);
   const [v, setV] = useState<SimulatorInputs>(() => initialInputs ?? DEFAULT_INPUTS);
 
-  // 환율 자동 조회 (앱 열릴 때 1회)
   useEffect(() => {
-    const fetchRate = async () => {
-      try {
-        const res = await fetch(
-          'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.min.json'
-        );
-        const data = await res.json();
+    fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.min.json')
+      .then(r => r.json())
+      .then(data => {
         const krw = Math.round(data.usd.krw);
-        if (krw > 1000 && krw < 2000) {
-          setV(prev => ({
-            ...prev,
-            currentExchangeRate: krw,
+        if (krw > 1000 && krw < 2500) {
+          setV(prev => ({ ...prev, currentExchangeRate: krw,
             usdInsuranceMaturityExchangeRate: prev.usdInsuranceMaturityExchangeRate === 1400
-              ? Math.round(krw * 1.05) // 만기 환율 기본값: 현재 +5%
-              : prev.usdInsuranceMaturityExchangeRate,
-          }));
+              ? Math.round(krw * 1.05) : prev.usdInsuranceMaturityExchangeRate }));
         }
-      } catch {
-        // 실패 시 기본값 유지
-      }
-    };
-    fetchRate();
+      }).catch(() => {});
   }, []);
   const [pensionAutoSet, setPensionAutoSet] = useState(!initialInputs);
   const [bucketOpen, setBucketOpen] = useState(false);
@@ -786,7 +758,7 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
               label="폐업/매각 시 예상 수령액 (권리금·보증금 등)"
               icon={<Briefcase size={16} />}
               value={v.businessAsset ?? 0}
-              min={0} max={MAN * 10000} step={MAN * 500} unit="만 원"
+              min={0} max={MAN * 20000} step={MAN * 500} unit="만 원"
               display={val => Math.floor(val / MAN).toLocaleString()}
               parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
               trackColor="bg-navy-500"
@@ -797,7 +769,7 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
         )}
 
         <CollapsibleSection icon="💰" title="현재 준비 현황" subtitle="지금 가지고 있는 돈">
-          <div className="animate-fade-in" style={{ animationDelay: '240ms', animationFillMode: 'both' }}>
+        <div className="animate-fade-in" style={{ animationDelay: '240ms', animationFillMode: 'both' }}>
           <div className="mb-2 flex items-center gap-2">
             <PiggyBank size={16} className="text-navy-500" />
             <p className="text-xs font-bold text-navy-800">현재 준비 현황</p>
@@ -824,22 +796,39 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
               display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
               trackColor="bg-purple-400" onChange={set('savingsInsurance')}
             />
-            {/* 달러 종신보험 현재 해지환급금 */}
-            <div className="bg-white rounded-2xl p-5 shadow-sm border border-blue-100">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-blue-500">💵</span>
-                  <div>
-                    <p className="text-xs font-semibold text-navy-800">달러 종신보험 해지환급금</p>
-                    <p className="text-[10px] text-navy-400">
-                      오늘 환율 <span className="font-bold text-blue-600">{(v.currentExchangeRate ?? 1350).toLocaleString()}원</span>
-                      {' '}기준 ≈ {Math.floor((v.usdInsuranceCurrentUSD ?? 0) * (v.currentExchangeRate ?? 1350) / MAN).toLocaleString()}만원
-                    </p>
-                  </div>
+            <DualInput
+              label="IRP·연금저축 적립금" sublabel="퇴직연금·개인연금 합산"
+              tooltip="IRP·연금저축·퇴직연금 전체 합산 금액입니다."
+              value={v.savingsPension401k ?? 0} min={0} max={MAN * 10000} step={MAN * 100} unit="만 원"
+              display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
+              trackColor="bg-orange-400" onChange={set('savingsPension401k')}
+            />
+            <DualInput
+              label="ISA 적립금" sublabel="개인종합자산관리계좌"
+              tooltip="ISA 계좌 보유액입니다. 없으시면 0으로 두세요."
+              value={v.savingsIsa ?? 0} min={0} max={MAN * 10000} step={MAN * 100} unit="만 원"
+              display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
+              trackColor="bg-teal-400" onChange={set('savingsIsa')}
+            />
+            <DualInput
+              label="연금저축펀드 적립금" sublabel="연금저축계좌 (펀드형)"
+              tooltip="연금저축펀드 보유액입니다. IRP와 별도 운용 계좌예요."
+              value={v.savingsPensionSavings ?? 0} min={0} max={MAN * 10000} step={MAN * 100} unit="만 원"
+              display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
+              trackColor="bg-yellow-400" onChange={set('savingsPensionSavings')}
+            />
+            <div className="bg-blue-50 rounded-2xl p-4 border border-blue-100">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <p className="text-xs font-semibold text-navy-800">💵 달러 종신보험 해지환급금</p>
+                  <p className="text-[10px] text-blue-500">
+                    오늘 환율 <span className="font-bold">{(v.currentExchangeRate ?? 1350).toLocaleString()}원</span>
+                    {" "}기준 ≈ {Math.floor((v.usdInsuranceCurrentUSD ?? 0) * (v.currentExchangeRate ?? 1350) / MAN).toLocaleString()}만원
+                  </p>
                 </div>
                 <div className="flex items-baseline gap-1">
                   <span className="text-xl font-bold text-navy-900">${(v.usdInsuranceCurrentUSD ?? 0).toLocaleString()}</span>
-                  <span className="text-sm text-navy-400">USD</span>
+                  <span className="text-xs text-navy-400">USD</span>
                 </div>
               </div>
               <div className="relative h-1.5 mt-1">
@@ -853,40 +842,18 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
                 <div className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-blue-400 border-2 border-white shadow-md pointer-events-none"
                   style={{ left: `calc(${Math.min(100, ((v.usdInsuranceCurrentUSD ?? 0) / 50000) * 100)}% - 8px)` }} />
               </div>
-              <div className="flex justify-between mt-1.5">
+              <div className="flex justify-between mt-1">
                 <span className="text-[10px] text-navy-300">$0</span>
                 <span className="text-[10px] text-navy-300">$50,000</span>
               </div>
             </div>
-            <DualInput
-              label="IRP 적립금" sublabel="퇴직연금·IRP 합산"
-              tooltip="IRP·퇴직연금 합산 금액입니다. 연금저축펀드는 아래에 별도 입력하세요."
-              value={v.savingsPension401k ?? 0} min={0} max={MAN * 10000} step={MAN * 100} unit="만 원"
-              display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
-              trackColor="bg-orange-400" onChange={set('savingsPension401k')}
-            />
-            <DualInput
-              label="연금저축펀드 적립금" sublabel="연금저축계좌 (펀드형)"
-              tooltip="연금저축펀드 보유액입니다. IRP와 별도로 운용되는 계좌예요."
-              value={v.savingsPensionSavings ?? 0} min={0} max={MAN * 10000} step={MAN * 100} unit="만 원"
-              display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
-              trackColor="bg-yellow-400" onChange={set('savingsPensionSavings')}
-            />
-            <DualInput
-              label="ISA 적립금" sublabel="개인종합자산관리계좌"
-              tooltip="ISA 계좌 보유액입니다. 없으시면 0으로 두세요."
-              value={v.savingsIsa ?? 0} min={0} max={MAN * 10000} step={MAN * 100} unit="만 원"
-              display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
-              trackColor="bg-teal-400" onChange={set('savingsIsa')}
-            />
           </div>
         </div>
-
 
         </CollapsibleSection>
 
         <CollapsibleSection icon="📊" title="자산별 정밀 배분" subtitle="계좌별 수익률·납입기간 설정">
-          <div className="animate-fade-in" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>
+        <div className="animate-fade-in" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>
           <button type="button" onClick={() => setBucketOpen(p => !p)}
             className="w-full bg-white rounded-2xl px-5 py-4 shadow-sm border border-navy-100 flex items-center justify-between hover:shadow-md transition-shadow">
             <div className="flex items-center gap-2">
@@ -936,7 +903,7 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
                   <DualInput
                     label="월 납입액"
                     value={v.monthlyPension401k ?? 0}
-                    min={0} max={MAN * 50} step={MAN * 5} unit="만 원"
+                    min={0} max={MAN * 200} step={MAN * 10} unit="만 원"
                     display={val => Math.floor(val / MAN).toLocaleString()}
                     parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
                     trackColor="bg-indigo-500"
@@ -974,7 +941,7 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
                   <DualInput
                     label="월 납입액"
                     value={v.isaMonthly ?? 0}
-                    min={0} max={MAN * 50} step={MAN * 5} unit="만 원"
+                    min={0} max={MAN * 200} step={MAN * 10} unit="만 원"
                     display={val => Math.floor(val / MAN).toLocaleString()}
                     parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
                     trackColor="bg-emerald-500"
@@ -1003,65 +970,45 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
                 </div>
               )}
 
-              {/* ── 연금저축펀드 ── */}
+              {/* 연금저축펀드 월납입 */}
               <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-2 px-1 pt-1">
-                  <TrendingUp size={15} className="text-yellow-500" />
-                  <div>
-                    <p className="text-xs font-bold text-navy-800">연금저축펀드</p>
-                    <p className="text-[10px] text-navy-400">연금저축계좌 (펀드형) · 세액공제 연 600만원 한도</p>
-                  </div>
+                <div className="flex items-center gap-2 px-1">
+                  <p className="text-xs font-bold text-navy-800">📋 연금저축펀드</p>
+                  <span className="text-[10px] text-navy-400">세액공제 연 600만원 한도</span>
                 </div>
-                <DualInput
-                  label="월 납입액"
-                  value={v.monthlyPensionSavings ?? 0}
-                  min={0} max={MAN * 50} step={MAN * 5} unit="만 원"
-                  display={val => Math.floor(val / MAN).toLocaleString()}
-                  parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
-                  trackColor="bg-yellow-400"
-                  onChange={set('monthlyPensionSavings')}
-                  tooltip="연금저축펀드 월 납입액입니다. 연 600만원 한도로 세액공제 16.5%가 적용돼요."
+                <DualInput label="월 납입액"
+                  value={v.monthlyPensionSavings ?? 0} min={0} max={MAN * 50} step={MAN * 5} unit="만 원"
+                  display={val => Math.floor(val / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
+                  trackColor="bg-yellow-400" onChange={set('monthlyPensionSavings')}
+                  tooltip="연금저축펀드 월 납입액입니다. 연 600만원 한도로 세액공제 16.5% 적용."
                 />
-                <DualInput
-                  label="운용 수익률"
-                  value={v.pensionSavingsRate ?? 5.0}
-                  min={1.0} max={15} step={0.5} unit="%"
-                  display={val => val.toFixed(1)}
-                  parse={parseFloat}
-                  trackColor="bg-yellow-400"
-                  onChange={set('pensionSavingsRate')}
-                  decimalPlaces={1}
-                  tooltip="펀드 투자 시 기대 수익률입니다. 인덱스 펀드 기준 5~8% 수준이에요."
+                <DualInput label="운용 수익률"
+                  value={v.pensionSavingsRate ?? 5.0} min={1.0} max={15} step={0.5} unit="%"
+                  display={val => val.toFixed(1)} parse={parseFloat}
+                  trackColor="bg-yellow-400" decimalPlaces={1} onChange={set('pensionSavingsRate')}
                 />
               </div>
 
-              {/* ── 달러 종신보험 ── */}
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-2 px-1 pt-1">
-                  <span className="text-blue-500 text-base">💵</span>
+              {/* 달러 종신보험 월납입 */}
+              <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">💵</span>
                   <div>
                     <p className="text-xs font-bold text-navy-800">달러 종신보험</p>
-                    <p className="text-[10px] text-navy-400">달러 종신·변액보험 · 환율 헷지 + 비과세</p>
+                    <p className="text-[10px] text-navy-400">환율 헷지 + 비과세</p>
                   </div>
                 </div>
-                {/* 월 납입 (USD) */}
-                <div className="bg-white rounded-2xl p-4 border border-blue-100">
-                  <div className="flex items-center justify-between mb-2">
+                <div className="bg-white rounded-xl p-3 border border-blue-100">
+                  <div className="flex items-center justify-between mb-1">
                     <p className="text-xs text-navy-600 font-medium">월 납입액</p>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-lg font-bold text-navy-900">${(v.usdInsuranceMonthlyUSD ?? 0).toLocaleString()}</span>
-                      <span className="text-xs text-navy-400">USD</span>
-                    </div>
+                    <span className="text-lg font-bold text-navy-900">${(v.usdInsuranceMonthlyUSD ?? 0).toLocaleString()} USD</span>
                   </div>
-                  <p className="text-[10px] text-blue-500 mb-2">
-                    ≈ {Math.floor((v.usdInsuranceMonthlyUSD ?? 0) * (v.currentExchangeRate ?? 1350) / MAN).toLocaleString()}만원/월
-                  </p>
+                  <p className="text-[10px] text-blue-500 mb-2">≈ {Math.floor((v.usdInsuranceMonthlyUSD ?? 0) * (v.currentExchangeRate ?? 1350) / MAN).toLocaleString()}만원/월</p>
                   <div className="relative h-1.5">
                     <div className="absolute inset-0 rounded-full bg-navy-100" />
                     <div className="absolute h-full rounded-full bg-blue-400 transition-all"
                       style={{ width: `${Math.min(100, ((v.usdInsuranceMonthlyUSD ?? 0) / 1000) * 100)}%` }} />
-                    <input type="range" min={0} max={1000} step={10}
-                      value={v.usdInsuranceMonthlyUSD ?? 0}
+                    <input type="range" min={0} max={1000} step={10} value={v.usdInsuranceMonthlyUSD ?? 0}
                       onChange={e => setV(prev => ({ ...prev, usdInsuranceMonthlyUSD: Number(e.target.value) }))}
                       className="absolute inset-0 w-full opacity-0 cursor-pointer" />
                     <div className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-blue-400 border-2 border-white shadow-md pointer-events-none"
@@ -1072,60 +1019,42 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
                     <span className="text-[10px] text-navy-300">$1,000</span>
                   </div>
                 </div>
-                {/* 납입 기간 */}
-                <DualInput
-                  label="납입 기간"
-                  value={v.usdInsurancePaymentYears ?? 120}
-                  min={1} max={360} step={1} unit="개월"
+                <DualInput label="납입 기간"
+                  value={v.usdInsurancePaymentMonths ?? 120} min={1} max={360} step={1} unit="개월"
                   display={val => `${val}개월 (${Math.floor(val/12)}년 ${val%12}개월)`}
                   parse={s => parseInt(s.replace(/[^0-9]/g, ''))}
                   trackColor="bg-blue-400"
-                  onChange={val => setV(prev => ({ ...prev, usdInsurancePaymentYears: val }))}
-                  tooltip="총 납입 개월 수입니다. 예: 84개월(7년), 120개월(10년)"
+                  onChange={val => setV(prev => ({ ...prev, usdInsurancePaymentMonths: val }))}
                 />
-                {/* 수익률 */}
-                <DualInput
-                  label="공시이율 (수익률)"
-                  value={v.usdInsuranceRate ?? 4.0}
-                  min={1.0} max={8.0} step={0.1} unit="%"
+                <DualInput label="공시이율"
+                  value={v.usdInsuranceRate ?? 4.0} min={1.0} max={8.0} step={0.1} unit="%"
                   display={val => val.toFixed(1)} parse={parseFloat}
                   trackColor="bg-blue-400" decimalPlaces={1}
                   onChange={val => setV(prev => ({ ...prev, usdInsuranceRate: val }))}
-                  tooltip="달러 종신보험 공시이율입니다. 통상 3.5~5% 수준이에요."
                 />
-                {/* 환율 설정 */}
-                <div className="bg-blue-50 rounded-xl p-3 space-y-2">
+                <div className="bg-white rounded-xl p-3 border border-blue-100 flex flex-col gap-2">
                   <p className="text-[10px] font-bold text-blue-800">환율 설정</p>
-                  <DualInput
-                    label="현재 환율"
-                    value={v.currentExchangeRate ?? 1350}
-                    min={1000} max={2000} step={10} unit="원/달러"
+                  <DualInput label="현재 환율"
+                    value={v.currentExchangeRate ?? 1350} min={1000} max={2000} step={10} unit="원/달러"
                     display={val => val.toLocaleString()} parse={s => parseFloat(s.replace(/,/g, ''))}
                     trackColor="bg-blue-400"
                     onChange={val => setV(prev => ({ ...prev, currentExchangeRate: val }))}
-                    tooltip="자동으로 오늘 환율을 가져옵니다. 직접 수정도 가능해요."
                   />
-                  <DualInput
-                    label="만기 예상 환율"
-                    value={v.usdInsuranceMaturityExchangeRate ?? 1400}
-                    min={1000} max={2500} step={10} unit="원/달러"
+                  <DualInput label="만기 예상 환율"
+                    value={v.usdInsuranceMaturityExchangeRate ?? 1400} min={1000} max={2500} step={10} unit="원/달러"
                     display={val => val.toLocaleString()} parse={s => parseFloat(s.replace(/,/g, ''))}
                     trackColor="bg-blue-600"
                     onChange={val => setV(prev => ({ ...prev, usdInsuranceMaturityExchangeRate: val }))}
-                    tooltip="만기 시점의 예상 환율입니다. 원화 약세를 가정할수록 달러보험 가치가 높아져요."
                   />
                 </div>
-                {/* 만기 재투자 */}
                 <div className="bg-white rounded-xl border border-blue-100 p-3">
-                  <p className="text-[10px] font-bold text-navy-800 mb-2">만기 환급금 활용 전략</p>
+                  <p className="text-[10px] font-bold text-navy-800 mb-2">만기 환급금 활용</p>
                   <div className="flex gap-2">
                     {(['stock', 'bank', 'keep'] as const).map(opt => (
                       <button key={opt}
                         onClick={() => setV(prev => ({ ...prev, usdInsuranceMaturityReinvest: opt }))}
                         className={`flex-1 text-[10px] py-1.5 rounded-lg font-bold transition-colors
-                          ${(v.usdInsuranceMaturityReinvest ?? 'stock') === opt
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-blue-50 text-blue-700 border border-blue-200'}`}>
+                          ${(v.usdInsuranceMaturityReinvest ?? 'stock') === opt ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700 border border-blue-200'}`}>
                         {opt === 'stock' ? '증권 재투자' : opt === 'bank' ? '은행 이체' : '보험 유지'}
                       </button>
                     ))}
@@ -1147,11 +1076,7 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
         </div>
 
         {/* 월 보장성 보험료 */}
-
-        </CollapsibleSection>
-
-        <CollapsibleSection icon="🏠" title="생활비 설정" subtitle="은퇴 후 필요한 돈">
-          <div className="animate-fade-in" style={{ animationDelay: '355ms', animationFillMode: 'both' }}>
+        <div className="animate-fade-in" style={{ animationDelay: '355ms', animationFillMode: 'both' }}>
           <DualInput
             label="월 보장성 보험료" sublabel="실손·암·종신 등 보장성 합계"
             tooltip="현재 내고 계신 보장성 보험료 전체 합산 금액입니다. 저축성 보험은 제외하고 순수 보장성만 입력해주세요."
@@ -1194,6 +1119,9 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
         </div>
 
         {/* ── 생애주기 설정 (Plus) ── */}
+        </CollapsibleSection>
+
+        <CollapsibleSection icon="🏠" title="생활비 설정" subtitle="은퇴 후 필요한 돈">
         {features.lifecycleSettings ? (
         <div className="animate-fade-in" style={{ animationDelay: '400ms', animationFillMode: 'both' }}>
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-navy-100">
@@ -1286,7 +1214,6 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
         )}
 
         {/* 가정 안내 */}
-
         </CollapsibleSection>
 
         <div className="rounded-2xl bg-navy-50 border border-navy-100 p-4 flex gap-2.5 mt-1 animate-fade-in" style={{ animationDelay: '440ms', animationFillMode: 'both' }}>
