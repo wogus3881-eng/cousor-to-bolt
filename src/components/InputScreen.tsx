@@ -588,28 +588,7 @@ function BucketCard({ theme, amount, rate, onAmountChange, onRateChange, payment
               </p>
             </div>
 
-            {/* 만기 환급금 재투자 전략 */}
-            <div className="bg-white rounded-xl border border-navy-100 p-3">
-              <p className="text-[10px] font-bold text-navy-800 mb-2">만기 환급금 활용 전략</p>
-              <div className="flex gap-1.5">
-                {([
-                  { key: 'keep' as const, label: '종신연금 유지', desc: '평생 월 지급' },
-                  { key: 'stock' as const, label: '증권 재투자', desc: `${rate.toFixed(1)}% 운용` },
-                  { key: 'bank' as const, label: '은행 이체', desc: '2.5% 안전' },
-                ]).map(opt => (
-                  <button key={opt.key}
-                    type="button"
-                    onClick={() => setV(prev => ({ ...prev, insuranceMaturityReinvest: opt.key }))}
-                    className={`flex-1 py-2 rounded-lg text-[9px] font-bold transition-colors text-center
-                      ${(v.insuranceMaturityReinvest ?? 'keep') === opt.key
-                        ? 'bg-navy-800 text-white'
-                        : 'bg-slate-50 text-navy-600 border border-slate-200'}`}>
-                    <p>{opt.label}</p>
-                    <p className="font-normal opacity-70 mt-0.5">{opt.desc}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
+
           </>
         )}
 
@@ -997,6 +976,31 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
               <BucketCard theme={BANK_THEME} amount={v.monthlyBank} rate={v.bankRate} onAmountChange={set('monthlyBank')} onRateChange={set('bankRate')} />
               <BucketCard theme={STOCK_THEME} amount={v.monthlyStock} rate={v.stockRate} onAmountChange={set('monthlyStock')} onRateChange={set('stockRate')} />
               <BucketCard theme={INS_THEME} amount={v.monthlyInsurance} rate={v.insuranceRate} onAmountChange={set('monthlyInsurance')} onRateChange={set('insuranceRate')} paymentYears={v.insurancePaymentYears ?? 10} onPaymentYearsChange={set('insurancePaymentYears')} />
+
+              {/* 만기 환급금 재투자 전략 - BucketCard 외부 */}
+              {(v.monthlyInsurance ?? 0) > 0 && (
+                <div className="bg-white rounded-xl border border-navy-100 p-3 -mt-1">
+                  <p className="text-[10px] font-bold text-navy-800 mb-2">만기 환급금 활용 전략</p>
+                  <div className="flex gap-1.5">
+                    {([
+                      { key: 'keep' as const, label: '종신연금 유지', desc: '평생 월 지급' },
+                      { key: 'stock' as const, label: '증권 재투자', desc: `${(v.stockRate ?? 5).toFixed(1)}% 운용` },
+                      { key: 'bank' as const, label: '은행 이체', desc: '2.5% 안전' },
+                    ]).map(opt => (
+                      <button key={opt.key}
+                        type="button"
+                        onClick={() => setV(prev => ({ ...prev, insuranceMaturityReinvest: opt.key }))}
+                        className={`flex-1 py-2 rounded-lg text-[9px] font-bold transition-colors text-center
+                          ${(v.insuranceMaturityReinvest ?? 'keep') === opt.key
+                            ? 'bg-navy-800 text-white'
+                            : 'bg-slate-50 text-navy-600 border border-slate-200'}`}>
+                        <p>{opt.label}</p>
+                        <p className="font-normal opacity-70 mt-0.5">{opt.desc}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {features.pension401kBucket && !isSelfEmployed && (
                 <div className="flex flex-col gap-3">
