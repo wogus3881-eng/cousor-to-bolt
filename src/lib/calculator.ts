@@ -37,6 +37,7 @@ export interface SimulatorInputs {
   usdInsuranceMaturityExchangeRate?: number;
   usdInsuranceMaturityReinvest?: 'stock' | 'bank' | 'keep';
   lifeEvents?: Array<{ age: number; amount: number; label: string; source: 'bank' | 'stock' | 'insurance' | 'auto' }>;
+  insuranceMaturityReinvest?: 'stock' | 'bank' | 'keep'; // 원화보험 만기 재투자
   pensionStartAge?: number;
   isaMonthly?: number;
   isaRate?: number;
@@ -291,6 +292,7 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     usdInsuranceMaturityExchangeRate: inputs.usdInsuranceMaturityExchangeRate ?? 1400,
     usdInsuranceMaturityReinvest: inputs.usdInsuranceMaturityReinvest ?? 'stock',
     lifeEvents: inputs.lifeEvents ?? [],
+    insuranceMaturityReinvest: inputs.insuranceMaturityReinvest ?? 'keep',
     pensionStartAge: inputs.pensionStartAge ?? DEFAULT_PENSION_START_AGE,
     isaMonthly: Math.min(inputs.isaMonthly ?? 0, ISA_MAX_MONTHLY),
     isaRate: inputs.isaRate ?? (inputs.stockRate ?? (inputs.expectedReturn ?? DEFAULT_STOCK_RATE)),
@@ -367,7 +369,11 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
   const usdToStock = usdReinvest === 'stock' ? usdInsRetirementKRW : 0;
   const usdToBank = usdReinvest === 'bank' ? usdInsRetirementKRW : 0;
 
-  const retirementBalanceBank = fv(savingsBank, bankR, yearsToRetirement) + usdToBank
+  // 원화보험 만기 재투자
+  const insMaturityReinvest = norm.insuranceMaturityReinvest ?? 'keep';
+  // retirementBalanceInsurance는 아래에서 계산되므로 placeholder로 선언 후 나중에 재정의
+
+  const retirementBalanceBank = fv(savingsBank, bankR, yearsToRetirement) + usdToBank + insMaturityToBank
     + fvAnnuity(monthlyBank, bankR, yearsToRetirement);
   // 보험: 납입기간(insurancePaymentYears)만 납입 후 은퇴까지 복리 증식
   // insurancePaymentYears는 개월 단위
@@ -376,6 +382,16 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     + fvAnnuity(monthlyInsurance, insR, insPayYears);
   const yearsCompoundAfterPayment = yearsToRetirement - insPayYears;
   const retirementBalanceInsurance = fv(insBalanceAtPaymentEnd, insR, yearsCompoundAfterPayment);
+
+  // 원화보험 만기 재투자 분기
+  const insMaturityToBank = insMaturityReinvest === 'bank' ? retirementBalanceInsurance : 0;
+  const insMaturityToStock = insMaturityReinvest === 'stock' ? retirementBalanceInsurance : 0;
+
+  // 은행/증권 은퇴자산 (보험 만기 재투자 포함)
+  const retirementBalanceBank = fv(savingsBank, bankR, yearsToRetirement) + usdToBank + insMaturityToBank;
+  const retirementBalanceStock = fv(savingsStock, stockR, yearsToRetirement) + usdToStock + insMaturityToStock
+    + fv(savingsPensionSavings, pensionSavingsR, yearsToRetirement)
+    + fvAnnuity(monthlyPensionSavings, pensionSavingsR, yearsToRetirement);
   // 납입 종료 나이 (은퇴 전)
   const insurancePaymentEndAge = currentAge + insPayYears;
 
@@ -397,7 +413,7 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     ? fv(isaMatureBalance, stockR, yearsToRetirement - isaTermYears)
     : isaMatureBalance;
 
-  const retirementBalanceStock = fv(savingsStock, stockR, yearsToRetirement) + usdToStock + fv(savingsPensionSavings, pensionSavingsR, yearsToRetirement) + fvAnnuity(monthlyPensionSavings, pensionSavingsR, yearsToRetirement)
+  const retirementBalanceStock = fv(savingsStock, stockR, yearsToRetirement) + usdToStock + insMaturityToStock + fv(savingsPensionSavings, pensionSavingsR, yearsToRetirement) + fvAnnuity(monthlyPensionSavings, pensionSavingsR, yearsToRetirement)
     + fvAnnuity(monthlyStock, stockR, yearsToRetirement)
     + isaRetirementBalance;
   const retirementBalance = retirementBalanceBank + retirementBalanceStock + retirementBalanceInsurance + businessAsset;
@@ -438,7 +454,7 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     + (firstYearStockReturn > FINANCIAL_HI_THRESHOLD ? (firstYearStockReturn - FINANCIAL_HI_THRESHOLD) * FINANCIAL_HI_RATE : 0);
   const annualFinancialTaxAtRetirement = firstYearBankTax + firstYearStockTax;
 
-  const insAnnuityMonthly = calcAnnuityMonthly(retirementBalanceInsurance, insRatePct, retirementAge);
+  const insAnnuityMonthly = insMaturityReinvest === 'keep' ? calcAnnuityMonthly(retirementBalanceInsurance, insRatePct, retirementAge) : 0;
   const pension401kAnnuityMonthly = calcAnnuityMonthly(retirementBalancePension401k, pension401kRatePct, retirementAge);
   const pensionBreakevenAge = calcPensionBreakevenAge(
     pensionAtRetirement,
