@@ -373,8 +373,7 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
   const insMaturityReinvest = norm.insuranceMaturityReinvest ?? 'keep';
   // retirementBalanceInsurance는 아래에서 계산되므로 placeholder로 선언 후 나중에 재정의
 
-  const retirementBalanceBank = fv(savingsBank, bankR, yearsToRetirement) + usdToBank + insMaturityToBank
-    + fvAnnuity(monthlyBank, bankR, yearsToRetirement);
+  // retirementBalanceBank는 보험 계산 후 정의
   // 보험: 납입기간(insurancePaymentYears)만 납입 후 은퇴까지 복리 증식
   // insurancePaymentYears는 개월 단위
   const insPayYears = Math.min((insurancePaymentYears) / 12, yearsToRetirement);
@@ -413,9 +412,7 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     ? fv(isaMatureBalance, stockR, yearsToRetirement - isaTermYears)
     : isaMatureBalance;
 
-  const retirementBalanceStock = fv(savingsStock, stockR, yearsToRetirement) + usdToStock + insMaturityToStock + fv(savingsPensionSavings, pensionSavingsR, yearsToRetirement) + fvAnnuity(monthlyPensionSavings, pensionSavingsR, yearsToRetirement)
-    + fvAnnuity(monthlyStock, stockR, yearsToRetirement)
-    + isaRetirementBalance;
+
   const retirementBalance = retirementBalanceBank + retirementBalanceStock + retirementBalanceInsurance + businessAsset;
 
   // 비교선: 전액 과세(증권 수익률), 전액 비과세(보험 수익률)
