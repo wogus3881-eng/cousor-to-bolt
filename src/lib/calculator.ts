@@ -474,7 +474,7 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
           const pension401kContrib = yearsFromNow < pension401kPayYears ? effectiveMonthlyPension401k : 0;
           a401k = a401k * (1 + pension401kMR) + pension401kContrib;
           for (const ev of (norm.lifeEvents ?? [])) {
-            if (acc.age === ev.age) {
+            if (age === ev.age && m === 0) {
               const amt = ev.amount;
               if (ev.source === 'bank' || ev.source === 'auto') aBank = Math.max(0, aBank - amt);
               else if (ev.source === 'stock') aStock = Math.max(0, aStock - amt);
