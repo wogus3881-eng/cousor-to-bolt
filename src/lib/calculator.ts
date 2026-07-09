@@ -23,21 +23,19 @@ export interface SimulatorInputs {
   activeEndAge: number;
   medicalCostEnabled: boolean;
   monthlyMedicalCost: number;
-  monthlyPension401k?: number;        // IRP 월 납입
+  monthlyPension401k?: number;
   pension401kRate?: number;
   pension401kPaymentYears?: number;
-  monthlyPensionSavings?: number;     // 연금저축펀드 월 납입
-  pensionSavingsRate?: number;        // 연금저축펀드 수익률
-  savingsPensionSavings?: number;     // 현재 연금저축펀드 적립금
-
-  // 달러 종신보험
-  usdInsuranceCurrentUSD?: number;        // 현재 해지환급금 (USD)
-  usdInsuranceMonthlyUSD?: number;        // 월 납입 (USD)
-  usdInsurancePaymentYears?: number;      // 납입 기간 (년)
-  usdInsuranceRate?: number;             // 수익률 %
-  currentExchangeRate?: number;          // 현재 환율 (원/달러)
-  usdInsuranceMaturityExchangeRate?: number; // 만기 환율 가정
-  usdInsuranceMaturityReinvest?: 'stock' | 'bank' | 'keep'; // 만기 재투자
+  monthlyPensionSavings?: number;
+  pensionSavingsRate?: number;
+  savingsPensionSavings?: number;
+  usdInsuranceCurrentUSD?: number;
+  usdInsuranceMonthlyUSD?: number;
+  usdInsurancePaymentMonths?: number;
+  usdInsuranceRate?: number;
+  currentExchangeRate?: number;
+  usdInsuranceMaturityExchangeRate?: number;
+  usdInsuranceMaturityReinvest?: 'stock' | 'bank' | 'keep';
   pensionStartAge?: number;
   isaMonthly?: number;
   isaRate?: number;
@@ -48,7 +46,7 @@ export interface SimulatorInputs {
   savingsStock?: number;
   /** 현재 보험 해지환급금 */
   savingsInsurance?: number;
-  /** 현재 IRP 적립금 */
+  /** 현재 IRP/연금저축 적립금 */
   savingsPension401k?: number;
   /** 현재 ISA 적립금 */
   savingsIsa?: number;
@@ -112,8 +110,6 @@ export interface SimulationResult {
   retirementBalancePension401k: number;
   pension401kAnnuityMonthly: number;
   pension401kTotalTax: number;
-  pensionSavingsAnnuityMonthly: number;
-  pensionSavingsTotalTax: number;
   pensionAdjustmentRate: number;
   pensionBreakevenAge: number;
   isaRetirementBalance: number;
@@ -288,7 +284,7 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     savingsPensionSavings: inputs.savingsPensionSavings ?? 0,
     usdInsuranceCurrentUSD: inputs.usdInsuranceCurrentUSD ?? 0,
     usdInsuranceMonthlyUSD: inputs.usdInsuranceMonthlyUSD ?? 0,
-    usdInsurancePaymentYears: inputs.usdInsurancePaymentYears ?? 120,
+    usdInsurancePaymentMonths: inputs.usdInsurancePaymentMonths ?? 120,
     usdInsuranceRate: inputs.usdInsuranceRate ?? 4.0,
     currentExchangeRate: inputs.currentExchangeRate ?? 1350,
     usdInsuranceMaturityExchangeRate: inputs.usdInsuranceMaturityExchangeRate ?? 1400,
@@ -352,35 +348,28 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
   const savingsStock = norm.savingsStock ?? (currentSavings * stockRatio);
   const savingsInsurance = norm.savingsInsurance ?? (currentSavings * insRatio);
   const savingsPension401k = norm.savingsPension401k ?? 0;
+  const savingsIsa = norm.savingsIsa ?? 0;
   const savingsPensionSavings = norm.savingsPensionSavings ?? 0;
   const monthlyPensionSavings = norm.monthlyPensionSavings ?? 0;
-  const pensionSavingsRatePct = norm.pensionSavingsRate ?? DEFAULT_STOCK_RATE;
-  const pensionSavingsR = pensionSavingsRatePct / 100;
-
-  // 달러 보험
+  const pensionSavingsR = (norm.pensionSavingsRate ?? DEFAULT_STOCK_RATE) / 100;
   const currentExRate = norm.currentExchangeRate ?? 1350;
   const maturityExRate = norm.usdInsuranceMaturityExchangeRate ?? 1400;
   const usdCurrentKRW = (norm.usdInsuranceCurrentUSD ?? 0) * currentExRate;
   const usdMonthlyKRW = (norm.usdInsuranceMonthlyUSD ?? 0) * currentExRate;
-  // usdInsurancePaymentYears는 개월 단위 → 년으로 변환
-  const usdPayYears = Math.min((norm.usdInsurancePaymentYears ?? 120) / 12, yearsToRetirement);
+  const usdPayYears = Math.min((norm.usdInsurancePaymentMonths ?? 120) / 12, yearsToRetirement);
   const usdRate = (norm.usdInsuranceRate ?? 4.0) / 100;
   const usdReinvest = norm.usdInsuranceMaturityReinvest ?? 'stock';
-  // 달러보험 만기 시점 = 현재나이 + 납입기간 + 거치 (납입 후 은퇴까지)
-  const usdMaturityAge = Math.min(currentAge + (norm.usdInsurancePaymentYears ?? 10) * 2, retirementAge);
-  // 은퇴 시점 달러보험 잔고 (원화)
   const usdInsAtPayEnd = fvAnnuity(usdMonthlyKRW, usdRate, usdPayYears);
   const usdInsCompoundYears = Math.max(0, yearsToRetirement - usdPayYears);
-  const usdInsRetirementKRW = (usdCurrentKRW + fv(usdInsAtPayEnd, usdRate, usdInsCompoundYears))
-    * (maturityExRate / currentExRate); // 환율 변동 반영
-  const savingsIsa = norm.savingsIsa ?? 0;
+  const usdInsRetirementKRW = (usdCurrentKRW + fv(usdInsAtPayEnd, usdRate, usdInsCompoundYears)) * (maturityExRate / currentExRate);
+  const usdToStock = usdReinvest === 'stock' ? usdInsRetirementKRW : 0;
+  const usdToBank = usdReinvest === 'bank' ? usdInsRetirementKRW : 0;
 
   const retirementBalanceBank = fv(savingsBank, bankR, yearsToRetirement) + usdToBank
     + fvAnnuity(monthlyBank, bankR, yearsToRetirement);
   // 보험: 납입기간(insurancePaymentYears)만 납입 후 은퇴까지 복리 증식
-  // insurancePaymentYears는 개월 단위 → 년으로 변환
-  const insurancePaymentYearsActual = (insurancePaymentYears) / 12;
-  const insPayYears = Math.min(insurancePaymentYearsActual, yearsToRetirement);
+  // insurancePaymentYears는 개월 단위
+  const insPayYears = Math.min((insurancePaymentYears) / 12, yearsToRetirement);
   const insBalanceAtPaymentEnd = fv(savingsInsurance, insR, insPayYears)
     + fvAnnuity(monthlyInsurance, insR, insPayYears);
   const yearsCompoundAfterPayment = yearsToRetirement - insPayYears;
@@ -391,15 +380,6 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
   const pension401kPayYears = Math.min(pension401kPaymentYears, yearsToRetirement);
   const retirementBalancePension401k = fv(savingsPension401k, pension401kR, yearsToRetirement)
     + fvAnnuity(effectiveMonthlyPension401k, pension401kR, pension401kPayYears);
-
-  // 연금저축펀드 은퇴 시점 잔고
-  const retirementBalancePensionSavings = fv(savingsPensionSavings, pensionSavingsR, yearsToRetirement)
-    + fvAnnuity(monthlyPensionSavings, pensionSavingsR, yearsToRetirement);
-
-  // 달러보험 → 만기 후 재투자 방식에 따라 해당 자산에 합산
-  const usdToStock = usdReinvest === 'stock' ? usdInsRetirementKRW : 0;
-  const usdToBank = usdReinvest === 'bank' ? usdInsRetirementKRW : 0;
-  const usdToIns = usdReinvest === 'keep' ? usdInsRetirementKRW : 0;
 
   const isaContributionYears = Math.min(isaTermYears, yearsToRetirement);
   const isaFromMonthly = isaContributionYears > 0
@@ -415,7 +395,7 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     ? fv(isaMatureBalance, stockR, yearsToRetirement - isaTermYears)
     : isaMatureBalance;
 
-  const retirementBalanceStock = fv(savingsStock, stockR, yearsToRetirement) + usdToStock
+  const retirementBalanceStock = fv(savingsStock, stockR, yearsToRetirement) + usdToStock + fv(savingsPensionSavings, pensionSavingsR, yearsToRetirement) + fvAnnuity(monthlyPensionSavings, pensionSavingsR, yearsToRetirement)
     + fvAnnuity(monthlyStock, stockR, yearsToRetirement)
     + isaRetirementBalance;
   const retirementBalance = retirementBalanceBank + retirementBalanceStock + retirementBalanceInsurance + businessAsset;
@@ -458,7 +438,6 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
 
   const insAnnuityMonthly = calcAnnuityMonthly(retirementBalanceInsurance, insRatePct, retirementAge);
   const pension401kAnnuityMonthly = calcAnnuityMonthly(retirementBalancePension401k, pension401kRatePct, retirementAge);
-  const pensionSavingsAnnuityMonthly = calcAnnuityMonthly(retirementBalancePensionSavings, pensionSavingsRatePct * 100, retirementAge);
   const pensionBreakevenAge = calcPensionBreakevenAge(
     pensionAtRetirement,
     pensionStartAge,
@@ -492,8 +471,6 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
           aIns = aIns * (1 + insMR) + insContrib;
           const pension401kContrib = yearsFromNow < pension401kPayYears ? effectiveMonthlyPension401k : 0;
           a401k = a401k * (1 + pension401kMR) + pension401kContrib;
-          // 연금저축펀드도 별도 추적 (aStock에 합산)
-          aStock += monthlyPensionSavings * (1 + pensionSavingsR / 12);
         }
       }
     }
@@ -791,8 +768,6 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     retirementBalancePension401k,
     pension401kAnnuityMonthly,
     pension401kTotalTax,
-    pensionSavingsAnnuityMonthly,
-    pensionSavingsTotalTax: 0,
     pensionAdjustmentRate,
     pensionBreakevenAge,
     isaRetirementBalance,
