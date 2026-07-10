@@ -1902,11 +1902,9 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
               <Tooltip content={<CustomTooltip />} />
               {!compactChart && <Legend {...CHART_LEGEND_PROPS} />}
 
-              <ReferenceLine x={activeEndAge} stroke={SLATE} strokeDasharray="3 2" strokeWidth={1.5}
-                label={compactChart ? undefined : { value: `${activeEndAge}세 활동종료`, position: 'insideTopRight', fill: SLATE, fontSize: 9 }} />
+              <ReferenceLine x={activeEndAge} stroke={SLATE} strokeDasharray="3 2" strokeWidth={1.5} />
               {medicalCostEnabled && (
-                <ReferenceLine x={80} stroke={RED} strokeDasharray="3 2" strokeWidth={1.5}
-                  label={compactChart ? undefined : { value: '80세 의료비↑', position: 'insideTopLeft', fill: RED, fontSize: 9 }} />
+                <ReferenceLine x={80} stroke={RED} strokeDasharray="3 2" strokeWidth={1.5} />
               )}
 
               {/* 지출 */}
