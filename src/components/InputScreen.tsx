@@ -86,7 +86,7 @@ function DualInput({
                 <p className="text-xs font-semibold text-navy-800">{label}</p>
                 {tooltip && <Tooltip text={tooltip} />}
               </div>
-              {sublabel && <p className="text-[10px] text-navy-400">{sublabel}</p>}
+              {sublabel && <p className="text-[11px] text-navy-400">{sublabel}</p>}
             </div>
           </div>
         ) : (
@@ -95,7 +95,7 @@ function DualInput({
               <p className="text-xs font-semibold text-navy-800">{label}</p>
               {tooltip && <Tooltip text={tooltip} />}
             </div>
-            {sublabel && <p className="text-[10px] text-navy-400">{sublabel}</p>}
+            {sublabel && <p className="text-[11px] text-navy-400">{sublabel}</p>}
           </div>
         )}
 
@@ -180,7 +180,7 @@ function InlineField({
     <div>
       <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-1">
-          <span className="text-[10px] text-navy-500 font-medium">{label}</span>
+          <span className="text-[12px] text-navy-600 font-semibold">{label}</span>
           {tooltip && <Tooltip text={tooltip} />}
         </div>
         <div className="flex items-baseline gap-1">
@@ -384,7 +384,7 @@ function CollapsibleSection({ icon, title, subtitle, children, defaultOpen = tru
             <span className="text-gold-400 text-xs">{icon}</span>
           </div>
           <div className="text-left">
-            <p className="text-sm font-extrabold text-navy-900">{title}</p>
+            <p className="text-base font-extrabold text-navy-900">{title}</p>
             {subtitle && <p className="text-[10px] text-navy-400">{subtitle}</p>}
           </div>
         </div>
@@ -799,7 +799,8 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
         {isSelfEmployed && (
           <div className="animate-fade-in" style={{ animationDelay: '140ms', animationFillMode: 'both' }}>
             <DualInput
-              label="국민연금 납부 기준 월 소득"
+              label={isSelfEmployed ? "사업소득 기준 월 소득" : "국민연금 납부 기준 월 소득"}
+              sublabel={isSelfEmployed ? "순이익(소득) 기준 · 매출 아님" : "고지서 기준"}
               icon={<CalendarDays size={16} />}
               value={pensionBaseIncome}
               min={MAN * 35} max={MAN * 617} step={MAN * 10} unit="만 원"
@@ -807,7 +808,9 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
               parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
               trackColor="bg-navy-500"
               onChange={set('pensionBaseIncome')}
-              tooltip="실제 납부하고 계신 국민연금 고지서 기준 소득이에요."
+              tooltip={isSelfEmployed
+                ? "종합소득세 신고서의 사업소득금액 기준입니다 (매출 아님). 정확한 예상 수령액은 '내 곁에 국민연금' 앱에서 조회하세요. ※ 본 계산기는 실제보다 보수적으로 계산됩니다."
+                : "국민연금 고지서 기준 월 소득입니다. 정확한 예상 수령액은 '내 곁에 국민연금' 앱에서 조회하세요. ※ 본 계산기는 실제보다 보수적으로 계산됩니다."}
             />
           </div>
         )}
@@ -857,7 +860,7 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
         <div className="animate-fade-in" style={{ animationDelay: '240ms', animationFillMode: 'both' }}>
           <div className="mb-2 flex items-center gap-2">
             <PiggyBank size={16} className="text-navy-500" />
-            <p className="text-xs font-bold text-navy-800">현재 준비 현황</p>
+            <p className="text-sm font-bold text-navy-800">현재 준비 현황</p>
           </div>
           <div className="space-y-3">
             <DualInput
@@ -944,7 +947,7 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
             <div className="flex items-center gap-2">
               <BarChart2 size={15} className="text-navy-600" />
               <div className="text-left">
-                <p className="text-xs font-bold text-navy-800">자산별 정밀 배분</p>
+                <p className="text-sm font-bold text-navy-800">자산별 정밀 배분</p>
                 <p className="text-[10px] text-navy-400">
                   합계 <span className="font-bold text-navy-700">{Math.floor(totalMonthly / MAN).toLocaleString()}만 원/월</span>
                   {' '}· 은행/증권/보험 각각 수익률 설정
@@ -1008,7 +1011,7 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-2 px-1 pt-1">
                     <Landmark size={15} className="text-indigo-600" />
-                    <p className="text-xs font-bold text-navy-800">퇴직연금 (IRP/DC)</p>
+                    <p className="text-sm font-bold text-navy-800">퇴직연금 (IRP/DC)</p>
                   </div>
                   <DualInput
                     label="월 납입액"
@@ -1046,7 +1049,7 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-2 px-1 pt-1">
                     <TrendingUp size={15} className="text-emerald-600" />
-                    <p className="text-xs font-bold text-navy-800">ISA 계좌 (비과세)</p>
+                    <p className="text-sm font-bold text-navy-800">ISA 계좌 (비과세)</p>
                   </div>
                   <DualInput
                     label="월 납입액"
@@ -1083,7 +1086,7 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
               {/* 연금저축펀드 월납입 */}
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-2 px-1">
-                  <p className="text-xs font-bold text-navy-800">📋 연금저축펀드</p>
+                  <p className="text-sm font-bold text-navy-800">📋 연금저축펀드</p>
                   <span className="text-[10px] text-navy-400">세액공제 연 600만원 한도</span>
                 </div>
                 <DualInput label="월 납입액"
@@ -1104,7 +1107,7 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
                 <div className="flex items-center gap-2">
                   <span className="text-base">💵</span>
                   <div>
-                    <p className="text-xs font-bold text-navy-800">달러 종신보험</p>
+                    <p className="text-sm font-bold text-navy-800">달러 종신보험</p>
                     <p className="text-[10px] text-navy-400">환율 헷지 + 비과세</p>
                   </div>
                 </div>
@@ -1235,7 +1238,7 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
         {!isSelfEmployed && (
           <CollapsibleSection icon="💼" title="퇴직급여" subtitle="예상 퇴직금 · 수령 방식 설정">
             <div className="bg-white rounded-2xl p-4 shadow-sm border border-navy-100 flex flex-col gap-3">
-              <p className="text-[10px] text-navy-400 leading-relaxed">
+              <p className="text-[11px] text-navy-400 leading-relaxed">
                 퇴직 시점 예상 퇴직급여를 입력하세요. 수령 방식에 따라 세금과 노후 자산이 크게 달라져요.
               </p>
 
@@ -1300,7 +1303,7 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
 
         <CollapsibleSection icon="🎯" title="목적자금 이벤트" subtitle="결혼·주택·교육비 등 목돈 지출">
           <div className="bg-white rounded-2xl p-4 shadow-sm border border-navy-100 flex flex-col gap-3">
-            <p className="text-[10px] text-navy-400 leading-relaxed">
+            <p className="text-[11px] text-navy-400 leading-relaxed">
               은퇴 전 큰 지출이 예상되는 시점을 추가하면 더 현실적인 노후 시뮬레이션이 가능해요.
             </p>
             {(v.lifeEvents ?? []).map((ev, i) => (
@@ -1345,7 +1348,7 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-navy-100">
             <div className="flex items-center gap-2 mb-4">
               <Activity size={15} className="text-teal-600" />
-              <p className="text-xs font-bold text-navy-800">생애 주기별 지출 설정</p>
+              <p className="text-sm font-bold text-navy-800">생애 주기별 지출 설정</p>
             </div>
 
             <div className="mb-5">
