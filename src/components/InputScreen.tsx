@@ -650,8 +650,6 @@ const DEFAULT_INPUTS: SimulatorInputs = {
   usdInsuranceMaturityReinvest: 'stock' as const,
   lifeEvents: [] as Array<{ age: number; amount: number; label: string; source: 'bank' | 'stock' | 'insurance' | 'auto' }>,
   insuranceMaturityReinvest: 'keep' as const,
-  severancePay: 0,
-  severanceReinvest: 'irp' as const,
   annualSalary: MAN * 5000,
   monthlyExpense: MAN * 300,
   activeEndAge: 78,
@@ -1230,73 +1228,6 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
 
         {/* ── 생애주기 설정 (Plus) ── */}
         </CollapsibleSection>
-
-        {/* 퇴직급여 - 직장인만 표시 */}
-        {!isSelfEmployed && (
-          <CollapsibleSection icon="💼" title="퇴직급여" subtitle="예상 퇴직금 · 수령 방식 설정">
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-navy-100 flex flex-col gap-3">
-              <p className="text-[10px] text-navy-400 leading-relaxed">
-                퇴직 시점 예상 퇴직급여를 입력하세요. 수령 방식에 따라 세금과 노후 자산이 크게 달라져요.
-              </p>
-
-              <DualInput
-                label="예상 퇴직급여"
-                sublabel="퇴직 시점 수령 예정액"
-                value={v.severancePay ?? 0}
-                min={0} max={MAN * 50000} step={MAN * 500} unit="만 원"
-                display={val => Math.floor(val / MAN).toLocaleString()}
-                parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
-                trackColor="bg-indigo-400"
-                onChange={set('severancePay')}
-                tooltip={`연봉 ${Math.floor((v.annualSalary ?? 0) / MAN / 10000)}억 × ${v.retirementAge - v.currentAge}년 근무 기준 예상 퇴직급여: 약 ${Math.floor((v.annualSalary ?? 0) / MAN / 10000 * (v.retirementAge - v.currentAge) / 10000)}억원`}
-              />
-
-              {/* 자동 계산 안내 */}
-              {(v.severancePay ?? 0) === 0 && (
-                <button
-                  onClick={() => setV(prev => ({
-                    ...prev,
-                    severancePay: Math.round((prev.annualSalary ?? 0) * (prev.retirementAge - prev.currentAge) / MAN) * MAN
-                  }))}
-                  className="text-[10px] text-indigo-600 underline text-left">
-                  연봉 × 근무연수로 자동 계산하기 ({Math.floor((v.annualSalary ?? 0) / MAN).toLocaleString()}만원 × {v.retirementAge - v.currentAge}년 = 약 {Math.floor((v.annualSalary ?? 0) * (v.retirementAge - v.currentAge) / MAN / 10000)}억)
-                </button>
-              )}
-
-              {/* 수령 방식 */}
-              <div className="bg-indigo-50 rounded-xl p-3 border border-indigo-100">
-                <p className="text-[10px] font-bold text-indigo-800 mb-2">수령 방식 선택</p>
-                <div className="flex gap-2">
-                  {([
-                    { key: 'irp' as const, label: 'IRP 이전', desc: '연금 수령 3.3~5.5% 저율과세' },
-                    { key: 'lump' as const, label: '일시금 수령', desc: '퇴직소득세 약 7% 공제' },
-                  ]).map(opt => (
-                    <button key={opt.key}
-                      type="button"
-                      onClick={() => setV(prev => ({ ...prev, severanceReinvest: opt.key }))}
-                      className={`flex-1 py-2.5 rounded-xl text-[10px] font-bold transition-colors text-center
-                        ${(v.severanceReinvest ?? 'irp') === opt.key
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-white text-indigo-700 border border-indigo-200'}`}>
-                      <p>{opt.label}</p>
-                      <p className="font-normal opacity-75 mt-0.5 text-[9px]">{opt.desc}</p>
-                    </button>
-                  ))}
-                </div>
-                {(v.severanceReinvest ?? 'irp') === 'irp' && (
-                  <p className="text-[9px] text-indigo-600 mt-2">
-                    ✅ IRP 이전 시 퇴직소득세 과세 이연 → 연금 수령 시 70% 감면 혜택
-                  </p>
-                )}
-                {(v.severanceReinvest ?? 'irp') === 'lump' && (
-                  <p className="text-[9px] text-amber-600 mt-2">
-                    ⚠️ 일시금 수령 시 퇴직소득세 약 7% 공제 후 은행으로 편입
-                  </p>
-                )}
-              </div>
-            </div>
-          </CollapsibleSection>
-        )}
 
         <CollapsibleSection icon="🎯" title="목적자금 이벤트" subtitle="결혼·주택·교육비 등 목돈 지출">
           <div className="bg-white rounded-2xl p-4 shadow-sm border border-navy-100 flex flex-col gap-3">

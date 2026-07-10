@@ -37,11 +37,7 @@ export interface SimulatorInputs {
   usdInsuranceMaturityExchangeRate?: number;
   usdInsuranceMaturityReinvest?: 'stock' | 'bank' | 'keep';
   lifeEvents?: Array<{ age: number; amount: number; label: string; source: 'bank' | 'stock' | 'insurance' | 'auto' }>;
-  insuranceMaturityReinvest?: 'stock' | 'bank' | 'keep';
-
-  // 퇴직급여
-  severancePay?: number;           // 예상 퇴직급여 (원)
-  severanceReinvest?: 'irp' | 'lump'; // IRP 이전 or 일시금 수령 // 원화보험 만기 재투자
+  insuranceMaturityReinvest?: 'stock' | 'bank' | 'keep'; // 원화보험 만기 재투자
   pensionStartAge?: number;
   isaMonthly?: number;
   isaRate?: number;
@@ -297,8 +293,6 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     usdInsuranceMaturityReinvest: inputs.usdInsuranceMaturityReinvest ?? 'stock',
     lifeEvents: inputs.lifeEvents ?? [],
     insuranceMaturityReinvest: inputs.insuranceMaturityReinvest ?? 'keep',
-    severancePay: inputs.severancePay ?? 0,
-    severanceReinvest: inputs.severanceReinvest ?? 'irp',
     pensionStartAge: inputs.pensionStartAge ?? DEFAULT_PENSION_START_AGE,
     isaMonthly: Math.min(inputs.isaMonthly ?? 0, ISA_MAX_MONTHLY),
     isaRate: inputs.isaRate ?? (inputs.stockRate ?? (inputs.expectedReturn ?? DEFAULT_STOCK_RATE)),
@@ -392,17 +386,8 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
   const insMaturityToBank = insMaturityReinvest === 'bank' ? retirementBalanceInsurance : 0;
   const insMaturityToStock = insMaturityReinvest === 'stock' ? retirementBalanceInsurance : 0;
 
-  // 퇴직급여 처리
-  const severancePay = norm.severancePay ?? 0;
-  const severanceReinvest = norm.severanceReinvest ?? 'irp';
-  // IRP 이전: 퇴직소득세 면제, 연금 수령 시 3.3~5.5% 저율 과세
-  // 일시금: 퇴직소득세 약 6~8% 공제 후 수령
-  const SEVERANCE_TAX_RATE = 0.07; // 평균 퇴직소득세율 약 7%
-  const severanceToIRP = severanceReinvest === 'irp' ? severancePay : 0;
-  const severanceToBank = severanceReinvest === 'lump' ? severancePay * (1 - SEVERANCE_TAX_RATE) : 0;
-
   // 은행/증권 은퇴자산 (보험 만기 재투자 포함)
-  const retirementBalanceBank = fv(savingsBank, bankR, yearsToRetirement) + usdToBank + insMaturityToBank + severanceToBank;
+  const retirementBalanceBank = fv(savingsBank, bankR, yearsToRetirement) + usdToBank + insMaturityToBank;
   const retirementBalanceStock = fv(savingsStock, stockR, yearsToRetirement) + usdToStock + insMaturityToStock
     + fv(savingsPensionSavings, pensionSavingsR, yearsToRetirement)
     + fvAnnuity(monthlyPensionSavings, pensionSavingsR, yearsToRetirement);
@@ -410,7 +395,7 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
   const insurancePaymentEndAge = currentAge + insPayYears;
 
   const pension401kPayYears = Math.min(pension401kPaymentYears, yearsToRetirement);
-  const retirementBalancePension401k = fv(savingsPension401k + severanceToIRP, pension401kR, yearsToRetirement)
+  const retirementBalancePension401k = fv(savingsPension401k, pension401kR, yearsToRetirement)
     + fvAnnuity(effectiveMonthlyPension401k, pension401kR, pension401kPayYears);
 
   const isaContributionYears = Math.min(isaTermYears, yearsToRetirement);
