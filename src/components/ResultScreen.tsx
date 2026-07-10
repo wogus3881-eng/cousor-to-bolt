@@ -375,7 +375,7 @@ function LivePensionSlider({
 
             <span className="text-[11px] font-bold text-white">은행 적립</span>
 
-            <span className="ml-auto text-[11px] bg-navy-500 text-white px-1.5 py-0.5 rounded-full">과세</span>
+            <span className="ml-auto text-[9px] bg-navy-500 text-white px-1.5 py-0.5 rounded-full">과세</span>
 
           </div>
 
@@ -417,7 +417,7 @@ function LivePensionSlider({
 
             <span className="text-[11px] font-bold text-white">증권 투자</span>
 
-            <span className="ml-auto text-[11px] bg-red-400 text-white px-1.5 py-0.5 rounded-full">과세</span>
+            <span className="ml-auto text-[9px] bg-red-400 text-white px-1.5 py-0.5 rounded-full">과세</span>
 
           </div>
 
@@ -479,7 +479,7 @@ function LivePensionSlider({
 
             <span className="text-[11px] font-bold text-white">보험·비과세 연금</span>
 
-            <span className="ml-auto text-[11px] bg-gold-200 text-gold-900 px-1.5 py-0.5 rounded-full">비과세</span>
+            <span className="ml-auto text-[9px] bg-gold-200 text-gold-900 px-1.5 py-0.5 rounded-full">비과세</span>
 
           </div>
 
@@ -974,20 +974,20 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
               </p>
               <div className="bg-black/20 rounded-xl p-3 flex items-center justify-between">
                 <div className="text-center">
-                  <p className="text-[11px] text-red-400">지금</p>
+                  <p className="text-[9px] text-red-400">지금</p>
                   <p className="text-base font-bold text-white">{Math.floor(monthlyExpense / 10000).toLocaleString()}만원</p>
                 </div>
                 <div className="text-red-400 text-lg font-bold">→</div>
                 <div className="text-center">
-                  <p className="text-[11px] text-red-400">{retirementAge}세</p>
+                  <p className="text-[9px] text-red-400">{retirementAge}세</p>
                   <p className="text-base font-bold text-red-300">{Math.floor(expAtRet / 10000).toLocaleString()}만원</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-[11px] text-red-400">증가</p>
+                  <p className="text-[9px] text-red-400">증가</p>
                   <p className="text-base font-bold text-amber-300">×{ratio.toFixed(1)}</p>
                 </div>
               </div>
-              <p className="text-[11px] text-red-400 mt-2">※ 연 3% 물가상승률 기준</p>
+              <p className="text-[9px] text-red-400 mt-2">※ 연 3% 물가상승률 기준</p>
             </div>
           );
         })()}
@@ -1074,7 +1074,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
               {pensionCapped && (
 
-                <span className="text-[11px] font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full tracking-wide">
+                <span className="text-[9px] font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full tracking-wide">
 
                   상한선 적용
 
@@ -1349,7 +1349,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
                     {badge && (
 
-                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 shrink-0">{badge}</span>
+                      <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 shrink-0">{badge}</span>
 
                     )}
 
@@ -1684,8 +1684,6 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
                 fill="#f0fdf4" fillOpacity={0.6}
 
-                
-
               />
 
 
@@ -1724,31 +1722,24 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
                 fill="url(#realGrad)" dot={false} name="실질 가치 (현재 구매력)" connectNulls />
 
               {depletionAge && (
-                <ReferenceLine x={depletionAge} stroke={RED} strokeDasharray="4 3" strokeWidth={2}
-                   />
+                <ReferenceLine x={depletionAge} stroke={RED} strokeDasharray="4 3" strokeWidth={2} />
               )}
               {features.taxScenarioCompare && !compactChart && depletionAgeGross && depletionAgeGross !== depletionAge && (
-                <ReferenceLine x={depletionAgeGross} stroke={GOLD} strokeDasharray="3 2" strokeWidth={1.5}
-                  label={{ value: `과세 ${depletionAgeGross}세`, position: 'insideTopLeft', fill: GOLD, fontSize: 9 }} />
+                <ReferenceLine x={depletionAgeGross} stroke={GOLD} strokeDasharray="3 2" strokeWidth={1.5} />
               )}
               {features.taxScenarioCompare && !compactChart && dignityEndAgeInsOnly && dignityEndAgeInsOnly !== depletionAge && (
-                <ReferenceLine x={dignityEndAgeInsOnly} stroke={EMERALD} strokeDasharray="3 2" strokeWidth={1.5}
-                  label={{ value: `비과세 ${dignityEndAgeInsOnly}세`, position: 'insideTopRight', fill: EMERALD, fontSize: 9 }} />
+                <ReferenceLine x={dignityEndAgeInsOnly} stroke={EMERALD} strokeDasharray="3 2" strokeWidth={1.5} />
               )}
-              <ReferenceLine x={retirementAge} stroke={SLATE} strokeDasharray="3 3" strokeWidth={1}
-                label={compactChart ? undefined : { value: `${retirementAge}세 은퇴`, position: 'insideTopRight', fill: SLATE, fontSize: 9 }} />
+              <ReferenceLine x={retirementAge} stroke={SLATE} strokeDasharray="3 3" strokeWidth={1} />
               {/* 자산 고갈 후 종신연금 유지 구간 라벨 */}
               {depletionAge && inputs.monthlyInsurance > 0 && (
-                <ReferenceLine x={depletionAge + 1} stroke="#fdc017" strokeDasharray="3 2" strokeWidth={0}
-                   />
+                <ReferenceLine x={depletionAge + 1} stroke="#fdc017" strokeDasharray="3 2" strokeWidth={0} />
               )}
               {/* 80세 노후 간병기 리스크 구간 */}
-              <ReferenceLine x={80} stroke="#dc2626" strokeDasharray="2 2" strokeWidth={1.5}
-                 />
+              <ReferenceLine x={80} stroke="#dc2626" strokeDasharray="2 2" strokeWidth={1.5} />
               {/* 보험 납입 종료 시점 */}
               {!compactChart && insurancePaymentEndAge < retirementAge && inputs.monthlyInsurance > 0 && (
-                <ReferenceLine x={insurancePaymentEndAge} stroke={GOLD} strokeDasharray="2 3" strokeWidth={1.5}
-                  label={{ value: `보험 납입 종료 ${insurancePaymentEndAge}세`, position: 'insideTopLeft', fill: GOLD, fontSize: 9 }} />
+                <ReferenceLine x={insurancePaymentEndAge} stroke={GOLD} strokeDasharray="2 3" strokeWidth={1.5} />
               )}
             </AreaChart>
           </ResponsiveContainer>
@@ -1774,7 +1765,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
           <div className="mt-3 grid grid-cols-2 gap-2">
             <div className="rounded-xl border border-red-200 bg-red-50 p-2.5 text-center shadow-sm">
               <div className="mx-auto mb-1.5 h-1 w-6 rounded bg-red-500" />
-              <p className="text-[13px] font-bold text-red-700">명목 자산</p>
+              <p className="text-[12px] font-bold text-red-700">명목 자산</p>
               <p className="mt-0.5 text-[11px] font-medium text-red-600">원금+이자 합계</p>
             </div>
             <div className="bg-orange-50 rounded-xl p-2.5 text-center border border-orange-100">
@@ -1817,11 +1808,11 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
           {inputs.monthlyInsurance > 0 && (
             <div className="mt-3 flex items-start gap-2.5 rounded-xl p-3 border-2 border-gold-300" style={{background:'linear-gradient(135deg,#fffbeb,#fef3c7)'}}>
               <div className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5" style={{background:'#fdc017'}}>
-                <span className="text-white text-[11px] font-extrabold">∞</span>
+                <span className="text-white text-[9px] font-extrabold">∞</span>
               </div>
               <div>
                 <p className="text-[11px] font-bold mb-0.5" style={{color:'#92400e'}}>종신연금: 자산이 0이 되어도 끊기지 않습니다</p>
-                <p className="text-[12px] leading-relaxed" style={{color:'#a36203'}}>
+                <p className="text-[10px] leading-relaxed" style={{color:'#a36203'}}>
                   보험 주머니는 일반 금융자산과 달리 <strong>가입자 사망 시까지</strong> 연금이 지급됩니다.
                   위 금색 선이 바로 그 구간입니다. 은행·증권 자산이 고갈된 후에도{' '}
                   <strong>월 {Math.round(insAnnuityMonthly / 10000).toLocaleString()}만 원</strong> 수준의 수령이 계속됩니다.
@@ -1834,11 +1825,11 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
           {insurancePaymentEndAge < retirementAge && inputs.monthlyInsurance > 0 && (
             <div className="mt-3 flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-xl p-3">
               <div className="shrink-0 w-5 h-5 rounded-full bg-amber-400 flex items-center justify-center mt-0.5">
-                <span className="text-white text-[11px] font-extrabold">★</span>
+                <span className="text-white text-[9px] font-extrabold">★</span>
               </div>
               <div>
                 <p className="text-[11px] font-bold text-amber-800 mb-0.5">납입 종료 후 자동 복리 증식 구간</p>
-                <p className="text-[12px] text-amber-700 leading-relaxed">
+                <p className="text-[10px] text-amber-700 leading-relaxed">
                   <strong>{insurancePaymentEndAge}세</strong>에 보험 납입이 끝난 후, 은퇴까지{' '}
                   <strong>{retirementAge - insurancePaymentEndAge}년간</strong> 추가 지출 없이{' '}
                   <strong>{inputs.insuranceRate?.toFixed(1) ?? '3.5'}%</strong>로 스스로 불어납니다.
@@ -1853,22 +1844,22 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
         <div className="bg-white rounded-2xl p-5 border border-navy-100 shadow-sm">
           <p className="text-[11px] text-navy-400 font-medium mb-1">은퇴 후 월별 수입·지출 비교</p>
           <p className="text-sm font-bold text-navy-900 mb-1">국민연금 · 보험연금 vs 생활비</p>
-          <p className="text-[12px] text-teal-600 font-medium mb-4">
+          <p className="text-[10px] text-teal-600 font-medium mb-4">
             {activeEndAge}세 이후 생활비 75% 하향{medicalCostEnabled ? ' · 80세+ 의료비 추가' : ''}
           </p>
 
           {/* 수령액 요약 카드 */}
           <div className="grid grid-cols-2 gap-2 mb-4">
             <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3">
-              <p className="text-[11px] text-emerald-500 font-semibold mb-0.5">국민연금 (은퇴 시, 세후)</p>
+              <p className="text-[9px] text-emerald-500 font-semibold mb-0.5">국민연금 (은퇴 시, 세후)</p>
               <p className="text-sm font-extrabold text-emerald-700">{formatKRW(pensionNetAtRetirement)}/월</p>
-              <p className="text-[11px] text-emerald-400 mt-0.5">매년 3% 인상 적용</p>
+              <p className="text-[9px] text-emerald-400 mt-0.5">매년 3% 인상 적용</p>
             </div>
             {inputs.monthlyInsurance > 0 && (
               <div className="border-2 border-gold-300 rounded-xl p-3" style={{background:'#fffbeb'}}>
-                <p className="text-[11px] font-semibold mb-0.5" style={{color:'#b45309'}}>보험 종신연금 (월 수령)</p>
+                <p className="text-[9px] font-semibold mb-0.5" style={{color:'#b45309'}}>보험 종신연금 (월 수령)</p>
                 <p className="text-sm font-extrabold" style={{color:'#92400e'}}>{formatKRW(insAnnuityMonthly)}/월</p>
-                <p className="text-[11px] mt-0.5" style={{color:'#d97706'}}>사망 시까지 평생 유지</p>
+                <p className="text-[9px] mt-0.5" style={{color:'#d97706'}}>사망 시까지 평생 유지</p>
               </div>
             )}
           </div>
@@ -1915,7 +1906,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
                 label={compactChart ? undefined : { value: `${activeEndAge}세 활동종료`, position: 'insideTopRight', fill: SLATE, fontSize: 9 }} />
               {medicalCostEnabled && (
                 <ReferenceLine x={80} stroke={RED} strokeDasharray="3 2" strokeWidth={1.5}
-                   />
+                  label={compactChart ? undefined : { value: '80세 의료비↑', position: 'insideTopLeft', fill: RED, fontSize: 9 }} />
               )}
 
               {/* 지출 */}
@@ -1943,7 +1934,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
           </div>
 
           {compactChart && (
-            <div className="mt-2 rounded-xl border border-navy-100 bg-navy-50/80 px-3 py-2.5 text-[12px] leading-snug text-navy-800 space-y-1">
+            <div className="mt-2 rounded-xl border border-navy-100 bg-navy-50/80 px-3 py-2.5 text-[10px] leading-snug text-navy-800 space-y-1">
               <p className="font-bold text-navy-900">수입·지출 차트 세로선</p>
               <ul className="list-none space-y-1">
                 <li><span className="inline-block w-1.5 h-3 rounded-sm bg-slate-500 mr-1.5 align-middle" /> 회색 점선: {activeEndAge}세 활동 종료 전후</li>
@@ -2074,7 +2065,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
         >
           <div className="flex items-center gap-2 mb-3">
             <Lightbulb size={16} className="text-gold-400" />
-            <span className="text-[12px] font-bold tracking-[0.15em] uppercase text-gold-400">해결책</span>
+            <span className="text-[10px] font-bold tracking-[0.15em] uppercase text-gold-400">해결책</span>
           </div>
           <p className="text-[15px] font-extrabold leading-snug mb-3 text-white">
             비과세 계좌를 활용해 세금과 건보료를 방어하고, 고갈 시점을 15년 연장하는 플랜을 받아보세요.
@@ -2100,7 +2091,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
         {/* ── 95세 목표 섹션 ── */}
         <div className="bg-white rounded-3xl border border-navy-100 shadow-sm overflow-hidden">
           <div className="bg-gradient-to-r from-navy-900 to-navy-700 px-6 pt-6 pb-5">
-            <span className="inline-block text-[12px] font-bold tracking-[0.15em] text-gold-300 uppercase bg-navy-800/60 px-3 py-1 rounded-full mb-3">
+            <span className="inline-block text-[10px] font-bold tracking-[0.15em] text-gold-300 uppercase bg-navy-800/60 px-3 py-1 rounded-full mb-3">
               해결 방안
             </span>
             <h2 className="text-[18px] font-extrabold text-white leading-snug">
@@ -2127,14 +2118,14 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
                   ) : (
                     <p className="text-[13px] text-navy-600 mt-1">추가 저축 금액을 계산 중입니다.</p>
                   )}
-                  <p className="text-[12px] text-navy-400 mt-1.5">
+                  <p className="text-[10px] text-navy-400 mt-1.5">
                     현재 자산 배분 기준 · 은퇴 시점({inputs.retirementAge}세)까지 {Math.max(0, inputs.retirementAge - inputs.currentAge)}년 적립 기준
                   </p>
                 </>
               ) : (
                 <div className="flex items-center gap-2">
                   <span className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center">
-                    <span className="text-emerald-600 text-[12px] font-extrabold">✓</span>
+                    <span className="text-emerald-600 text-[10px] font-extrabold">✓</span>
                   </span>
                   <p className="text-sm font-bold text-emerald-600">
                     {dignityEndAge === null ? '100세까지 충분합니다' : '95세 이후까지 유지됩니다'}
@@ -2214,7 +2205,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
               </div>
             </div>
             <div className="rounded-xl bg-slate-50 p-3 space-y-1.5">
-              <p className="text-[12px] font-bold uppercase text-slate-400 mb-2">한국 60세 이후 발생확률</p>
+              <p className="text-[10px] font-bold uppercase text-slate-400 mb-2">한국 60세 이후 발생확률</p>
               <div className="grid grid-cols-3 gap-2">
                 {[
                   { label: '암 진단', pct: '37%', cost: '4,000만원', color: 'text-red-600' },
@@ -2223,8 +2214,8 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
                 ].map((item) => (
                   <div key={item.label} className="rounded-lg bg-white p-2 text-center border border-slate-100">
                     <p className={`text-[13px] font-extrabold ${item.color}`}>{item.pct}</p>
-                    <p className="text-[12px] font-semibold text-navy-700">{item.label}</p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">{item.cost}</p>
+                    <p className="text-[10px] font-semibold text-navy-700">{item.label}</p>
+                    <p className="text-[9px] text-slate-400 mt-0.5">{item.cost}</p>
                   </div>
                 ))}
               </div>
@@ -2232,14 +2223,14 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
             <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2.5">
               <div>
                 <p className="text-[11px] font-semibold text-navy-700">80세 이후 월 의료비 추정</p>
-                <p className="text-[12px] text-slate-400">건강보험공단 통계 기준</p>
+                <p className="text-[10px] text-slate-400">건강보험공단 통계 기준</p>
               </div>
               <p className="text-[15px] font-extrabold text-rose-600">{formatKRW(result.medicalRisk.monthlyCostAfter80)}</p>
             </div>
             <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2.5">
               <div>
                 <p className="text-[11px] font-semibold text-navy-700">치매 요양비 (5년 기준)</p>
-                <p className="text-[12px] text-slate-400">국민건강보험 2023</p>
+                <p className="text-[10px] text-slate-400">국민건강보험 2023</p>
               </div>
               <p className="text-[15px] font-extrabold text-rose-600">{formatKRW(result.medicalRisk.dementiaCost)}</p>
             </div>
@@ -2257,7 +2248,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
                     <div className="h-2.5 rounded-full bg-white/80 overflow-hidden">
                       <div className={`h-full rounded-full transition-all duration-700 ${coverageScore >= 70 ? 'bg-emerald-500' : coverageScore >= 40 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${coverageScore}%` }} />
                     </div>
-                    <div className="mt-2 flex justify-between text-[12px]">
+                    <div className="mt-2 flex justify-between text-[10px]">
                       <span className="text-slate-500">월 보장성 보험료: {formatKRW(monthlyProtectionInsurance)}</span>
                       <span className={`font-bold ${coverageColor}`}>{coverageScore >= 70 ? '양호' : coverageScore >= 40 ? '보완 필요' : '위험'}</span>
                     </div>
@@ -2269,7 +2260,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
                         <div>
                           <p className="text-[12px] font-bold text-red-800">미보장 리스크 추정액</p>
                           <p className="text-[20px] font-extrabold text-red-600 mt-1">{formatKRW(uncoveredRisk)}</p>
-                          <p className="text-[12px] text-red-500 mt-1">현재 보장 수준으로는 3대 질병 발생 시 이 금액이 본인 부담이 될 수 있습니다. 전문가 상담을 통해 보장 구조를 점검해 보세요.</p>
+                          <p className="text-[10px] text-red-500 mt-1">현재 보장 수준으로는 3대 질병 발생 시 이 금액이 본인 부담이 될 수 있습니다. 전문가 상담을 통해 보장 구조를 점검해 보세요.</p>
                         </div>
                       </div>
                     </div>
@@ -2279,14 +2270,14 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
             })()}
             <div className="rounded-xl border border-navy-100 bg-navy-50 px-3 py-2.5">
               <p className="text-[11px] font-bold text-navy-700 leading-relaxed">한국 노인 자살률 OECD 1위 — 주요 원인 1위 생활비, 2위 치료비</p>
-              <p className="text-[12px] text-navy-500 mt-1 leading-relaxed">은퇴설계는 현금흐름과 의료비 보장, 두 가지를 함께 준비해야 완성됩니다.</p>
+              <p className="text-[10px] text-navy-500 mt-1 leading-relaxed">은퇴설계는 현금흐름과 의료비 보장, 두 가지를 함께 준비해야 완성됩니다.</p>
             </div>
           </div>
         )}
 
         {/* ── 법적 면책 문구 (고정) ── */}
         <div className="bg-slate-800 rounded-2xl p-4 border border-slate-700">
-          <p className="text-[12px] text-slate-300 leading-relaxed space-y-1">
+          <p className="text-[10px] text-slate-300 leading-relaxed space-y-1">
             <span className="block"><strong className="text-gold-400">※ 운용 가정:</strong> 은퇴 후 증권 자산은 연 5%(배당 3% + 자본성장 2%) 수익률의 배당 자산으로 전환됨을 가정함. 배당 소득은 매월 우선 수령하며, 생활비 부족분만 원금을 매도하여 충당하고, 잉여분은 자동 재투자됨.</span>
             <span className="block mt-2"><strong className="text-slate-300">※ 면책:</strong> 본 시뮬레이션은 이해를 돕기 위한 예시이며, 실제 투자 결과 및 세법(비과세/건보료) 개정에 따라 수치는 달라질 수 있습니다. 반드시 전문가의 가입설계서를 확인하십시오.</span>
             <span className="block mt-2"><strong className="text-slate-300">※ 종신연금:</strong> 수령액은 선택하신 상품의 연금지급 형태(확정기간형·종신형·부부형 등)에 따라 달라질 수 있습니다. 본 시뮬레이션의 종신연금 수령액은 보험 적립금을 100세까지 균등 연금화한 참고값입니다.</span>
@@ -2296,12 +2287,12 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
         {/* ── 전문가 푸터 ── */}
         <div className="bg-navy-900 rounded-2xl px-5 py-4 flex flex-col gap-1 border border-navy-700">
 
-          <p className="text-[12px] text-navy-400 mt-0.5">본 시뮬레이터는 전문가용 상담 보조 도구입니다.</p>
+          <p className="text-[10px] text-navy-400 mt-0.5">본 시뮬레이터는 전문가용 상담 보조 도구입니다.</p>
         </div>
 
         {/* ── 제작자 서명 ── */}
         <div className="text-center py-2">
-          <p className="text-[12px] text-slate-400 font-medium tracking-widest">Designed by 금융전문가 임재현</p>
+          <p className="text-[10px] text-slate-400 font-medium tracking-widest">Designed by 금융전문가 임재현</p>
         </div>
 
         <div className="h-8" />
