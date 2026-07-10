@@ -750,7 +750,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
 
 
-  const { retirementAge, monthlyExpense } = inputs;
+  const { retirementAge, monthlyExpense, currentAge } = inputs;
 
   const isSafe = dignityEndAge === null;
 
