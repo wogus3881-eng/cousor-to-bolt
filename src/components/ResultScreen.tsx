@@ -959,7 +959,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
         {/* ── 인플레이션 체감 카드 ── */}
         {(() => {
-          const yearsToRet = retirementAge - currentAge;
+          const yearsToRet = retirementAge - inputs.currentAge;
           const expAtRet = Math.round(monthlyExpense * Math.pow(1.03, yearsToRet) / 10000) * 10000;
           const ratio = expAtRet / monthlyExpense;
           return (
