@@ -393,7 +393,7 @@ function LivePensionSlider({
 
             <CompactSlider label="수익률 (연)"
 
-              value={bankR} min={0.5} max={8} step={0.5}
+              value={bankR} min={0.5} max={15} step={0.5}
 
               display={(v) => `${v.toFixed(1)}%`}
 
@@ -497,7 +497,7 @@ function LivePensionSlider({
 
             <CompactSlider label="수익률 (연)"
 
-              value={insR} min={0.5} max={8} step={0.5}
+              value={insR} min={0.5} max={15} step={0.5}
 
               display={(v) => `${v.toFixed(1)}%`}
 
