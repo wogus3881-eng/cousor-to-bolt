@@ -611,6 +611,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
   const features = proFeatures(tier);
   const [showTable, setShowTable] = useState(false);
+  const [pdfDownloading, setPdfDownloading] = useState(false);
 
   const [liveInputs, setLiveInputs] = useState<SimulatorInputs>(initialResult.inputs);
   /** 좁은 화면·일부 폰(가로/세로 판별 이슈): 차트 라벨 비활성 + 단순 레이아웃 */
@@ -1554,6 +1555,48 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
 
 
+        <div id="pro-result-pdf-capture" className="flex flex-col gap-4">
+
+        {/* ── 고객 입력 자산현황 요약 (PDF 전용 포함) ── */}
+        <div className="bg-white rounded-2xl p-5 border border-navy-100 shadow-sm">
+          <p className="text-sm font-bold text-navy-900 mb-3">고객 입력 자산현황 요약</p>
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="bg-navy-50 rounded-xl p-3">
+              <p className="text-[10px] text-navy-400 font-medium">현재 나이 · 은퇴 희망 나이</p>
+              <p className="text-[13px] font-bold text-navy-900 mt-0.5">{inputs.currentAge}세 → {inputs.retirementAge}세</p>
+            </div>
+            <div className="bg-navy-50 rounded-xl p-3">
+              <p className="text-[10px] text-navy-400 font-medium">은퇴 후 월 생활비 (현재가치)</p>
+              <p className="text-[13px] font-bold text-navy-900 mt-0.5">{formatKRW(inputs.monthlyExpense, true)}</p>
+            </div>
+          </div>
+
+          <p className="text-[11px] font-bold text-navy-600 mb-2">현재 보유자산</p>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 mb-4 text-[12px]">
+            <div className="flex justify-between"><span className="text-navy-500">은행/CMA</span><span className="font-semibold text-navy-800">{formatKRW(inputs.savingsBank ?? 0, true)}</span></div>
+            <div className="flex justify-between"><span className="text-navy-500">증권/ETF</span><span className="font-semibold text-navy-800">{formatKRW(inputs.savingsStock ?? 0, true)}</span></div>
+            <div className="flex justify-between"><span className="text-navy-500">보험 해지환급금</span><span className="font-semibold text-navy-800">{formatKRW(inputs.savingsInsurance ?? 0, true)}</span></div>
+            <div className="flex justify-between"><span className="text-navy-500">IRP·연금저축</span><span className="font-semibold text-navy-800">{formatKRW(inputs.savingsPension401k ?? 0, true)}</span></div>
+            <div className="flex justify-between"><span className="text-navy-500">ISA</span><span className="font-semibold text-navy-800">{formatKRW(inputs.savingsIsa ?? 0, true)}</span></div>
+            <div className="flex justify-between border-t border-navy-100 pt-1.5 mt-0.5"><span className="font-bold text-navy-700">합계</span><span className="font-bold text-navy-900">
+              {formatKRW((inputs.savingsBank ?? 0) + (inputs.savingsStock ?? 0) + (inputs.savingsInsurance ?? 0) + (inputs.savingsPension401k ?? 0) + (inputs.savingsIsa ?? 0), true)}
+            </span></div>
+          </div>
+
+          <p className="text-[11px] font-bold text-navy-600 mb-2">월 저축·납입액</p>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[12px]">
+            <div className="flex justify-between"><span className="text-navy-500">은행/CMA</span><span className="font-semibold text-navy-800">{formatKRW(inputs.monthlyBank ?? 0, true)}</span></div>
+            <div className="flex justify-between"><span className="text-navy-500">증권/ETF</span><span className="font-semibold text-navy-800">{formatKRW(inputs.monthlyStock ?? 0, true)}</span></div>
+            <div className="flex justify-between"><span className="text-navy-500">보험/비과세 연금</span><span className="font-semibold text-navy-800">{formatKRW(inputs.monthlyInsurance ?? 0, true)}</span></div>
+            <div className="flex justify-between"><span className="text-navy-500">IRP</span><span className="font-semibold text-navy-800">{formatKRW(inputs.monthlyPension401k ?? 0, true)}</span></div>
+            <div className="flex justify-between"><span className="text-navy-500">연금저축</span><span className="font-semibold text-navy-800">{formatKRW(inputs.monthlyPensionSavings ?? 0, true)}</span></div>
+            <div className="flex justify-between"><span className="text-navy-500">ISA</span><span className="font-semibold text-navy-800">{formatKRW(inputs.isaMonthly ?? 0, true)}</span></div>
+            <div className="flex justify-between border-t border-navy-100 pt-1.5 mt-0.5 col-span-2"><span className="font-bold text-navy-700">합계</span><span className="font-bold text-navy-900">
+              {formatKRW((inputs.monthlyBank ?? 0) + (inputs.monthlyStock ?? 0) + (inputs.monthlyInsurance ?? 0) + (inputs.monthlyPension401k ?? 0) + (inputs.monthlyPensionSavings ?? 0) + (inputs.isaMonthly ?? 0), true)}
+            </span></div>
+          </div>
+        </div>
+
         {/* ── 자산 축적~소진 통합 차트 ── */}
 
         <div className="bg-white rounded-2xl p-5 border border-navy-100 shadow-sm">
@@ -2044,6 +2087,9 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
           />
         )}
 
+        </div>
+        {/* ── /pro-result-pdf-capture ── */}
+
         {/* ── 부족액 콜아웃 ── */}
         {!isSafe && (
           <div className="flex gap-3 bg-red-50 border border-red-200 rounded-2xl p-4">
@@ -2167,26 +2213,37 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
             리포트 인쇄 저장
           </button>
           <button
-            onClick={() => {
+            onClick={async () => {
               if (!features.unlimitedPrint && !canRunBasicPrint()) {
                 window.alert('이번 달 Basic 리포트 저장 한도(5회)를 모두 사용했어요. Plus로 업그레이드하면 무제한입니다.');
                 return;
               }
               if (!features.unlimitedPrint) recordBasicPrint();
-              const el = document.querySelector<HTMLElement>('.flex-col.min-h-screen');
-              if (!el) { handlePrintReport(); return; }
-              const style = document.createElement('style');
-              style.textContent = '@media print { body > *:not(.flex-col) { display: none !important; } .flex-col { display: block !important; } button { display: none !important; } }';
-              document.head.appendChild(style);
-              window.print();
-              setTimeout(() => document.head.removeChild(style), 500);
+
+              const wasTableOpen = showTable;
+              if (!wasTableOpen) setShowTable(true);
+              // 표가 펼쳐지고 DOM에 반영될 시간을 확보
+              await new Promise((r) => setTimeout(r, 350));
+
+              setPdfDownloading(true);
+              try {
+                const { downloadResultPdf } = await import('../lib/generateResultPdf');
+                const ok = await downloadResultPdf('pro-result-pdf-capture');
+                if (!ok) {
+                  window.alert('PDF 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+                }
+              } finally {
+                setPdfDownloading(false);
+                if (!wasTableOpen) setShowTable(false);
+              }
             }}
-            className="flex-1 bg-white border-2 border-navy-300 hover:border-navy-500 hover:bg-navy-50 active:scale-[0.98] text-navy-800 font-bold text-[13px] rounded-2xl py-4 flex items-center justify-center gap-2 transition-all"
+            disabled={pdfDownloading}
+            className="flex-1 bg-white border-2 border-navy-300 hover:border-navy-500 hover:bg-navy-50 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-navy-800 font-bold text-[13px] rounded-2xl py-4 flex items-center justify-center gap-2 transition-all"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
             </svg>
-            이미지 저장
+            {pdfDownloading ? 'PDF 생성 중…' : 'PDF 저장'}
           </button>
         </div>
 
