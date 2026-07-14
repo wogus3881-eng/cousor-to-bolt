@@ -942,9 +942,9 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
             </p>
             <p className="text-[11px] font-bold text-rose-700 mt-1 leading-relaxed">
               인구 10만 명당 41.7명 · OECD 평균의 2.6배<br />
-              61세 이상 자살 동기 1위는 질병(치료비), 생활비도 주요 원인입니다
+              자살을 생각한 이유 1위는 경제적 어려움(27.7%), 건강 문제(27.6%)와 근소한 차이로 나란히 최상위입니다
             </p>
-            <p className="text-[9px] text-rose-400 mt-1.5">출처: 보건복지부 제5차 자살예방기본계획, OECD</p>
+            <p className="text-[9px] text-rose-400 mt-1.5">출처: OECD · 한국보건사회연구원(자살을 생각해본 노인 673명 대상)</p>
           </div>
         </div>
 
