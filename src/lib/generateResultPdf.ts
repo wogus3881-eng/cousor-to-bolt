@@ -32,6 +32,7 @@ async function captureElementToPdf(elementId: string): Promise<jsPDF | null> {
     scrollY: -window.scrollY,
     windowWidth: el.scrollWidth,
     windowHeight: el.scrollHeight,
+    ignoreElements: (element) => element.classList.contains('pdf-exclude'),
   });
 
   if (canvas.width === 0 || canvas.height === 0) {
