@@ -736,12 +736,9 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     return pv;
   }
 
-  // 90세 이전에 고갈되는 경우에만 extraNeeded 계산
-  const extraNeeded = (dignityEndAge !== null && dignityEndAge <= 90) ? actualShortfallFor(90) : 0;
-
-  // 100세 이전에 고갈되는 경우에만 추가 저축 계산
-  const needs100 = dignityEndAge !== null && dignityEndAge < 100;
-  const shortfall100 = needs100 ? actualShortfallFor(100) : 0;
+  // 고갈되는 경우 100세 기준 부족액 계산 (앱 전체 기준인 100세로 통일)
+  const extraNeeded = (dignityEndAge !== null && dignityEndAge < 100) ? actualShortfallFor(100) : 0;
+  const shortfall100 = extraNeeded;
 
   const blendedMonthlyRate = (
     totalContrib > 0
