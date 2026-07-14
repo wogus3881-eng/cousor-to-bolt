@@ -955,46 +955,46 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
           const expAtRet = Math.round(monthlyExpense * Math.pow(1.03, yearsToRet) / 10000) * 10000;
           const ratio = expAtRet / monthlyExpense;
           return (
-            <div className="rounded-2xl bg-gradient-to-br from-red-900 to-rose-950 p-4 border border-red-700">
+            <div className="rounded-2xl bg-gradient-to-br from-red-50 to-rose-50 p-4 border border-rose-200">
               <div className="flex items-center gap-2 mb-2">
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-rose-500">
                   <ShieldAlert size={15} className="text-white" />
                 </div>
                 <span className="text-[9px] font-extrabold text-white bg-rose-500 px-2 py-0.5 rounded-full">필독</span>
               </div>
-              <p className="text-[14px] font-extrabold text-white leading-snug">노인 자살률 OECD 1위</p>
-              <p className="text-[12px] font-bold text-rose-200 mt-1 leading-relaxed">
+              <p className="text-[14px] font-extrabold text-rose-900 leading-snug">노인 자살률 OECD 1위</p>
+              <p className="text-[12px] font-bold text-rose-700 mt-1 leading-relaxed">
                 10만 명당 41.7명 · OECD 평균의 2.6배<br />
                 자살을 생각한 이유 1위는 경제적 어려움, 건강 문제와 근소한 차이로 나란히 최상위입니다
               </p>
-              <p className="text-[9px] text-rose-300/70 mt-1.5">출처: OECD · 한국보건사회연구원(자살을 생각해본 노인 673명 대상)</p>
+              <p className="text-[9px] text-rose-400 mt-1.5">출처: OECD · 한국보건사회연구원(자살을 생각해본 노인 673명 대상)</p>
 
-              <div className="h-px bg-white/15 my-3" />
+              <div className="h-px bg-rose-200 my-3" />
 
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-sm">📈</span>
-                <p className="text-[10px] font-bold text-red-300 tracking-wide uppercase">인플레이션 경고</p>
+                <p className="text-[10px] font-bold text-rose-500 tracking-wide uppercase">인플레이션 경고</p>
               </div>
-              <p className="text-white text-[14px] font-extrabold leading-snug">
+              <p className="text-rose-900 text-[14px] font-extrabold leading-snug">
                 지금 {Math.floor(monthlyExpense / 10000).toLocaleString()}만원 생활비가{' '}
-                <span className="text-red-300">{retirementAge}세엔 {Math.floor(expAtRet / 10000).toLocaleString()}만원</span>이 필요합니다
+                <span className="text-rose-600">{retirementAge}세엔 {Math.floor(expAtRet / 10000).toLocaleString()}만원</span>이 필요합니다
               </p>
-              <div className="bg-black/20 rounded-xl p-3 mt-2 flex items-center justify-between">
+              <div className="bg-white/60 rounded-xl p-3 mt-2 flex items-center justify-between">
                 <div className="text-center">
-                  <p className="text-[9px] text-red-300">지금</p>
-                  <p className="text-sm font-bold text-white">{Math.floor(monthlyExpense / 10000).toLocaleString()}만원</p>
+                  <p className="text-[9px] text-rose-400">지금</p>
+                  <p className="text-sm font-bold text-rose-900">{Math.floor(monthlyExpense / 10000).toLocaleString()}만원</p>
                 </div>
-                <div className="text-red-300 text-base font-bold">→</div>
+                <div className="text-rose-400 text-base font-bold">→</div>
                 <div className="text-center">
-                  <p className="text-[9px] text-red-300">{retirementAge}세</p>
-                  <p className="text-sm font-bold text-red-200">{Math.floor(expAtRet / 10000).toLocaleString()}만원</p>
+                  <p className="text-[9px] text-rose-400">{retirementAge}세</p>
+                  <p className="text-sm font-bold text-rose-600">{Math.floor(expAtRet / 10000).toLocaleString()}만원</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-[9px] text-red-300">증가</p>
-                  <p className="text-sm font-bold text-amber-300">×{ratio.toFixed(1)}</p>
+                  <p className="text-[9px] text-rose-400">증가</p>
+                  <p className="text-sm font-bold text-amber-600">×{ratio.toFixed(1)}</p>
                 </div>
               </div>
-              <p className="text-[9px] text-red-300/70 mt-2">※ 연 3% 물가상승률 기준</p>
+              <p className="text-[9px] text-rose-400 mt-2">※ 연 3% 물가상승률 기준</p>
             </div>
           );
         })()}
