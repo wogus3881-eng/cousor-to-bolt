@@ -110,7 +110,7 @@ export default function LiteResultDashboard({ result }: Props) {
   const monthlyGap = flow.fromAssets;
 
   const shortageLabel =
-    dignityEndAge !== null && dignityEndAge <= 90 && extraNeeded > 0
+    dignityEndAge !== null && dignityEndAge < 100 && extraNeeded > 0
       ? formatKRW(extraNeeded)
       : dignityEndAge === null
         ? '해당 없음'
@@ -150,7 +150,7 @@ export default function LiteResultDashboard({ result }: Props) {
 
       <section className="grid grid-cols-2 gap-2">
         <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-black/[0.04]">
-          <p className="text-[10px] font-medium text-toss-sub">90세까지 부족 추정</p>
+          <p className="text-[10px] font-medium text-toss-sub">100세까지 부족 추정</p>
           <p className={`mt-1 text-[15px] font-bold tabular-nums ${extraNeeded > 0 ? 'text-red-600' : 'text-toss-ink'}`}>
             {shortageLabel}
           </p>
