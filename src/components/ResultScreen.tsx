@@ -927,27 +927,6 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
 
 
-        {/* ── 노인 자살률 경고 (상단 고정 노출) ── */}
-
-        <div className="rounded-2xl bg-gradient-to-br from-red-50 to-rose-50 border border-rose-200 p-4 flex gap-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-rose-500">
-            <ShieldAlert size={16} className="text-white" />
-          </div>
-          <div>
-            <span className="inline-block text-[9px] font-extrabold text-white bg-rose-500 px-2 py-0.5 rounded-full mb-1.5">
-              ⚠ 반드시 확인하세요
-            </span>
-            <p className="text-[12.5px] font-extrabold text-rose-900 leading-relaxed">
-              한국 노인 자살률 OECD 1위
-            </p>
-            <p className="text-[11px] font-bold text-rose-700 mt-1 leading-relaxed">
-              인구 10만 명당 41.7명 · OECD 평균의 2.6배<br />
-              자살을 생각한 이유 1위는 경제적 어려움(27.7%), 건강 문제(27.6%)와 근소한 차이로 나란히 최상위입니다
-            </p>
-            <p className="text-[9px] text-rose-400 mt-1.5">출처: OECD · 한국보건사회연구원(자살을 생각해본 노인 673명 대상)</p>
-          </div>
-        </div>
-
         {/* ── 국민연금 경고 (25년 미만) ── */}
 
         {weakPension && (
@@ -970,40 +949,48 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
 
 
-        {/* ── 인플레이션 체감 카드 ── */}
-        {(() => {
-          const yearsToRet = retirementAge - inputs.currentAge;
-          const expAtRet = Math.round(monthlyExpense * Math.pow(1.03, yearsToRet) / 10000) * 10000;
-          const ratio = expAtRet / monthlyExpense;
-          return (
-            <div className="rounded-2xl bg-gradient-to-r from-red-900 to-red-800 p-4 border border-red-700">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-sm">📈</span>
-                <p className="text-[10px] font-bold text-red-300 tracking-wide uppercase">인플레이션 경고</p>
+        {/* ── 경고 통계 2종: 노인 자살률 + 인플레이션 (2열) ── */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-2xl bg-gradient-to-br from-red-50 to-rose-50 border border-rose-200 p-3">
+            <div className="flex items-center gap-1.5 mb-2">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-rose-500">
+                <ShieldAlert size={13} className="text-white" />
               </div>
-              <p className="text-white text-sm font-extrabold leading-snug mb-3">
-                지금 {Math.floor(monthlyExpense / 10000).toLocaleString()}만원 생활비가<br />
-                <span className="text-red-300">{retirementAge}세엔 {Math.floor(expAtRet / 10000).toLocaleString()}만원</span>이 필요합니다
-              </p>
-              <div className="bg-black/20 rounded-xl p-3 flex items-center justify-between">
-                <div className="text-center">
-                  <p className="text-[9px] text-red-400">지금</p>
-                  <p className="text-base font-bold text-white">{Math.floor(monthlyExpense / 10000).toLocaleString()}만원</p>
-                </div>
-                <div className="text-red-400 text-lg font-bold">→</div>
-                <div className="text-center">
-                  <p className="text-[9px] text-red-400">{retirementAge}세</p>
-                  <p className="text-base font-bold text-red-300">{Math.floor(expAtRet / 10000).toLocaleString()}만원</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-[9px] text-red-400">증가</p>
-                  <p className="text-base font-bold text-amber-300">×{ratio.toFixed(1)}</p>
-                </div>
-              </div>
-              <p className="text-[9px] text-red-400 mt-2">※ 연 3% 물가상승률 기준</p>
+              <span className="text-[8px] font-extrabold text-white bg-rose-500 px-1.5 py-0.5 rounded-full">필독</span>
             </div>
-          );
-        })()}
+            <p className="text-[11px] font-extrabold text-rose-900 leading-snug">노인 자살률 OECD 1위</p>
+            <p className="text-[10px] font-bold text-rose-700 mt-1 leading-relaxed">
+              10만 명당 41.7명 · OECD 2.6배<br />
+              이유 1위: 경제난 · 건강문제
+            </p>
+            <p className="text-[8px] text-rose-400 mt-1.5">출처: OECD·한국보건사회연구원</p>
+          </div>
+
+          {(() => {
+            const yearsToRet = retirementAge - inputs.currentAge;
+            const expAtRet = Math.round(monthlyExpense * Math.pow(1.03, yearsToRet) / 10000) * 10000;
+            const ratio = expAtRet / monthlyExpense;
+            return (
+              <div className="rounded-2xl bg-gradient-to-br from-red-900 to-red-800 p-3 border border-red-700">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <span className="text-xs">📈</span>
+                  <p className="text-[8px] font-bold text-red-300 tracking-wide uppercase">인플레이션</p>
+                </div>
+                <p className="text-white text-[11px] font-extrabold leading-snug">
+                  {Math.floor(monthlyExpense / 10000).toLocaleString()}만원<br />
+                  → <span className="text-red-300">{retirementAge}세 {Math.floor(expAtRet / 10000).toLocaleString()}만원</span>
+                </p>
+                <div className="bg-black/20 rounded-lg p-2 mt-2 flex items-center justify-between">
+                  <div className="text-center">
+                    <p className="text-[7px] text-red-400">증가배율</p>
+                    <p className="text-[13px] font-bold text-amber-300">×{ratio.toFixed(1)}</p>
+                  </div>
+                </div>
+                <p className="text-[8px] text-red-400 mt-1.5">※ 연 3% 물가상승률 기준</p>
+              </div>
+            );
+          })()}
+        </div>
 
         {/* ── Key Metrics ── */}
 
