@@ -719,16 +719,21 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     : stockR;
 
   // 실제 연도별 시뮬레이션(dignityEndAge를 만들어낸 것과 동일한 결과)에서
-  // 목표 나이 직전 시점의 실제 부족액(deficit)을 가져와 은퇴 시점 기준으로
-  // 할인합니다. 별도의 단순 공식을 쓰지 않으므로 "OO세에 고갈되는데
-  // 부족액은 0원" 같은 모순이 생기지 않습니다.
+  // "고갈 이후 각 해에 감당 못하는 금액(연 생활비 - 연 순연금)"을 목표 나이
+  // 직전까지 전부 더하고, 각 연도를 은퇴 시점 기준으로 할인해서 합산합니다.
+  // 단일 연도 스냅샷이 아니라 고갈~목표나이 전체 기간의 누적 부족을 반영하므로,
+  // dignityEndAge와 항상 논리적으로 일치합니다.
   function actualShortfallFor(targetAge: number): number {
-    const checkAge = Math.min(targetAge - 1, LIFE_EXPECTANCY);
-    const row = yearRows.find((r) => r.age === checkAge);
-    const deficitAtTarget = row ? row.deficit : 0;
-    if (deficitAtTarget <= 0) return 0;
-    const yearsBack = Math.max(0, checkAge - retirementAge);
-    return deficitAtTarget / Math.pow(1 + (blendedRetirementRate || 0.001), yearsBack);
+    let pv = 0;
+    for (const row of yearRows) {
+      if (row.age < retirementAge) continue;
+      if (row.age > targetAge - 1) break;
+      if (!row.isPostDepletion) continue;
+      const annualUnmet = Math.max(0, (row.requiredExpense - row.pensionNet) * 12);
+      const yearsBack = row.age - retirementAge;
+      pv += annualUnmet / Math.pow(1 + (blendedRetirementRate || 0.001), yearsBack);
+    }
+    return pv;
   }
 
   // 90세 이전에 고갈되는 경우에만 extraNeeded 계산
