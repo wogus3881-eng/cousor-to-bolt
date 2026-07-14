@@ -1053,11 +1053,11 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
           <StatCard
 
-            label={isSafe ? '90세까지 여유 자금' : '품격 유지 부족액'}
+            label={isSafe ? '100세까지 여유 자금' : '품격 유지 부족액'}
 
             value={formatKRW(extraNeeded)}
 
-            sub={isSafe ? '안정적 수준' : `90세까지 부족`}
+            sub={isSafe ? '안정적 수준' : `100세까지 부족`}
 
             danger={!isSafe}
 
@@ -2024,7 +2024,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
           <div className="flex gap-3 bg-red-50 border border-red-200 rounded-2xl p-4">
             <TrendingDown size={18} className="text-red-500 shrink-0 mt-0.5" />
             <p className="text-[12px] text-red-800 leading-relaxed">
-              현재 구조에서는 <strong>90세까지 품격을 지키기 위해{' '}
+              현재 구조에서는 <strong>100세까지 품격을 지키기 위해{' '}
               <span className="text-red-600 underline decoration-dotted">{formatKRW(extraNeeded)}</span>이 더 필요합니다.</strong>
             </p>
           </div>
