@@ -965,7 +965,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
               <p className="text-[14px] font-extrabold text-rose-900 leading-snug">노인 자살률 OECD 1위</p>
               <p className="text-[12px] font-bold text-rose-700 mt-1 leading-relaxed">
                 10만 명당 41.7명 · OECD 평균의 2.6배<br />
-                자살을 생각한 이유 1위는 경제적 어려움, 건강 문제와 근소한 차이로 나란히 최상위입니다
+                자살을 생각한 이유 1위는 경제적 어려움(27.7%), 건강 문제(27.6%)와 근소한 차이로 나란히 최상위입니다
               </p>
               <p className="text-[9px] text-rose-400 mt-1.5">출처: OECD · 한국보건사회연구원(자살을 생각해본 노인 673명 대상)</p>
 
