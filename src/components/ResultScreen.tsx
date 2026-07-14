@@ -686,7 +686,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
     healthInsuranceTriggered,
 
-    monthlySavingsNeededFor95,
+    monthlySavingsNeededFor100,
 
     insurancePaymentEndAge,
 
@@ -926,6 +926,27 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
         )}
 
 
+
+        {/* ── 노인 자살률 경고 (상단 고정 노출) ── */}
+
+        <div className="rounded-2xl bg-gradient-to-br from-red-50 to-rose-50 border border-rose-200 p-4 flex gap-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-rose-500">
+            <ShieldAlert size={16} className="text-white" />
+          </div>
+          <div>
+            <span className="inline-block text-[9px] font-extrabold text-white bg-rose-500 px-2 py-0.5 rounded-full mb-1.5">
+              ⚠ 반드시 확인하세요
+            </span>
+            <p className="text-[12.5px] font-extrabold text-rose-900 leading-relaxed">
+              한국 노인 자살률 OECD 1위
+            </p>
+            <p className="text-[11px] font-bold text-rose-700 mt-1 leading-relaxed">
+              인구 10만 명당 41.7명 · OECD 평균의 2.6배<br />
+              61세 이상 자살 동기 1위는 질병(치료비), 생활비도 주요 원인입니다
+            </p>
+            <p className="text-[9px] text-rose-400 mt-1.5">출처: 보건복지부 제5차 자살예방기본계획, OECD</p>
+          </div>
+        </div>
 
         {/* ── 국민연금 경고 (25년 미만) ── */}
 
@@ -1367,15 +1388,15 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
                     <div className="flex justify-between gap-2">
 
-                      <span className="text-navy-500">95세 추가저축</span>
+                      <span className="text-navy-500">100세 추가저축</span>
 
                       <span className="font-bold text-navy-900">
 
-                        {data.monthlySavingsNeededFor95 <= 0
+                        {data.monthlySavingsNeededFor100 <= 0
 
                           ? '충분'
 
-                          : `${formatKRW(data.monthlySavingsNeededFor95, true)}/월`}
+                          : `${formatKRW(data.monthlySavingsNeededFor100, true)}/월`}
 
                       </span>
 
@@ -2118,14 +2139,14 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
         </div>
         )}
 
-        {/* ── 95세 목표 섹션 ── */}
+        {/* ── 100세 목표 섹션 ── */}
         <div className="bg-white rounded-3xl border border-navy-100 shadow-sm overflow-hidden">
           <div className="bg-gradient-to-r from-navy-900 to-navy-700 px-6 pt-6 pb-5">
             <span className="inline-block text-[10px] font-bold tracking-[0.15em] text-gold-300 uppercase bg-navy-800/60 px-3 py-1 rounded-full mb-3">
               해결 방안
             </span>
             <h2 className="text-[18px] font-extrabold text-white leading-snug">
-              95세까지 품격을 지키려면<br />
+              100세까지 품격을 지키려면<br />
               <span className="text-gold-300">지금 무엇을 해야 할까요?</span>
             </h2>
           </div>
@@ -2133,15 +2154,15 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
           <div className="px-6 py-5 flex flex-col gap-4">
             <div className="bg-navy-50 rounded-2xl p-4 border border-navy-100">
               <p className="text-[11px] text-navy-500 font-medium mb-2">단순 합산 기준 추가 저축 금액</p>
-              {dignityEndAge !== null && dignityEndAge < 95 ? (
+              {dignityEndAge !== null && dignityEndAge < 100 ? (
                 <>
                   <p className="text-[13px] text-navy-700 leading-relaxed mb-1">
-                    고객님의 노후를 <strong className="text-navy-900">95세까지 지키기 위해</strong>
+                    고객님의 노후를 <strong className="text-navy-900">100세까지 지키기 위해</strong>
                   </p>
-                  {monthlySavingsNeededFor95 > 0 ? (
+                  {monthlySavingsNeededFor100 > 0 ? (
                     <div className="flex items-baseline gap-1.5 mt-1">
                       <span className="text-3xl font-extrabold text-navy-800">
-                        월 {Math.ceil(monthlySavingsNeededFor95 / 10000).toLocaleString()}만 원
+                        월 {Math.ceil(monthlySavingsNeededFor100 / 10000).toLocaleString()}만 원
                       </span>
                       <span className="text-sm text-navy-400">추가 저축 필요</span>
                     </div>
@@ -2158,7 +2179,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
                     <span className="text-emerald-600 text-[10px] font-extrabold">✓</span>
                   </span>
                   <p className="text-sm font-bold text-emerald-600">
-                    {dignityEndAge === null ? '100세까지 충분합니다' : '95세 이후까지 유지됩니다'}
+                    {dignityEndAge === null ? '100세까지 충분합니다' : '100세 이후까지 유지됩니다'}
                   </p>
                 </div>
               )}
@@ -2173,13 +2194,13 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
               </p>
             </div>
 
-            {dignityEndAge !== null && dignityEndAge < 95 && (
+            {dignityEndAge !== null && dignityEndAge < 100 && (
               <button
                 onClick={scrollToReportActions}
                 className="w-full bg-gradient-to-r from-navy-800 to-navy-700 hover:from-navy-700 hover:to-navy-600 active:scale-[0.98] text-white font-bold text-[13px] rounded-2xl py-4 flex items-center justify-center gap-2 transition-all shadow-lg shadow-navy-900/30 border border-gold-600/30"
               >
                 <span className="text-gold-400">▶</span>
-                월 {Math.ceil(monthlySavingsNeededFor95 / 10000).toLocaleString()}만 원 추가 저축 —
+                월 {Math.ceil(monthlySavingsNeededFor100 / 10000).toLocaleString()}만 원 추가 저축 —
                 리포트 저장 · 고객 상담 자료로 활용
                 <ChevronRight size={16} />
               </button>
@@ -2308,10 +2329,6 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
                 </>
               );
             })()}
-            <div className="rounded-xl border border-navy-100 bg-navy-50 px-3 py-2.5">
-              <p className="text-[11px] font-bold text-navy-700 leading-relaxed">한국 노인 자살률 OECD 1위 — 주요 원인 1위 생활비, 2위 치료비</p>
-              <p className="text-[10px] text-navy-500 mt-1 leading-relaxed">은퇴설계는 현금흐름과 의료비 보장, 두 가지를 함께 준비해야 완성됩니다.</p>
-            </div>
           </div>
         )}
 
