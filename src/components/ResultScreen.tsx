@@ -2161,7 +2161,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
                       <span className="text-sm text-navy-400">추가 저축 필요</span>
                     </div>
                   ) : (
-                    <p className="text-[13px] text-navy-600 mt-1">추가 저축 금액을 계산 중입니다.</p>
+                    <p className="text-[13px] text-navy-600 mt-1">현재 배분 기준으로는 추가 저축 없이도 근접 가능한 수준입니다.</p>
                   )}
                   <p className="text-[10px] text-navy-400 mt-1.5">
                     현재 자산 배분 기준 · 은퇴 시점({inputs.retirementAge}세)까지 {Math.max(0, inputs.retirementAge - inputs.currentAge)}년 적립 기준
