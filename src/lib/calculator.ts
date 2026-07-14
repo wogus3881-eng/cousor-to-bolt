@@ -269,7 +269,7 @@ function calcPensionBreakevenAge(
   return LIFE_EXPECTANCY;
 }
 
-export function simulate(inputs: SimulatorInputs): SimulationResult {
+export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): SimulationResult {
   const yearsToRetirementPre = Math.max(0, (inputs.retirementAge ?? 0) - (inputs.currentAge ?? 0));
 
   // 구버전 필드 정규화
@@ -402,8 +402,12 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
   const severanceToBank = severanceReinvest === 'lump' ? severancePay * (1 - SEVERANCE_TAX_RATE) : 0;
 
   // 은행/증권 은퇴자산 (보험 만기 재투자 포함)
-  const retirementBalanceBank = fv(savingsBank, bankR, yearsToRetirement) + usdToBank + insMaturityToBank + severanceToBank;
-  const retirementBalanceStock = fv(savingsStock, stockR, yearsToRetirement) + usdToStock + insMaturityToStock
+  const retirementBalanceBank = fv(savingsBank, bankR, yearsToRetirement)
+    + fvAnnuity(monthlyBank, bankR, yearsToRetirement)
+    + usdToBank + insMaturityToBank + severanceToBank;
+  const retirementBalanceStock = fv(savingsStock, stockR, yearsToRetirement)
+    + fvAnnuity(monthlyStock, stockR, yearsToRetirement)
+    + usdToStock + insMaturityToStock
     + fv(savingsPensionSavings, pensionSavingsR, yearsToRetirement)
     + fvAnnuity(monthlyPensionSavings, pensionSavingsR, yearsToRetirement);
   // 납입 종료 나이 (은퇴 전)
@@ -738,19 +742,14 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
 
   // 고갈되는 경우 100세 기준 부족액 계산 (앱 전체 기준인 100세로 통일)
   const extraNeeded = (dignityEndAge !== null && dignityEndAge < 100) ? actualShortfallFor(100) : 0;
-  const shortfall100 = extraNeeded;
 
-  const blendedMonthlyRate = (
-    totalContrib > 0
-      ? (monthlyBank * bankR + monthlyStock * stockR + monthlyInsurance * insR) / totalContrib
-      : stockR
-  ) / 12;
-  const monthsToRetirement = Math.max(1, yearsToRetirement * 12);
-  const monthlySavingsNeededFor100 = shortfall100 <= 0
-    ? 0
-    : blendedMonthlyRate === 0
-      ? shortfall100 / monthsToRetirement
-      : shortfall100 * blendedMonthlyRate / (Math.pow(1 + blendedMonthlyRate, monthsToRetirement) - 1);
+  // 월 추가저축 필요액: 단순 공식이 아니라, "현재 비율대로 추가 저축했을 때
+  // 실제로 100세까지 버티는가"를 실제 시뮬레이션으로 직접 검증(이진탐색)해서
+  // 구합니다. 그래서 화면의 금액을 실제로 입력에 반영하면 정말로 문제가
+  // 해결됩니다 (별도 공식으로 추정만 하고 검증하지 않던 이전 방식과 다름).
+  const monthlySavingsNeededFor100 = (!_skipSavingsSearch && dignityEndAge !== null && dignityEndAge < 100)
+    ? solveMonthlySavingsFor100(inputs)
+    : 0;
 
   // 치료비 리스크 계산
   const monthlyProtection = norm.monthlyProtectionInsurance ?? 0;
@@ -808,6 +807,52 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
       coverageScore,
     },
   };
+}
+
+/**
+ * 현재 은행/증권/보험 월 저축 비율 그대로 추가 저축했을 때, 실제로 100세까지
+ * 자산이 버티는 데 필요한 월 추가저축액을 이진탐색으로 찾습니다.
+ * 별도 공식으로 추정만 하지 않고, 매 후보 금액마다 simulate()를 실제로 다시
+ * 돌려서 검증하기 때문에 화면에 뜬 금액을 실제로 입력하면 정말로 100세까지
+ * 버티는 결과가 나옵니다.
+ */
+function solveMonthlySavingsFor100(inputs: SimulatorInputs): number {
+  const baseBank = inputs.monthlyBank ?? 0;
+  const baseStock = inputs.monthlyStock ?? 0;
+  const baseIns = inputs.monthlyInsurance ?? 0;
+  const totalBase = baseBank + baseStock + baseIns;
+  const wBank = totalBase > 0 ? baseBank / totalBase : 1 / 3;
+  const wStock = totalBase > 0 ? baseStock / totalBase : 1 / 3;
+  const wIns = totalBase > 0 ? baseIns / totalBase : 1 / 3;
+
+  function reachesHundred(extraMonthly: number): boolean {
+    const testInputs: SimulatorInputs = {
+      ...inputs,
+      monthlyBank: baseBank + extraMonthly * wBank,
+      monthlyStock: baseStock + extraMonthly * wStock,
+      monthlyInsurance: baseIns + extraMonthly * wIns,
+    };
+    // _skipSavingsSearch=true: 탐색 도중 무한 재귀를 막기 위해 내부 호출에서는
+    // 월 추가저축액 재계산을 건너뜁니다.
+    const r = simulate(testInputs, true);
+    return r.dignityEndAge === null;
+  }
+
+  const UPPER_BOUND = 100000000; // 월 1억원까지 탐색 (그 이상은 사실상 해결 불가로 간주)
+  if (!reachesHundred(UPPER_BOUND)) return UPPER_BOUND;
+
+  let lo = 0;
+  let hi = UPPER_BOUND;
+  for (let i = 0; i < 30; i++) {
+    const mid = (lo + hi) / 2;
+    if (reachesHundred(mid)) {
+      hi = mid;
+    } else {
+      lo = mid;
+    }
+  }
+  // 만원 단위로 올림 처리 (실제로는 hi보다 살짝 여유 있게 안전 마진)
+  return Math.ceil(hi / 10000) * 10000;
 }
 
 export function formatKRW(amount: number, short = false): string {
