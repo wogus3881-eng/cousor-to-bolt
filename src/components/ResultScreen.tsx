@@ -698,10 +698,6 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
     pensionBreakevenAge,
 
-    isaTaxSaved,
-
-    pension401kTotalTax,
-
   } = result;
 
 
@@ -1472,74 +1468,6 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
 
 
-        {features.taxSavingsChart && (() => {
-
-          const yearBarScale = 5000000;
-
-          const bars = [
-
-            { label: 'ISA 절세액', value: isaTaxSaved, display: formatKRW(isaTaxSaved, true), color: 'bg-emerald-500' },
-
-            { label: '퇴직연금 절세 효과', value: pension401kTotalTax, display: formatKRW(pension401kTotalTax, true), color: 'bg-indigo-500' },
-
-            { label: '비과세 연장', value: taxFreeYearsGained * yearBarScale, display: `${taxFreeYearsGained}년`, color: 'bg-amber-500' },
-
-          ];
-
-          const maxVal = Math.max(...bars.map(b => b.value), 1);
-
-          return (
-
-            <div className="rounded-2xl border border-navy-100 bg-white p-4 shadow-sm">
-
-              <div className="flex items-center gap-2 mb-4">
-
-                <Shield size={15} className="text-emerald-600" />
-
-                <p className="text-sm font-bold text-navy-900">절세·세금 효과 비교</p>
-
-              </div>
-
-              <div className="space-y-4">
-
-                {bars.map(bar => (
-
-                  <div key={bar.label}>
-
-                    <div className="flex justify-between items-baseline mb-1.5">
-
-                      <span className="text-[11px] font-medium text-navy-600">{bar.label}</span>
-
-                      <span className="text-[12px] font-bold text-navy-900">{bar.display}</span>
-
-                    </div>
-
-                    <div className="h-2.5 rounded-full bg-navy-100 overflow-hidden">
-
-                      <div
-
-                        className={`h-full rounded-full ${bar.color} transition-all duration-500`}
-
-                        style={{ width: `${Math.max(4, (bar.value / maxVal) * 100)}%` }}
-
-                      />
-
-                    </div>
-
-                  </div>
-
-                ))}
-
-              </div>
-
-            </div>
-
-          );
-
-        })()}
-
-
-
         {/* ── 실시간 자산 조정 패널 (Plus) ── */}
 
         <div className="pdf-exclude">
@@ -2164,7 +2092,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
                     <p className="text-[13px] text-navy-600 mt-1">현재 배분 기준으로는 추가 저축 없이도 근접 가능한 수준입니다.</p>
                   )}
                   <p className="text-[10px] text-navy-400 mt-1.5">
-                    현재 자산 배분 기준 · 은퇴 시점({inputs.retirementAge}세)까지 {Math.max(0, inputs.retirementAge - inputs.currentAge)}년 적립 기준
+                    현재 은행·증권·보험 <strong>저축 비율 그대로</strong> 이 추가 저축액도 나눠 넣는다고 가정 · 은퇴 시점({inputs.retirementAge}세)까지 {Math.max(0, inputs.retirementAge - inputs.currentAge)}년 적립 기준
                   </p>
                 </>
               ) : (
