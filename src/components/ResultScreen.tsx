@@ -740,17 +740,6 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
     reportActionsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  function handlePrintReport() {
-    if (!features.unlimitedPrint && !canRunBasicPrint()) {
-      window.alert('이번 달 Basic 리포트 저장 한도(5회)를 모두 사용했어요. Plus로 업그레이드하면 무제한입니다.');
-      return;
-    }
-    if (!features.unlimitedPrint) recordBasicPrint();
-    window.print();
-  }
-
-
-
   const { retirementAge, monthlyExpense } = inputs;
 
   const isSafe = dignityEndAge === null;
@@ -877,6 +866,8 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
       <div className="flex-1 px-4 py-5 flex flex-col gap-4">
 
 
+
+        <div id="pro-result-pdf-capture" className="flex flex-col gap-4">
 
         {/* ── Headline Banner ── */}
 
@@ -1536,6 +1527,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
         {/* ── 실시간 자산 조정 패널 (Plus) ── */}
 
+        <div className="pdf-exclude">
         {features.liveAdjustment ? (
         <LivePensionSlider
 
@@ -1552,10 +1544,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
             description="상담 중 슬라이더로 연금·3버킷·수익률을 바꾸면 그래프가 즉시 반영됩니다. Basic은 입력 화면에서 값을 수정한 뒤 다시 진단해 주세요."
           />
         )}
-
-
-
-        <div id="pro-result-pdf-capture" className="flex flex-col gap-4">
+        </div>
 
         {/* ── 고객 입력 자산현황 요약 (PDF 전용 포함) ── */}
         <div className="bg-white rounded-2xl p-5 border border-navy-100 shadow-sm">
@@ -2087,9 +2076,6 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
           />
         )}
 
-        </div>
-        {/* ── /pro-result-pdf-capture ── */}
-
         {/* ── 부족액 콜아웃 ── */}
         {!isSafe && (
           <div className="flex gap-3 bg-red-50 border border-red-200 rounded-2xl p-4">
@@ -2202,16 +2188,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
         </div>
 
         {/* ── 리포트 저장 버튼 ── */}
-        <div ref={reportActionsRef} className="flex gap-2 scroll-mt-6">
-          <button
-            onClick={handlePrintReport}
-            className="flex-1 bg-navy-900 hover:bg-navy-800 active:scale-[0.98] text-white font-bold text-[13px] rounded-2xl py-4 flex items-center justify-center gap-2 transition-all shadow-lg"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
-            </svg>
-            리포트 인쇄 저장
-          </button>
+        <div ref={reportActionsRef} className="pdf-exclude flex gap-2 scroll-mt-6">
           <button
             onClick={async () => {
               if (!features.unlimitedPrint && !canRunBasicPrint()) {
@@ -2357,6 +2334,9 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
         <div className="text-center py-2">
           <p className="text-[10px] text-slate-400 font-medium tracking-widest">Designed by 금융전문가 임재현</p>
         </div>
+
+        </div>
+        {/* ── /pro-result-pdf-capture ── */}
 
         <div className="h-8" />
       </div>
