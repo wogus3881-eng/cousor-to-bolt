@@ -108,7 +108,7 @@ export interface SimulationResult {
   totalTaxBurden: number;
   taxFreeYearsGained: number;
   healthInsuranceTriggered: boolean;
-  monthlySavingsNeededFor95: number;
+  monthlySavingsNeededFor100: number;
   insurancePaymentEndAge: number; // 보험 납입 종료 나이
   insAnnuityMonthly: number;      // 종신연금 월 수령액 (보험 원금 연금화)
   // 세금 인사이트
@@ -749,10 +749,10 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
   const extraNeeded = (dignityEndAge !== null && dignityEndAge <= 90)
     ? Math.max(0, targetBalance90 - retirementBalance) : 0;
 
-  // 95세 이전에 고갈되는 경우에만 추가 저축 계산
-  const needs95 = dignityEndAge !== null && dignityEndAge < 95;
-  const targetBalance95 = needs95 ? calcTargetBalance(95) : 0;
-  const shortfall95 = needs95 ? Math.max(0, targetBalance95 - retirementBalance) : 0;
+  // 100세 이전에 고갈되는 경우에만 추가 저축 계산
+  const needs100 = dignityEndAge !== null && dignityEndAge < 100;
+  const targetBalance100 = needs100 ? calcTargetBalance(100) : 0;
+  const shortfall100 = needs100 ? Math.max(0, targetBalance100 - retirementBalance) : 0;
 
   const blendedMonthlyRate = (
     totalContrib > 0
@@ -760,11 +760,11 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
       : stockR
   ) / 12;
   const monthsToRetirement = Math.max(1, yearsToRetirement * 12);
-  const monthlySavingsNeededFor95 = shortfall95 <= 0
+  const monthlySavingsNeededFor100 = shortfall100 <= 0
     ? 0
     : blendedMonthlyRate === 0
-      ? shortfall95 / monthsToRetirement
-      : shortfall95 * blendedMonthlyRate / (Math.pow(1 + blendedMonthlyRate, monthsToRetirement) - 1);
+      ? shortfall100 / monthsToRetirement
+      : shortfall100 * blendedMonthlyRate / (Math.pow(1 + blendedMonthlyRate, monthsToRetirement) - 1);
 
   // 치료비 리스크 계산
   const monthlyProtection = norm.monthlyProtectionInsurance ?? 0;
@@ -799,7 +799,7 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
     totalTaxBurden,
     taxFreeYearsGained,
     healthInsuranceTriggered,
-    monthlySavingsNeededFor95,
+    monthlySavingsNeededFor100,
     insurancePaymentEndAge,
     insAnnuityMonthly,
     annualFinancialTaxAtRetirement,
