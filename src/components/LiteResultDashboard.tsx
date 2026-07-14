@@ -83,7 +83,7 @@ function FlowRow({
 }
 
 function buildAdvisorCopy(result: SimulationResult, band: LiteReadinessBand): string {
-  const { weakPension, monthlySavingsNeededFor95, dignityEndAge } = result;
+  const { weakPension, monthlySavingsNeededFor100, dignityEndAge } = result;
   const parts: string[] = [];
 
   if (band === 'ok') {
@@ -92,9 +92,9 @@ function buildAdvisorCopy(result: SimulationResult, band: LiteReadinessBand): st
   } else {
     parts.push('간편 진단 기준으로는 은퇴 이후 현금흐름에 부담이 생길 여지가 있어요.');
     if (weakPension) parts.push('국민연금 가입 기간이 짧게 반영되어, 개인 준비 비중이 더 커질 수 있습니다.');
-    if (monthlySavingsNeededFor95 > 0 && dignityEndAge !== null) {
+    if (monthlySavingsNeededFor100 > 0 && dignityEndAge !== null) {
       parts.push(
-        `참고로, 95세까지 맞추려면 매월 약 ${formatKRW(Math.round(monthlySavingsNeededFor95))} 정도의 추가 저축이 필요할 수 있다는 추정치도 나왔어요(단순 가정).`,
+        `참고로, 100세까지 맞추려면 매월 약 ${formatKRW(Math.round(monthlySavingsNeededFor100))} 정도의 추가 저축이 필요할 수 있다는 추정치도 나왔어요(단순 가정).`,
       );
     }
     parts.push('대출·보험·ISA·연금 구조를 어떻게 쌓을지 전문가와 짧게라도 상의해 보시길 권해 드려요.');
