@@ -2220,6 +2220,10 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
               }
               if (!features.unlimitedPrint) recordBasicPrint();
 
+              // 클릭과 같은 콜스택에서 미리 빈 탭을 열어둠 (모바일 브라우저의
+              // "비동기 이후 액션은 사용자 제스처 아님" 차단을 우회하기 위함)
+              const pendingWindow = window.open('', '_blank');
+
               const wasTableOpen = showTable;
               if (!wasTableOpen) setShowTable(true);
               // 표가 펼쳐지고 DOM에 반영될 시간을 확보
@@ -2228,10 +2232,14 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
               setPdfDownloading(true);
               try {
                 const { downloadResultPdf } = await import('../lib/generateResultPdf');
-                const ok = await downloadResultPdf('pro-result-pdf-capture');
+                const ok = await downloadResultPdf('pro-result-pdf-capture', '고객', pendingWindow);
                 if (!ok) {
                   window.alert('PDF 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.');
                 }
+              } catch (err) {
+                console.error('[PDF] 저장 중 오류:', err);
+                pendingWindow?.close();
+                window.alert('PDF 저장 중 문제가 발생했습니다. 네트워크 상태를 확인하고 다시 시도해 주세요.');
               } finally {
                 setPdfDownloading(false);
                 if (!wasTableOpen) setShowTable(false);
