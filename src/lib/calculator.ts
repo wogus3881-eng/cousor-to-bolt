@@ -718,41 +718,25 @@ export function simulate(inputs: SimulatorInputs): SimulationResult {
       / retirementBalance
     : stockR;
 
-  function calcTargetBalance(targetAge: number): number {
-    let bal = 0;
-    for (let age = targetAge - 1; age >= retirementAge; age--) {
-      const y = age - retirementAge;
-      const isAct = age <= ACTIVE_END_AGE;
-      let base: number;
-      if (isAct) {
-        base = inflationAdjustedMonthlyExpense * Math.pow(1 + INFLATION, y);
-      } else {
-        const inactYrs = age - ACTIVE_END_AGE;
-        const expTrans = inflationAdjustedMonthlyExpense * Math.pow(1 + INFLATION, ACTIVE_END_AGE - retirementAge);
-        base = expTrans * INACTIVE_EXPENSE_RATIO * Math.pow(1 + INFLATION, inactYrs);
-      }
-      const mInfl = age >= MEDICAL_START_AGE ? Math.pow(1 + INFLATION, age - MEDICAL_START_AGE) : 0;
-      const mCost = age >= MEDICAL_START_AGE ? MEDICAL_COST * mInfl : 0;
-      const yrExp = (base + mCost) * 12;
-      const yrPenGross = pensionAtRetirement * Math.pow(1 + PENSION_ANNUAL_INCREASE, y) * 12;
-      const yrTax = yrPenGross * PENSION_TAX_RATE;
-      const yrHI = healthInsuranceTriggered ? yrPenGross * HEALTH_INS_RATE : 0;
-      const yrPenNet = yrPenGross - yrTax - yrHI;
-      const netW = Math.max(0, yrExp - yrPenNet);
-      bal = (bal + netW) / (1 + blendedRetirementRate);
-    }
-    return bal;
+  // 실제 연도별 시뮬레이션(dignityEndAge를 만들어낸 것과 동일한 결과)에서
+  // 목표 나이 직전 시점의 실제 부족액(deficit)을 가져와 은퇴 시점 기준으로
+  // 할인합니다. 별도의 단순 공식을 쓰지 않으므로 "OO세에 고갈되는데
+  // 부족액은 0원" 같은 모순이 생기지 않습니다.
+  function actualShortfallFor(targetAge: number): number {
+    const checkAge = Math.min(targetAge - 1, LIFE_EXPECTANCY);
+    const row = yearRows.find((r) => r.age === checkAge);
+    const deficitAtTarget = row ? row.deficit : 0;
+    if (deficitAtTarget <= 0) return 0;
+    const yearsBack = Math.max(0, checkAge - retirementAge);
+    return deficitAtTarget / Math.pow(1 + (blendedRetirementRate || 0.001), yearsBack);
   }
 
   // 90세 이전에 고갈되는 경우에만 extraNeeded 계산
-  const targetBalance90 = (dignityEndAge !== null && dignityEndAge <= 90) ? calcTargetBalance(90) : 0;
-  const extraNeeded = (dignityEndAge !== null && dignityEndAge <= 90)
-    ? Math.max(0, targetBalance90 - retirementBalance) : 0;
+  const extraNeeded = (dignityEndAge !== null && dignityEndAge <= 90) ? actualShortfallFor(90) : 0;
 
   // 100세 이전에 고갈되는 경우에만 추가 저축 계산
   const needs100 = dignityEndAge !== null && dignityEndAge < 100;
-  const targetBalance100 = needs100 ? calcTargetBalance(100) : 0;
-  const shortfall100 = needs100 ? Math.max(0, targetBalance100 - retirementBalance) : 0;
+  const shortfall100 = needs100 ? actualShortfallFor(100) : 0;
 
   const blendedMonthlyRate = (
     totalContrib > 0
