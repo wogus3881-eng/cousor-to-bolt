@@ -281,7 +281,7 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
     stockRate: inputs.stockRate ?? (inputs.expectedReturn ?? DEFAULT_STOCK_RATE),
     monthlyInsurance: inputs.monthlyInsurance ?? 0,
     insuranceRate: inputs.insuranceRate ?? DEFAULT_INS_RATE,
-    insurancePaymentYears: inputs.insurancePaymentYears ?? 10,
+    insurancePaymentYears: inputs.insurancePaymentYears ?? 120,
     monthlyPension401k: inputs.monthlyPension401k ?? 0,
     pension401kRate: inputs.pension401kRate ?? DEFAULT_PENSION401K_RATE,
     pension401kPaymentYears: inputs.pension401kPaymentYears ?? yearsToRetirementPre,
