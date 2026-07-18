@@ -584,7 +584,7 @@ function BucketCard({ theme, amount, rate, onAmountChange, onRateChange, payment
               </span>
               <p className="text-[10px] text-gold-900 leading-relaxed">
                 납입 종료 후 은퇴까지 <strong>{rate.toFixed(1)}% 수익률</strong>로 스스로 복리 증식됩니다.
-                {paymentYears <= 10 && <><br /><span className="text-gold-700 font-semibold">집중 납입 → 장기 복리 전략</span>이 적용됩니다.</>}
+                {paymentYears <= 120 && <><br /><span className="text-gold-700 font-semibold">집중 납입 → 장기 복리 전략</span>이 적용됩니다.</>}
               </p>
             </div>
 
