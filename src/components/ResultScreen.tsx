@@ -1780,7 +1780,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
           )}
 
           {/* 종신연금 강조 인사이트 */}
-          {inputs.monthlyInsurance > 0 && (
+          {inputs.monthlyInsurance > 0 && inputs.insuranceMaturityReinvest !== 'bank' && inputs.insuranceMaturityReinvest !== 'stock' && (
             <div className="mt-3 flex items-start gap-2.5 rounded-xl p-3 border-2 border-gold-300" style={{background:'linear-gradient(135deg,#fffbeb,#fef3c7)'}}>
               <div className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5" style={{background:'#fdc017'}}>
                 <span className="text-white text-[9px] font-extrabold">∞</span>
@@ -1793,6 +1793,17 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
                   <strong>월 {Math.round(insAnnuityMonthly / 10000).toLocaleString()}만 원</strong> 수준의 수령이 계속됩니다.
                 </p>
               </div>
+            </div>
+          )}
+          {inputs.monthlyInsurance > 0 && (inputs.insuranceMaturityReinvest === 'bank' || inputs.insuranceMaturityReinvest === 'stock') && (
+            <div className="mt-3 flex items-start gap-2.5 rounded-xl p-3 border border-navy-200 bg-navy-50">
+              <Info size={16} className="text-navy-400 shrink-0 mt-0.5" />
+              <p className="text-[10px] leading-relaxed text-navy-500">
+                <strong className="text-navy-700">종신연금 미표시:</strong> 보험 만기 재투자를{' '}
+                <strong className="text-navy-700">{inputs.insuranceMaturityReinvest === 'bank' ? '은행' : '증권'}</strong>으로 선택하셨습니다.
+                만기 보험금이 연금화되지 않고 {inputs.insuranceMaturityReinvest === 'bank' ? '은행' : '증권'} 계좌로 재투자되기 때문에,
+                종신연금 수령액은 0으로 표시됩니다. 평생 연금 수령을 보여주려면 입력화면에서 재투자 방식을 <strong className="text-navy-700">"종신연금 유지"</strong>로 변경해 주세요.
+              </p>
             </div>
           )}
 
@@ -1834,7 +1845,11 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
               <div className="border-2 border-gold-300 rounded-xl p-3" style={{background:'#fffbeb'}}>
                 <p className="text-[9px] font-semibold mb-0.5" style={{color:'#b45309'}}>보험 종신연금 (월 수령)</p>
                 <p className="text-sm font-extrabold" style={{color:'#92400e'}}>{formatKRW(insAnnuityMonthly)}/월</p>
-                <p className="text-[9px] mt-0.5" style={{color:'#d97706'}}>사망 시까지 평생 유지</p>
+                <p className="text-[9px] mt-0.5" style={{color:'#d97706'}}>
+                  {inputs.insuranceMaturityReinvest === 'bank' || inputs.insuranceMaturityReinvest === 'stock'
+                    ? `${inputs.insuranceMaturityReinvest === 'bank' ? '은행' : '증권'} 재투자 선택 중`
+                    : '사망 시까지 평생 유지'}
+                </p>
               </div>
             )}
           </div>
