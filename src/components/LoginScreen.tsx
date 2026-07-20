@@ -36,12 +36,16 @@ export default function LoginScreen({ onSuccess }: Props) {
         }
         onSuccess();
       } else {
-        const { error: err } = await signUp(email.trim(), password);
+        const { error: err, loggedIn } = await signUp(email.trim(), password);
         if (err) {
           setError(err);
           return;
         }
-        setSignupDone(true);
+        if (loggedIn) {
+          onSuccess();
+        } else {
+          setSignupDone(true);
+        }
       }
     } finally {
       setLoading(false);
