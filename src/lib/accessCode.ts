@@ -10,9 +10,12 @@ export interface AccessCodeRecord {
 
 const STORAGE_KEY = 'pro_access_code';
 
-/** Supabase 미연결(로컬 개발) 환경에서만 사용. import.meta.env.DEV 가드로
- *  프로덕션 빌드 시 이 배열 자체가 번들에서 완전히 제거됩니다(dead-code elimination). */
-const FALLBACK_ACCESS_CODES: AccessCodeRecord[] = import.meta.env.DEV ? [
+/** ⚠️ 임시 상태: 아직 Supabase가 실제로 연결되지 않아서, 지금은 이 목록이
+ *  사실상 유일한 인증 수단입니다. Supabase 프로젝트를 만들고 VITE_SUPABASE_URL /
+ *  VITE_SUPABASE_ANON_KEY 환경변수를 연결한 뒤에는, 이 배열을 다시
+ *  import.meta.env.DEV 가드로 감싸서 프로덕션 번들에서 제거하는 게 안전합니다
+ *  (그때는 access_codes 테이블이 실제 인증을 담당하게 됨). */
+const FALLBACK_ACCESS_CODES: AccessCodeRecord[] = [
   // ── Basic 코드 (5개) ──────────────────────────────────────────
   { code: 'BASIC-TEST01', agent_name: '테스트 Basic 1', tier: 'basic', is_active: true },
   { code: 'BASIC-TEST02', agent_name: '테스트 Basic 2', tier: 'basic', is_active: true },
@@ -26,7 +29,7 @@ const FALLBACK_ACCESS_CODES: AccessCodeRecord[] = import.meta.env.DEV ? [
   { code: 'PLUS-TEST04', agent_name: '테스트 설계사 4', tier: 'plus', is_active: true },
   { code: 'PLUS-TEST05', agent_name: '테스트 설계사 5', tier: 'plus', is_active: true },
   { code: 'HENRY', agent_name: 'Henry', tier: 'plus', is_active: true },
-] : [];
+];
 
 function verifyFallbackCode(code: string, tier: ProTier): AccessCodeRecord | null {
   return FALLBACK_ACCESS_CODES.find(
