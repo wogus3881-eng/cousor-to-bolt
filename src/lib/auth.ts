@@ -29,19 +29,18 @@ async function claimSession(userId: string): Promise<void> {
   });
 }
 
-export async function signUp(email: string, password: string): Promise<{ error: string | null }> {
-  if (!supabase) return { error: 'Supabase가 설정되지 않았습니다.' };
+export async function signUp(email: string, password: string): Promise<{ error: string | null; loggedIn: boolean }> {
+  if (!supabase) return { error: 'Supabase가 설정되지 않았습니다.', loggedIn: false };
   const { data, error } = await supabase.auth.signUp({ email, password });
-  if (error) return { error: error.message };
-  if (data.user) {
-    await supabase.from('profiles').insert({
-      id: data.user.id,
-      display_name: email.split('@')[0],
-    });
+  if (error) return { error: error.message, loggedIn: false };
+  // profiles row는 DB 트리거(on_auth_user_created)가 자동으로 만들어줍니다.
+  // 이메일 인증이 켜져있어 아직 로그인 세션이 없는 상태에서도 안정적으로 동작합니다.
+  if (data.user && data.session) {
     // 이메일 확인이 꺼져있는 프로젝트라면 가입과 동시에 세션이 생기므로 바로 클레임
-    if (data.session) await claimSession(data.user.id);
+    await claimSession(data.user.id);
+    return { error: null, loggedIn: true };
   }
-  return { error: null };
+  return { error: null, loggedIn: false };
 }
 
 export async function signIn(email: string, password: string): Promise<{ error: string | null }> {
