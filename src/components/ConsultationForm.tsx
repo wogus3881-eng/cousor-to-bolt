@@ -340,7 +340,7 @@ export default function ConsultationForm({ inputs }: Props) {
             />
             <label htmlFor="agree" className="cursor-pointer text-[11px] leading-snug text-slate-500">
               (필수) 개인정보 수집 및 이용에 동의합니다. <br />
-              <span className="text-[10px] text-slate-400">상담 목적 이외에 사용되지 않습니다.</span>
+              <span className="text-[10px] text-slate-400">수집된 정보는 상담 진행 및 상담을 위해 소속 보험설계사(제3자)에게 제공될 수 있습니다.</span>
             </label>
           </div>
 
