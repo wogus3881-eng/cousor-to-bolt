@@ -361,7 +361,7 @@ export default function ConsultationForm({ inputs }: Props) {
                 </tr>
                 <tr>
                   <td className="py-1 pr-2 font-semibold text-slate-600 whitespace-nowrap align-top">보유 및 이용기간</td>
-                  <td className="py-1">상담 완료 후 1년 (관계 법령에 따른 보존 의무가 있는 경우 해당 기간까지)</td>
+                  <td className="py-1">상담 완료 후 6개월 (관계 법령에 따른 보존 의무가 있는 경우 해당 기간까지)</td>
                 </tr>
               </tbody>
             </table>
