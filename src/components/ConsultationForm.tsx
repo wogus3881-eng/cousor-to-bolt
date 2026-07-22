@@ -344,6 +344,32 @@ export default function ConsultationForm({ inputs }: Props) {
             </label>
           </div>
 
+          <div className="rounded-lg border border-toss-line bg-slate-50 px-3 py-2.5 text-[10px] leading-relaxed text-slate-500">
+            <table className="w-full border-collapse">
+              <tbody>
+                <tr className="border-b border-toss-line/60">
+                  <td className="py-1 pr-2 font-semibold text-slate-600 whitespace-nowrap align-top">제공받는 자</td>
+                  <td className="py-1">소속 보험설계사</td>
+                </tr>
+                <tr className="border-b border-toss-line/60">
+                  <td className="py-1 pr-2 font-semibold text-slate-600 whitespace-nowrap align-top">제공 항목</td>
+                  <td className="py-1">이름, 연락처, 상담 신청 시 입력한 자산·소득 정보</td>
+                </tr>
+                <tr className="border-b border-toss-line/60">
+                  <td className="py-1 pr-2 font-semibold text-slate-600 whitespace-nowrap align-top">제공 목적</td>
+                  <td className="py-1">은퇴설계 상담 진행 및 상담 결과 안내</td>
+                </tr>
+                <tr>
+                  <td className="py-1 pr-2 font-semibold text-slate-600 whitespace-nowrap align-top">보유 및 이용기간</td>
+                  <td className="py-1">상담 완료 후 1년 (관계 법령에 따른 보존 의무가 있는 경우 해당 기간까지)</td>
+                </tr>
+              </tbody>
+            </table>
+            <p className="mt-2 text-[9px] text-slate-400">
+              귀하는 개인정보 수집·이용 및 제3자 제공에 동의하지 않을 권리가 있으며, 동의하지 않을 경우 상담 서비스 이용이 제한될 수 있습니다.
+            </p>
+          </div>
+
           {error && <p className="text-xs font-semibold text-red-500">{error}</p>}
 
           <button
