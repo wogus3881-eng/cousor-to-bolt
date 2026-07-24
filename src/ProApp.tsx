@@ -72,9 +72,6 @@ function ProAppContent({ tier }: Props) {
       <p className="text-[10px] font-medium text-slate-400">
         <span className="font-bold text-slate-500">이기적인 은퇴설계</span> · {PRO_TIER_META[tier].label} | ⓒ 2026
       </p>
-      <Link to="/v2" className="text-[10px] text-navy-500 underline underline-offset-2 hover:text-navy-700">
-        고객용 간편 진단 (v2)
-      </Link>
     </footer>
   );
 
