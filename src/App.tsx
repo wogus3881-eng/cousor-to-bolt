@@ -5,14 +5,14 @@ import ProApp from './ProApp';
 import BlockedPage from './pages/BlockedPage';
 
 /**
- * ?code=BASIC-TEST01 / TRIAL-TEST01 처럼 코드 prefix로 /pro 진입 시
- * 해당 티어 경로로 자동 라우팅합니다.
+ * /pro 기본 링크(코드 없음)는 로그인 없이 바로 체험 가능한 Trial로 보냅니다.
+ * ?code=BASIC-TEST01 / TRIAL-TEST01 처럼 코드 prefix가 있으면 해당 티어로 분기합니다.
  */
 function ProAutoRedirect() {
   const { search } = useLocation();
   const params = new URLSearchParams(search);
   const code = params.get('code')?.toUpperCase() ?? '';
-  if (code.startsWith('TRIAL')) {
+  if (!code || code.startsWith('TRIAL')) {
     return <Navigate to={`/pro/trial${search}`} replace />;
   }
   if (code.startsWith('BASIC')) {
