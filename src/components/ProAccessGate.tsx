@@ -15,7 +15,7 @@ interface Props {
   children: ReactNode;
 }
 
-const TIER_RANK: Record<ProTier, number> = { basic: 1, plus: 2 };
+const TIER_RANK: Record<ProTier, number> = { trial: 0, basic: 1, plus: 2 };
 
 export default function ProAccessGate({ tier, children }: Props) {
   const navigate = useNavigate();

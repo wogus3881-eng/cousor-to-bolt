@@ -8,7 +8,15 @@ import { simulate } from './lib/calculator';
 import type { SimulatorInputs, SimulationResult } from './lib/calculator';
 import { peekHandoffSimulatorInputs, clearLiteProHandoffStorage } from './lib/liteProHandoff';
 import { proFeatures, PRO_TIER_META, type ProTier } from './lib/proTier';
-import { canRunBasicSimulation, getBasicUsage, recordBasicSimulation } from './lib/proUsageLimits';
+import {
+  canRunBasicSimulation,
+  canRunTrialSimulation,
+  getBasicUsage,
+  isTrialExpired,
+  recordBasicSimulation,
+  recordTrialSimulation,
+} from './lib/proUsageLimits';
+import { PRO_TRIAL_LIMITS } from './lib/proTier';
 
 interface Props {
   tier: ProTier;
@@ -50,13 +58,28 @@ function ProAppContent({ tier }: Props) {
   }, []);
 
   function handleSimulate(inputs: SimulatorInputs) {
-    if (!features.unlimitedSimulations && !canRunBasicSimulation()) {
-      const { simLimit } = getBasicUsage();
-      setLimitMessage(`이번 달 Basic 시뮬레이션 한도(${simLimit}회)를 모두 사용했어요. Plus로 업그레이드하면 무제한입니다.`);
-      return;
+    if (tier === 'trial') {
+      if (isTrialExpired()) {
+        setLimitMessage(`체험판 이용 기간(${PRO_TRIAL_LIMITS.validDays}일)이 종료되었어요. Basic 이상으로 업그레이드해 주세요.`);
+        return;
+      }
+      if (!canRunTrialSimulation()) {
+        setLimitMessage(`체험판 시뮬레이션 한도(${PRO_TRIAL_LIMITS.simulationsTotal}회)를 모두 사용했어요. Basic 이상으로 업그레이드하면 계속 쓸 수 있어요.`);
+        return;
+      }
+      setLimitMessage(null);
+      recordTrialSimulation();
+    } else if (!features.unlimitedSimulations) {
+      if (!canRunBasicSimulation()) {
+        const { simLimit } = getBasicUsage();
+        setLimitMessage(`이번 달 Basic 시뮬레이션 한도(${simLimit}회)를 모두 사용했어요. Pro로 업그레이드하면 무제한입니다.`);
+        return;
+      }
+      setLimitMessage(null);
+      recordBasicSimulation();
+    } else {
+      setLimitMessage(null);
     }
-    setLimitMessage(null);
-    if (!features.unlimitedSimulations) recordBasicSimulation();
     setSavedInputs(inputs);
     setResult(simulate(inputs));
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -105,8 +128,11 @@ function ProAppContent({ tier }: Props) {
       {limitMessage && (
         <div className="mx-4 mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[12px] leading-relaxed text-amber-900">
           {limitMessage}{' '}
-          <Link to={PRO_TIER_META.plus.path} className="font-bold underline underline-offset-2">
-            Plus 보기
+          <Link
+            to={tier === 'trial' ? PRO_TIER_META.basic.path : PRO_TIER_META.plus.path}
+            className="font-bold underline underline-offset-2"
+          >
+            {tier === 'trial' ? 'Basic 보기' : 'Pro 보기'}
           </Link>
         </div>
       )}

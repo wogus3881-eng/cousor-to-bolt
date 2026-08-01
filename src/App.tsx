@@ -5,14 +5,17 @@ import ProApp from './ProApp';
 import BlockedPage from './pages/BlockedPage';
 
 /**
- * ?code=BASIC-TEST01 처럼 Basic 코드로 /pro 진입 시
- * 코드 prefix를 보고 /pro/basic 으로 자동 라우팅합니다.
+ * ?code=BASIC-TEST01 / TRIAL-TEST01 처럼 코드 prefix로 /pro 진입 시
+ * 해당 티어 경로로 자동 라우팅합니다.
  */
 function ProAutoRedirect() {
   const { search } = useLocation();
   const params = new URLSearchParams(search);
-  const code = params.get('code') ?? '';
-  if (code.toUpperCase().startsWith('BASIC')) {
+  const code = params.get('code')?.toUpperCase() ?? '';
+  if (code.startsWith('TRIAL')) {
+    return <Navigate to={`/pro/trial${search}`} replace />;
+  }
+  if (code.startsWith('BASIC')) {
     return <Navigate to={`/pro/basic${search}`} replace />;
   }
   return <Navigate to={`/pro/plus${search}`} replace />;
@@ -27,6 +30,7 @@ export default function App() {
         <Route path="/v2" element={<LiteFlowV2 />} />
         <Route path="/lite" element={<Navigate to="/v2" replace />} />
         <Route path="/blocked" element={<BlockedPage />} />
+        <Route path="/pro/trial" element={<ProApp tier="trial" />} />
         <Route path="/pro/basic" element={<ProApp tier="basic" />} />
         <Route path="/pro/plus" element={<ProApp tier="plus" />} />
         {/* /pro?code=BASIC-TEST01 → /pro/basic?code=BASIC-TEST01 자동 분기 */}

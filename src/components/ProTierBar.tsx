@@ -1,23 +1,25 @@
 import { Link } from 'react-router-dom';
 import { PRO_TIER_META, type ProTier } from '../lib/proTier';
-import { getBasicUsage } from '../lib/proUsageLimits';
+import { getBasicUsage, getTrialUsage } from '../lib/proUsageLimits';
 
 interface Props {
   tier: ProTier;
 }
 
+const BADGE_CLASS: Record<ProTier, string> = {
+  trial: 'bg-slate-200 text-slate-700',
+  basic: 'bg-navy-100 text-navy-700',
+  plus: 'bg-gold-100 text-gold-800',
+};
+
 export default function ProTierBar({ tier }: Props) {
   const meta = PRO_TIER_META[tier];
-  const usage = tier === 'basic' ? getBasicUsage() : null;
+  const usage = tier === 'basic' ? getBasicUsage() : tier === 'trial' ? getTrialUsage() : null;
 
   return (
     <div className="flex shrink-0 items-center justify-between gap-3 border-b border-navy-200 bg-white px-4 py-2.5">
       <div className="flex min-w-0 items-center gap-2">
-        <span
-          className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-            tier === 'plus' ? 'bg-gold-100 text-gold-800' : 'bg-navy-100 text-navy-700'
-          }`}
-        >
+        <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${BADGE_CLASS[tier]}`}>
           {meta.label}
         </span>
         <p className="truncate text-[11px] text-navy-500">{meta.description}</p>
@@ -25,19 +27,20 @@ export default function ProTierBar({ tier }: Props) {
       <div className="flex shrink-0 items-center gap-2">
         {usage && (
           <span className="hidden text-[10px] text-navy-400 sm:inline">
-            시뮬 {usage.simulations}/{usage.simLimit} · 리포트 {usage.prints}/{usage.printLimit}
+            시뮬 {usage.simulations}/{usage.simLimit}
+            {usage.printLimit > 0 ? ` · 리포트 ${usage.prints}/${usage.printLimit}` : ''}
           </span>
         )}
-        {tier === 'basic' ? (
-          <Link
-            to={PRO_TIER_META.plus.path}
-            className="rounded-lg bg-navy-900 px-2.5 py-1 text-[10px] font-bold text-gold-300 hover:bg-navy-800"
-          >
-            Plus
-          </Link>
-        ) : (
+        {tier === 'plus' ? (
           <Link to={PRO_TIER_META.basic.path} className="text-[10px] font-medium text-navy-400 hover:text-navy-600">
             Basic
+          </Link>
+        ) : (
+          <Link
+            to={tier === 'trial' ? PRO_TIER_META.basic.path : PRO_TIER_META.plus.path}
+            className="rounded-lg bg-navy-900 px-2.5 py-1 text-[10px] font-bold text-gold-300 hover:bg-navy-800"
+          >
+            {tier === 'trial' ? 'Basic 결제' : 'Pro'}
           </Link>
         )}
       </div>

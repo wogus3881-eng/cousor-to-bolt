@@ -1406,9 +1406,9 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/70 backdrop-blur-[2px] rounded-2xl">
 
-              <p className="text-sm font-bold text-navy-900">Plus에서 확인하세요</p>
+              <p className="text-sm font-bold text-navy-900">Pro에서 확인하세요</p>
 
-              <p className="text-[11px] text-navy-500 mt-1">수익률 시나리오 비교는 Pro Plus 전용입니다</p>
+              <p className="text-[11px] text-navy-500 mt-1">수익률 시나리오 비교는 Pro 전용입니다</p>
 
             </div>
 
@@ -1483,8 +1483,8 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
         />
         ) : (
           <ProUpgradePrompt
-            title="실시간 조정은 Pro Plus"
-            description="상담 중 슬라이더로 연금·3버킷·수익률을 바꾸면 그래프가 즉시 반영됩니다. Basic은 입력 화면에서 값을 수정한 뒤 다시 진단해 주세요."
+            title="실시간 조정은 Pro"
+            description="상담 중 슬라이더로 연금·3버킷·수익률을 바꾸면 그래프가 즉시 반영됩니다. 지금 등급은 입력 화면에서 값을 수정한 뒤 다시 진단해 주세요."
           />
         )}
         </div>
@@ -2029,8 +2029,8 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
         </div>
         ) : (
           <ProUpgradePrompt
-            title="연도별 상세 테이블은 Pro Plus"
-            description="은퇴~100세 현금흐름을 연도별로 확인하고, 고객 상담·리포트에 활용하려면 Plus가 필요합니다."
+            title="연도별 상세 테이블은 Pro"
+            description="은퇴~100세 현금흐름을 연도별로 확인하고, 고객 상담·리포트에 활용하려면 Pro가 필요합니다."
           />
         )}
 
@@ -2149,8 +2149,12 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
         <div ref={reportActionsRef} className="pdf-exclude flex gap-2 scroll-mt-6">
           <button
             onClick={async () => {
+              if (features.printDisabled) {
+                window.alert('체험판에서는 리포트 저장이 제공되지 않아요. Basic 이상으로 업그레이드해 주세요.');
+                return;
+              }
               if (!features.unlimitedPrint && !canRunBasicPrint()) {
-                window.alert('이번 달 Basic 리포트 저장 한도(5회)를 모두 사용했어요. Plus로 업그레이드하면 무제한입니다.');
+                window.alert('이번 달 Basic 리포트 저장 한도(5회)를 모두 사용했어요. Pro로 업그레이드하면 무제한입니다.');
                 return;
               }
               if (!features.unlimitedPrint) recordBasicPrint();

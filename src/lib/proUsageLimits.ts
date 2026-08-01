@@ -1,6 +1,7 @@
-import { PRO_BASIC_LIMITS } from './proTier';
+import { PRO_BASIC_LIMITS, PRO_TRIAL_LIMITS } from './proTier';
 
 const STORAGE_KEY = 'pro-basic-usage-v1';
+const TRIAL_STORAGE_KEY = 'pro-trial-usage-v1';
 
 interface UsageState {
   month: string;
@@ -55,4 +56,50 @@ export function canRunBasicPrint(): boolean {
 export function recordBasicPrint(): void {
   const state = readState();
   writeState({ ...state, month: currentMonth(), prints: state.prints + 1 });
+}
+
+interface TrialUsageState {
+  firstUsedAt: string;
+  simulations: number;
+}
+
+function readTrialState(): TrialUsageState {
+  const empty: TrialUsageState = { firstUsedAt: new Date().toISOString(), simulations: 0 };
+  try {
+    const raw = localStorage.getItem(TRIAL_STORAGE_KEY);
+    if (!raw) return empty;
+    return JSON.parse(raw) as TrialUsageState;
+  } catch {
+    return empty;
+  }
+}
+
+function writeTrialState(state: TrialUsageState): void {
+  localStorage.setItem(TRIAL_STORAGE_KEY, JSON.stringify(state));
+}
+
+export function isTrialExpired(): boolean {
+  const state = readTrialState();
+  if (state.simulations === 0) return false;
+  const elapsedDays = (Date.now() - new Date(state.firstUsedAt).getTime()) / (1000 * 60 * 60 * 24);
+  return elapsedDays > PRO_TRIAL_LIMITS.validDays;
+}
+
+export function getTrialUsage() {
+  const state = readTrialState();
+  return {
+    simulations: state.simulations,
+    prints: 0,
+    simLimit: PRO_TRIAL_LIMITS.simulationsTotal,
+    printLimit: 0,
+  };
+}
+
+export function canRunTrialSimulation(): boolean {
+  return readTrialState().simulations < PRO_TRIAL_LIMITS.simulationsTotal && !isTrialExpired();
+}
+
+export function recordTrialSimulation(): void {
+  const state = readTrialState();
+  writeTrialState({ ...state, simulations: state.simulations + 1 });
 }
