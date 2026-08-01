@@ -51,6 +51,17 @@ export async function signIn(email: string, password: string): Promise<{ error: 
   return { error: null };
 }
 
+/** 카카오 로그인 시작 — 카카오 인증 후 현재 페이지(코드·경로 포함)로 되돌아옵니다. */
+export async function signInWithKakao(): Promise<{ error: string | null }> {
+  if (!supabase) return { error: 'Supabase가 설정되지 않았습니다.' };
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'kakao',
+    options: { redirectTo: window.location.href },
+  });
+  if (error) return { error: error.message };
+  return { error: null };
+}
+
 export async function signOut(): Promise<void> {
   if (!supabase) return;
   await supabase.auth.signOut();
@@ -62,13 +73,18 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
+  // 카카오 로그인 등 OAuth 콜백으로 막 돌아온 경우 아직 세션을 클레임하지 않았으므로 여기서 처리
+  if (!localStorage.getItem(SESSION_TOKEN_KEY)) {
+    await claimSession(user.id);
+  }
+
   const { data: profile } = await supabase
     .from('profiles')
     .select('tier')
     .eq('id', user.id)
     .maybeSingle();
 
-  // 프로필이 없으면(가입 절차 중 끊긴 경우 등) basic으로 자동 생성
+  // 프로필이 없으면(가입 절차 중 끊긴 경우 등) trial로 자동 생성
   if (!profile) {
     await supabase.from('profiles').insert({ id: user.id, display_name: user.email?.split('@')[0] });
   }
@@ -76,7 +92,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
   return {
     id: user.id,
     email: user.email ?? '',
-    tier: (profile?.tier as ProTier) ?? 'basic',
+    tier: (profile?.tier as ProTier) ?? 'trial',
   };
 }
 

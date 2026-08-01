@@ -81,16 +81,7 @@ export default function ProAccessGate({ tier, children }: Props) {
         clearStoredAccess();
       }
 
-      // 3순위: Trial은 로그인·접근코드 없이도 기본 개방 (공유 링크로 바로 체험 가능)
-      if (tier === 'trial') {
-        if (!cancelled) {
-          setGranted(true);
-          setChecking(false);
-        }
-        return;
-      }
-
-      // Basic/Pro는 로그인 계정도, 접근코드도 없으면 로그인 화면 표시
+      // 로그인 계정도, 접근코드도 없으면 로그인 화면 표시 (Trial 포함 모든 티어)
       if (!cancelled) {
         setShowLogin(true);
         setChecking(false);

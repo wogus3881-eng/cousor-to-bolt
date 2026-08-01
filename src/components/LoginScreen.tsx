@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { signIn, signUp } from '../lib/auth';
+import { signIn, signInWithKakao, signUp } from '../lib/auth';
 
 interface Props {
   onSuccess: () => void;
@@ -12,6 +12,18 @@ export default function LoginScreen({ onSuccess }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [signupDone, setSignupDone] = useState(false);
+  const [kakaoLoading, setKakaoLoading] = useState(false);
+
+  async function handleKakaoLogin() {
+    setError(null);
+    setKakaoLoading(true);
+    const { error: err } = await signInWithKakao();
+    if (err) {
+      setError(err);
+      setKakaoLoading(false);
+    }
+    // 성공 시 카카오 페이지로 리다이렉트되므로 별도 처리 불필요
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -80,6 +92,21 @@ export default function LoginScreen({ onSuccess }: Props) {
           <h1 className="text-lg font-extrabold text-navy-900">
             {mode === 'signin' ? '로그인' : '회원가입'}
           </h1>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleKakaoLogin}
+          disabled={kakaoLoading}
+          className="w-full rounded-xl bg-[#FEE500] hover:bg-[#FADA0A] disabled:opacity-50 text-[#191919] text-sm font-bold py-3 transition-colors mb-3"
+        >
+          {kakaoLoading ? '연결 중...' : '카카오로 시작하기'}
+        </button>
+
+        <div className="flex items-center gap-3 mb-3">
+          <div className="h-px flex-1 bg-slate-200" />
+          <span className="text-[11px] text-slate-400">또는 이메일로</span>
+          <div className="h-px flex-1 bg-slate-200" />
         </div>
 
         <form onSubmit={handleSubmit} className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100 space-y-3">
