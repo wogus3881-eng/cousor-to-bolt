@@ -56,7 +56,7 @@ export async function signInWithKakao(): Promise<{ error: string | null }> {
   if (!supabase) return { error: 'Supabase가 설정되지 않았습니다.' };
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'kakao',
-    options: { redirectTo: window.location.href },
+    options: { redirectTo: window.location.href, scopes: 'profile_nickname' },
   });
   if (error) return { error: error.message };
   return { error: null };
