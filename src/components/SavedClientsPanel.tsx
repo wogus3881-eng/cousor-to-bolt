@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react';
 import { Users, Save, Trash2, ChevronDown } from 'lucide-react';
 import type { SimulatorInputs } from '../lib/calculator';
-import { listSavedClients, saveClient, deleteSavedClient, type SavedClient } from '../lib/savedClients';
+import {
+  listSavedClients, saveClient, deleteSavedClient,
+  DEFAULT_FIXED_COSTS, type SavedClient, type FixedCosts,
+} from '../lib/savedClients';
 
 interface Props {
   currentInputs: SimulatorInputs;
-  onLoad: (inputs: SimulatorInputs) => void;
+  currentFixedCosts: FixedCosts;
+  onLoad: (inputs: SimulatorInputs, fixedCosts: FixedCosts) => void;
 }
 
-export default function SavedClientsPanel({ currentInputs, onLoad }: Props) {
+export default function SavedClientsPanel({ currentInputs, currentFixedCosts, onLoad }: Props) {
   const [clients, setClients] = useState<SavedClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -28,7 +32,7 @@ export default function SavedClientsPanel({ currentInputs, onLoad }: Props) {
     const label = window.prompt('고객 이름 또는 메모를 입력하세요 (예: 김철수님 - 2026.08 상담)');
     if (!label || !label.trim()) return;
     setSaving(true);
-    const { error } = await saveClient(label.trim(), currentInputs);
+    const { error } = await saveClient(label.trim(), currentInputs, currentFixedCosts);
     setSaving(false);
     if (error) {
       window.alert(error);
@@ -78,7 +82,7 @@ export default function SavedClientsPanel({ currentInputs, onLoad }: Props) {
             <div key={c.id} className="flex items-center gap-2 rounded-xl bg-navy-50/60 px-3 py-2">
               <button
                 type="button"
-                onClick={() => onLoad(c.inputs)}
+                onClick={() => onLoad(c.inputs, c.fixed_costs ?? DEFAULT_FIXED_COSTS)}
                 className="min-w-0 flex-1 text-left"
               >
                 <p className="truncate text-[12px] font-bold text-navy-800">{c.label}</p>

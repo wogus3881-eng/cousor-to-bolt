@@ -10,6 +10,7 @@ import { DEFAULT_BANK_RATE, DEFAULT_STOCK_RATE, DEFAULT_INS_RATE } from '../lib/
 import { proFeatures, type ProTier } from '../lib/proTier';
 import ProUpgradePrompt from './ProUpgradePrompt';
 import SavedClientsPanel from './SavedClientsPanel';
+import { DEFAULT_FIXED_COSTS, type FixedCosts } from '../lib/savedClients';
 
 interface Props {
   onSimulate: (inputs: SimulatorInputs) => void;
@@ -713,9 +714,9 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
   const [pensionAutoSet, setPensionAutoSet] = useState(!initialInputs);
   const [bucketOpen, setBucketOpen] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [fixedCosts, setFixedCosts] = useState({ housing: 0, telecom: 0, loan: 0, car: 0, living: 0, other: 0 });
+  const [fixedCosts, setFixedCosts] = useState<FixedCosts>(DEFAULT_FIXED_COSTS);
 
-  function setFixedCost<K extends keyof typeof fixedCosts>(key: K) {
+  function setFixedCost<K extends keyof FixedCosts>(key: K) {
     return (val: number) => setFixedCosts(prev => ({ ...prev, [key]: val }));
   }
 
@@ -801,7 +802,11 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
         <>
         {/* 고객 정보 저장 · 불러오기 (Pro) */}
         {features.clientProfiles ? (
-          <SavedClientsPanel currentInputs={v} onLoad={setV} />
+          <SavedClientsPanel
+            currentInputs={v}
+            currentFixedCosts={fixedCosts}
+            onLoad={(inputs, costs) => { setV(inputs); setFixedCosts(costs); }}
+          />
         ) : (
           <ProUpgradePrompt
             compact
