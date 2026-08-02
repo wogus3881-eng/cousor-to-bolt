@@ -288,6 +288,44 @@ function Cell({ value }: { value: CellValue }) {
   );
 }
 
+const PRICE_PLANS = [
+  { key: 'trial', name: 'Trial', monthly: '무료', yearly: null, note: '14일 · 3회 한정' },
+  { key: 'basic', name: 'Basic', monthly: '29,000원', yearly: '290,000원', note: '연 결제 시 2개월 무료' },
+  { key: 'pro', name: 'Pro', monthly: '49,000원', yearly: '490,000원', note: '연 결제 시 2개월 무료', highlight: true },
+] as const;
+
+function PriceCards() {
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      {PRICE_PLANS.map((p) => (
+        <div
+          key={p.key}
+          className={`rounded-2xl border p-3 text-center ${
+            'highlight' in p && p.highlight
+              ? 'border-gold-400 bg-gold-50 shadow-sm'
+              : 'border-navy-100 bg-white'
+          }`}
+        >
+          <p className="text-[11px] font-bold text-navy-500 mb-1">{p.name}</p>
+          <p className="text-[15px] font-extrabold text-navy-900 leading-tight">{p.monthly}</p>
+          {p.monthly !== '무료' && <p className="text-[10px] text-slate-400 mb-1">/ 월</p>}
+          {p.yearly && (
+            <p className="text-[10px] text-emerald-600 font-bold mt-1">연 {p.yearly} (2개월 무료)</p>
+          )}
+          <p className="text-[10px] text-slate-400 mt-1">{p.note}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const REFUND_POLICY = [
+  '최초 결제 후 7일 이내이고 서비스를 이용하지 않았다면 전액 환불해 드려요.',
+  '서비스를 이용하기 시작한 이후에는 단순 변심에 의한 환불은 어려워요. 대신 자동결제 해지는 언제든 가능하고, 해지해도 이미 결제한 기간까지는 계속 이용할 수 있어요.',
+  '연 구독을 중도 해지하는 경우도 마찬가지로 환불은 안 되지만, 다음 자동결제만 중단되고 남은 기간은 끝까지 이용할 수 있어요.',
+  '서비스 오류 등 회사 귀책 사유로 정상적으로 이용하지 못한 기간이 있다면 해당 기간만큼 별도로 보상해 드려요.',
+];
+
 function PlansTab() {
   const proExclusiveCount = FEATURE_ROWS.filter((r) => r.pro === true && r.basic === false).length;
   return (
@@ -299,6 +337,8 @@ function PlansTab() {
           Pro는 진짜 &apos;상담 무기&apos;가 되는 기능이 다 들어있어요.
         </p>
       </div>
+
+      <PriceCards />
 
       <div className="overflow-x-auto rounded-2xl border border-navy-100 bg-white shadow-sm">
         <table className="w-full text-[11.5px]">
@@ -325,7 +365,19 @@ function PlansTab() {
         </table>
       </div>
 
-      <p className="text-center text-[11px] text-slate-400">가격 및 결제 방법은 담당 설계사에게 문의해 주세요.</p>
+      <div className="rounded-2xl bg-white border border-navy-100 shadow-sm p-4">
+        <p className="text-[12.5px] font-bold text-navy-900 mb-2">환불 정책</p>
+        <ul className="space-y-1.5">
+          {REFUND_POLICY.map((line) => (
+            <li key={line} className="flex gap-2 text-[11.5px] leading-relaxed text-slate-500">
+              <span className="shrink-0 text-navy-300">·</span>
+              {line}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <p className="text-center text-[11px] text-slate-400">결제 방법에 대해 궁금한 점은 담당 설계사에게 문의해 주세요.</p>
     </div>
   );
 }
