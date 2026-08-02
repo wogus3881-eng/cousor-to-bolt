@@ -662,9 +662,9 @@ const DEFAULT_INPUTS: SimulatorInputs = {
   monthlyPensionSavings: 0,
   pensionSavingsRate: 5.0,
   savingsPensionSavings: 0,
-  usdInsuranceCurrentUSD: 0,
   usdInsuranceMonthlyUSD: 0,
   usdInsurancePaymentMonths: 120,
+  usdInsuranceElapsedMonths: 0,
   usdInsuranceRate: 4.0,
   currentExchangeRate: 1350,
   usdInsuranceMaturityExchangeRate: 1400,
@@ -938,36 +938,6 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
               display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
               trackColor="bg-yellow-400" onChange={set('savingsPensionSavings')}
             />
-            <div className="bg-blue-50 rounded-2xl p-4 border border-blue-100">
-              <div className="flex items-center justify-between mb-2">
-                <div>
-                  <p className="text-xs font-semibold text-navy-800">💵 달러 종신보험 해지환급금</p>
-                  <p className="text-[10px] text-blue-500">
-                    오늘 환율 <span className="font-bold">{(v.currentExchangeRate ?? 1350).toLocaleString()}원</span>
-                    {" "}기준 ≈ {Math.floor((v.usdInsuranceCurrentUSD ?? 0) * (v.currentExchangeRate ?? 1350) / MAN).toLocaleString()}만원
-                  </p>
-                </div>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-xl font-bold text-navy-900">${(v.usdInsuranceCurrentUSD ?? 0).toLocaleString()}</span>
-                  <span className="text-xs text-navy-400">USD</span>
-                </div>
-              </div>
-              <div className="relative h-1.5 mt-1">
-                <div className="absolute inset-0 rounded-full bg-navy-100" />
-                <div className="absolute h-full rounded-full bg-blue-400 transition-all"
-                  style={{ width: `${Math.min(100, ((v.usdInsuranceCurrentUSD ?? 0) / 50000) * 100)}%` }} />
-                <input type="range" min={0} max={50000} step={100}
-                  value={v.usdInsuranceCurrentUSD ?? 0}
-                  onChange={e => setV(prev => ({ ...prev, usdInsuranceCurrentUSD: Number(e.target.value) }))}
-                  className="absolute inset-0 w-full opacity-0 cursor-pointer" />
-                <div className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-blue-400 border-2 border-white shadow-md pointer-events-none"
-                  style={{ left: `calc(${Math.min(100, ((v.usdInsuranceCurrentUSD ?? 0) / 50000) * 100)}% - 8px)` }} />
-              </div>
-              <div className="flex justify-between mt-1">
-                <span className="text-[10px] text-navy-300">$0</span>
-                <span className="text-[10px] text-navy-300">$50,000</span>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -1162,12 +1132,21 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
                     <span className="text-[10px] text-navy-300">$1,000</span>
                   </div>
                 </div>
-                <DualInput label="납입 기간"
+                <DualInput label="총 납입 기간"
                   value={v.usdInsurancePaymentMonths ?? 120} min={1} max={360} step={1} unit="개월"
                   display={val => `${val}개월 (${Math.floor(val/12)}년 ${val%12}개월)`}
                   parse={s => parseInt(s.replace(/[^0-9]/g, ''))}
                   trackColor="bg-blue-400"
                   onChange={val => setV(prev => ({ ...prev, usdInsurancePaymentMonths: val }))}
+                />
+                <DualInput label="이미 납입한 기간"
+                  value={Math.min(v.usdInsuranceElapsedMonths ?? 0, v.usdInsurancePaymentMonths ?? 120)}
+                  min={0} max={v.usdInsurancePaymentMonths ?? 120} step={1} unit="개월"
+                  display={val => `${val}개월 (${Math.floor(val/12)}년 ${val%12}개월)`}
+                  parse={s => parseInt(s.replace(/[^0-9]/g, ''))}
+                  trackColor="bg-blue-400"
+                  onChange={val => setV(prev => ({ ...prev, usdInsuranceElapsedMonths: val }))}
+                  tooltip="이미 몇 개월 납입해오셨는지 입력하면, 그 기간 동안 공시이율로 쌓인 현재가치를 자동으로 계산해서 반영해요. 남은 기간만 앞으로 더 납입하는 걸로 시뮬레이션합니다."
                 />
                 <DualInput label="공시이율"
                   value={v.usdInsuranceRate ?? 4.0} min={1.0} max={8.0} step={0.1} unit="%"

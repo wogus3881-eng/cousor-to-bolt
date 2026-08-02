@@ -30,9 +30,9 @@ export interface SimulatorInputs {
   monthlyPensionSavings?: number;
   pensionSavingsRate?: number;
   savingsPensionSavings?: number;
-  usdInsuranceCurrentUSD?: number;
   usdInsuranceMonthlyUSD?: number;
   usdInsurancePaymentMonths?: number;
+  usdInsuranceElapsedMonths?: number;
   usdInsuranceRate?: number;
   currentExchangeRate?: number;
   usdInsuranceMaturityExchangeRate?: number;
@@ -312,9 +312,9 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
     monthlyPensionSavings: inputs.monthlyPensionSavings ?? 0,
     pensionSavingsRate: inputs.pensionSavingsRate ?? DEFAULT_STOCK_RATE,
     savingsPensionSavings: inputs.savingsPensionSavings ?? 0,
-    usdInsuranceCurrentUSD: inputs.usdInsuranceCurrentUSD ?? 0,
     usdInsuranceMonthlyUSD: inputs.usdInsuranceMonthlyUSD ?? 0,
     usdInsurancePaymentMonths: inputs.usdInsurancePaymentMonths ?? 120,
+    usdInsuranceElapsedMonths: inputs.usdInsuranceElapsedMonths ?? 0,
     usdInsuranceRate: inputs.usdInsuranceRate ?? 4.0,
     currentExchangeRate: inputs.currentExchangeRate ?? 1350,
     usdInsuranceMaturityExchangeRate: inputs.usdInsuranceMaturityExchangeRate ?? 1400,
@@ -387,11 +387,15 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
   const pensionSavingsR = (norm.pensionSavingsRate ?? DEFAULT_STOCK_RATE) / 100;
   const currentExRate = norm.currentExchangeRate ?? 1350;
   const maturityExRate = norm.usdInsuranceMaturityExchangeRate ?? 1400;
-  const usdCurrentKRW = (norm.usdInsuranceCurrentUSD ?? 0) * currentExRate;
   const usdMonthlyKRW = (norm.usdInsuranceMonthlyUSD ?? 0) * currentExRate;
-  const usdPayYears = Math.min((norm.usdInsurancePaymentMonths ?? 120) / 12, yearsToRetirement);
+  const usdTotalPaymentMonths = norm.usdInsurancePaymentMonths ?? 120;
+  const usdElapsedMonths = Math.min(Math.max(0, norm.usdInsuranceElapsedMonths ?? 0), usdTotalPaymentMonths);
+  const usdRemainingMonths = usdTotalPaymentMonths - usdElapsedMonths;
+  const usdPayYears = Math.min(usdRemainingMonths / 12, yearsToRetirement);
   const usdRate = (norm.usdInsuranceRate ?? 4.0) / 100;
   const usdReinvest = norm.usdInsuranceMaturityReinvest ?? 'stock';
+  // 이미 납입한 기간 동안 공시이율로 쌓인 현재가치 (현재 환율 기준)
+  const usdCurrentKRW = fvAnnuity(usdMonthlyKRW, usdRate, usdElapsedMonths / 12);
   const usdInsAtPayEnd = fvAnnuity(usdMonthlyKRW, usdRate, usdPayYears);
   const usdInsCompoundYears = Math.max(0, yearsToRetirement - usdPayYears);
   const usdInsRetirementKRW = (usdCurrentKRW + fv(usdInsAtPayEnd, usdRate, usdInsCompoundYears)) * (maturityExRate / currentExRate);
