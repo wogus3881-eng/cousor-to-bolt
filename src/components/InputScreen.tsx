@@ -9,6 +9,7 @@ import type { SimulatorInputs } from '../lib/calculator';
 import { DEFAULT_BANK_RATE, DEFAULT_STOCK_RATE, DEFAULT_INS_RATE } from '../lib/calculator';
 import { proFeatures, type ProTier } from '../lib/proTier';
 import ProUpgradePrompt from './ProUpgradePrompt';
+import SavedClientsPanel from './SavedClientsPanel';
 
 interface Props {
   onSimulate: (inputs: SimulatorInputs) => void;
@@ -750,6 +751,17 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
       </div>
 
       <div className="flex-1 px-4 pt-6 pb-28 flex flex-col gap-3 bg-slate-50">
+
+        {/* 고객 정보 저장 · 불러오기 (Pro) */}
+        {features.clientProfiles ? (
+          <SavedClientsPanel currentInputs={v} onLoad={setV} />
+        ) : (
+          <ProUpgradePrompt
+            compact
+            title="고객 정보 저장 · 불러오기는 Pro"
+            description="상담한 고객 데이터를 저장해두면 다음 상담 때 다시 입력할 필요 없이 바로 불러올 수 있어요."
+          />
+        )}
 
         {/* 직업 유형 */}
         <div className="animate-fade-in bg-white rounded-2xl p-1.5 shadow-sm border border-navy-100 flex gap-1.5">

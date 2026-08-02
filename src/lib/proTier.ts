@@ -17,6 +17,7 @@ export interface ProFeatureFlags {
   breakEvenAnalysis: boolean;
   taxSavingsChart: boolean;
   printDisabled: boolean;
+  clientProfiles: boolean;
 }
 
 export const PRO_TIER_META: Record<
@@ -70,6 +71,7 @@ export function proFeatures(tier: ProTier): ProFeatureFlags {
     solutionInsightBox: isPlus,    // 절세 인사이트 상세
     isaCalculation: isPlus,        // ISA/IRP 세금 분석
     unlimitedPrint: isPlus,        // PDF 출력 (무제한)
+    clientProfiles: isPlus,        // 고객 정보 저장 · 불러오기
 
     // ── 기타 연관 flags ──────────────────────────────────────────
     taxDetailSection: isPlus,

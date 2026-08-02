@@ -732,8 +732,41 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
   const reportActionsRef = useRef<HTMLDivElement>(null);
 
-  function scrollToReportActions() {
-    reportActionsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  async function handleSavePdf() {
+    if (features.printDisabled) {
+      window.alert('체험판에서는 리포트 저장이 제공되지 않아요. Basic 이상으로 업그레이드해 주세요.');
+      return;
+    }
+    if (!features.unlimitedPrint && !canRunBasicPrint()) {
+      window.alert('이번 달 Basic 리포트 저장 한도(5회)를 모두 사용했어요. Pro로 업그레이드하면 무제한입니다.');
+      return;
+    }
+    if (!features.unlimitedPrint) recordBasicPrint();
+
+    // 클릭과 같은 콜스택에서 미리 빈 탭을 열어둠 (모바일 브라우저의
+    // "비동기 이후 액션은 사용자 제스처 아님" 차단을 우회하기 위함)
+    const pendingWindow = window.open('', '_blank');
+
+    const wasTableOpen = showTable;
+    if (!wasTableOpen) setShowTable(true);
+    // 표가 펼쳐지고 DOM에 반영될 시간을 확보
+    await new Promise((r) => setTimeout(r, 350));
+
+    setPdfDownloading(true);
+    try {
+      const { downloadResultPdf } = await import('../lib/generateResultPdf');
+      const ok = await downloadResultPdf('pro-result-pdf-capture', '고객', pendingWindow);
+      if (!ok) {
+        window.alert('PDF 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+      }
+    } catch (err) {
+      console.error('[PDF] 저장 중 오류:', err);
+      pendingWindow?.close();
+      window.alert('PDF 저장 중 문제가 발생했습니다. 네트워크 상태를 확인하고 다시 시도해 주세요.');
+    } finally {
+      setPdfDownloading(false);
+      if (!wasTableOpen) setShowTable(false);
+    }
   }
 
   const { retirementAge, monthlyExpense } = inputs;
@@ -2133,12 +2166,17 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
             {dignityEndAge !== null && dignityEndAge < 100 && (
               <button
-                onClick={scrollToReportActions}
-                className="w-full bg-gradient-to-r from-navy-800 to-navy-700 hover:from-navy-700 hover:to-navy-600 active:scale-[0.98] text-white font-bold text-[13px] rounded-2xl py-4 flex items-center justify-center gap-2 transition-all shadow-lg shadow-navy-900/30 border border-gold-600/30"
+                onClick={handleSavePdf}
+                disabled={pdfDownloading}
+                className="w-full bg-gradient-to-r from-navy-800 to-navy-700 hover:from-navy-700 hover:to-navy-600 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-[13px] rounded-2xl py-4 flex items-center justify-center gap-2 transition-all shadow-lg shadow-navy-900/30 border border-gold-600/30"
               >
                 <span className="text-gold-400">▶</span>
-                월 {Math.ceil(monthlySavingsNeededFor100 / 10000).toLocaleString()}만 원 추가 저축 —
-                리포트 저장 · 고객 상담 자료로 활용
+                {pdfDownloading ? 'PDF 생성 중…' : (
+                  <>
+                    월 {Math.ceil(monthlySavingsNeededFor100 / 10000).toLocaleString()}만 원 추가 저축 —
+                    리포트 저장 · 고객 상담 자료로 활용
+                  </>
+                )}
                 <ChevronRight size={16} />
               </button>
             )}
@@ -2148,42 +2186,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
         {/* ── 리포트 저장 버튼 ── */}
         <div ref={reportActionsRef} className="pdf-exclude flex gap-2 scroll-mt-6">
           <button
-            onClick={async () => {
-              if (features.printDisabled) {
-                window.alert('체험판에서는 리포트 저장이 제공되지 않아요. Basic 이상으로 업그레이드해 주세요.');
-                return;
-              }
-              if (!features.unlimitedPrint && !canRunBasicPrint()) {
-                window.alert('이번 달 Basic 리포트 저장 한도(5회)를 모두 사용했어요. Pro로 업그레이드하면 무제한입니다.');
-                return;
-              }
-              if (!features.unlimitedPrint) recordBasicPrint();
-
-              // 클릭과 같은 콜스택에서 미리 빈 탭을 열어둠 (모바일 브라우저의
-              // "비동기 이후 액션은 사용자 제스처 아님" 차단을 우회하기 위함)
-              const pendingWindow = window.open('', '_blank');
-
-              const wasTableOpen = showTable;
-              if (!wasTableOpen) setShowTable(true);
-              // 표가 펼쳐지고 DOM에 반영될 시간을 확보
-              await new Promise((r) => setTimeout(r, 350));
-
-              setPdfDownloading(true);
-              try {
-                const { downloadResultPdf } = await import('../lib/generateResultPdf');
-                const ok = await downloadResultPdf('pro-result-pdf-capture', '고객', pendingWindow);
-                if (!ok) {
-                  window.alert('PDF 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.');
-                }
-              } catch (err) {
-                console.error('[PDF] 저장 중 오류:', err);
-                pendingWindow?.close();
-                window.alert('PDF 저장 중 문제가 발생했습니다. 네트워크 상태를 확인하고 다시 시도해 주세요.');
-              } finally {
-                setPdfDownloading(false);
-                if (!wasTableOpen) setShowTable(false);
-              }
-            }}
+            onClick={handleSavePdf}
             disabled={pdfDownloading}
             className="flex-1 bg-white border-2 border-navy-300 hover:border-navy-500 hover:bg-navy-50 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-navy-800 font-bold text-[13px] rounded-2xl py-4 flex items-center justify-center gap-2 transition-all"
           >
