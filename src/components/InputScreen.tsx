@@ -712,6 +712,17 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
   }, []);
   const [pensionAutoSet, setPensionAutoSet] = useState(!initialInputs);
   const [bucketOpen, setBucketOpen] = useState(false);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [fixedCosts, setFixedCosts] = useState({ housing: 0, telecom: 0, loan: 0, car: 0, living: 0, other: 0 });
+
+  function setFixedCost<K extends keyof typeof fixedCosts>(key: K) {
+    return (val: number) => setFixedCosts(prev => ({ ...prev, [key]: val }));
+  }
+
+  function goToStep(next: 1 | 2 | 3) {
+    setStep(next);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   useLayoutEffect(() => {
     if (initialInputs === undefined) return;
@@ -730,6 +741,10 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
   }
 
   const totalMonthly = v.monthlyBank + v.monthlyStock + v.monthlyInsurance;
+  const totalFixedCosts = fixedCosts.housing + fixedCosts.telecom + fixedCosts.loan + fixedCosts.car + fixedCosts.living + fixedCosts.other;
+  const totalCurrentContrib = totalMonthly + (v.monthlyPension401k ?? 0) + (v.isaMonthly ?? 0) + (v.monthlyPensionSavings ?? 0) + (v.monthlyProtectionInsurance ?? 0);
+  const monthlyIncomeApprox = Math.round((v.annualSalary ?? 0) / 12);
+  const availableFunds = monthlyIncomeApprox - totalFixedCosts - totalCurrentContrib;
   const pension401kPayYearsDefault = Math.max(1, Math.min(40, v.retirementAge - v.currentAge));
   const pension401kPaymentYears = v.pension401kPaymentYears ?? pension401kPayYearsDefault;
   const pensionStartAge = v.pensionStartAge ?? 65;
@@ -767,8 +782,23 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
         </div>
       </div>
 
-      <div className="flex-1 px-4 pt-6 pb-28 flex flex-col gap-3 bg-slate-50">
+      <div className="flex-1 px-4 pt-4 pb-28 flex flex-col gap-3 bg-slate-50">
 
+        {/* 진행 단계 표시 */}
+        <div className="mb-1">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[11px] font-bold text-navy-500">
+              {step}/3단계 · {step === 1 ? '소득·고정비' : step === 2 ? '현재 자산' : '향후 납입 계획'}
+            </span>
+            <span className="text-[11px] font-bold text-navy-400">{Math.round((step / 3) * 100)}%</span>
+          </div>
+          <div className="h-1.5 rounded-full bg-navy-100 overflow-hidden">
+            <div className="h-full rounded-full bg-gradient-to-r from-navy-600 to-gold-500 transition-all duration-300 ease-out" style={{ width: `${(step / 3) * 100}%` }} />
+          </div>
+        </div>
+
+        {step === 1 && (
+        <>
         {/* 고객 정보 저장 · 불러오기 (Pro) */}
         {features.clientProfiles ? (
           <SavedClientsPanel currentInputs={v} onLoad={setV} />
@@ -889,6 +919,115 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
           </div>
         )}
 
+        {/* 월 보장성 보험료 */}
+        <div className="animate-fade-in">
+          <DualInput
+            label="월 보장성 보험료" sublabel="실손·암·종신 등 보장성 합계"
+            tooltip="현재 내고 계신 보장성 보험료 전체 합산 금액입니다. 저축성 보험은 제외하고 순수 보장성만 입력해주세요."
+            value={v.monthlyProtectionInsurance ?? 0} min={0} max={MAN * 200} step={MAN * 5} unit="만 원"
+            display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
+            trackColor="bg-rose-500" onChange={set('monthlyProtectionInsurance')}
+          />
+          {(() => {
+            const age = v.currentAge;
+            const hints =
+              age < 30 ? [{ label: '30대', avg: 18 }] :
+              age < 40 ? [{ label: '30대', avg: 18 }, { label: '40대', avg: 26 }] :
+              age < 50 ? [{ label: '40대', avg: 26 }, { label: '50대', avg: 35 }] :
+              age < 60 ? [{ label: '50대', avg: 35 }, { label: '60대', avg: 42 }] :
+              [{ label: '60대', avg: 42 }];
+            return (
+              <div className="mt-1.5 rounded-xl bg-slate-50 px-3 py-2 space-y-1">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[10px] font-bold text-slate-400 shrink-0">💡 나이대별 평균</span>
+                  {hints.map((h) => (
+                    <span key={h.label} className="inline-flex items-center gap-1 rounded-full bg-white border border-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
+                      {h.label} <span className="text-toss-blue font-bold">{h.avg}만원</span>
+                    </span>
+                  ))}
+                </div>
+                <p className="text-[10px] text-slate-400">모르시면 0으로 두고 상담 시 확인해도 됩니다</p>
+              </div>
+            );
+          })()}
+        </div>
+
+        {/* 품격 유지 월 생활비 */}
+        <div className="animate-fade-in">
+          <DualInput
+            label="품격 유지 월 생활비" sublabel="은퇴 후 희망 생활비 (현재 가치)" icon={<Coffee size={16} />}
+            value={v.monthlyExpense} min={MAN * 100} max={MAN * 1000} step={MAN * 10} unit="만 원"
+            display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
+            trackColor="bg-navy-500" onChange={set('monthlyExpense')}
+          />
+        </div>
+
+        {/* 월 고정비 세부 입력 */}
+        <div className="animate-fade-in bg-white rounded-2xl p-5 shadow-sm border border-navy-100">
+          <div className="mb-3">
+            <p className="text-xs font-semibold text-navy-800">월 고정비</p>
+            <p className="text-[10px] text-navy-400">통신비·대출·차량 등 매달 나가는 고정 지출</p>
+          </div>
+          <div className="space-y-4">
+            <InlineField
+              label="주거비 (월세·관리비)" value={fixedCosts.housing}
+              min={0} max={MAN * 300} step={MAN * 5}
+              display={v => `${Math.floor(v / MAN).toLocaleString()}만 원`} parse={s => parseFloat(s) * MAN}
+              trackColor="bg-slate-400" thumbColor="bg-slate-600" onChange={setFixedCost('housing')}
+            />
+            <InlineField
+              label="통신비" value={fixedCosts.telecom}
+              min={0} max={MAN * 50} step={MAN * 1}
+              display={v => `${Math.floor(v / MAN).toLocaleString()}만 원`} parse={s => parseFloat(s) * MAN}
+              trackColor="bg-slate-400" thumbColor="bg-slate-600" onChange={setFixedCost('telecom')}
+            />
+            <InlineField
+              label="대출 원리금" value={fixedCosts.loan}
+              min={0} max={MAN * 300} step={MAN * 5}
+              display={v => `${Math.floor(v / MAN).toLocaleString()}만 원`} parse={s => parseFloat(s) * MAN}
+              trackColor="bg-slate-400" thumbColor="bg-slate-600" onChange={setFixedCost('loan')}
+            />
+            <InlineField
+              label="차량 유지비 (할부·보험·유류비)" value={fixedCosts.car}
+              min={0} max={MAN * 150} step={MAN * 5}
+              display={v => `${Math.floor(v / MAN).toLocaleString()}만 원`} parse={s => parseFloat(s) * MAN}
+              trackColor="bg-slate-400" thumbColor="bg-slate-600" onChange={setFixedCost('car')}
+            />
+            <InlineField
+              label="생활비 (식비 등)" value={fixedCosts.living}
+              min={0} max={MAN * 300} step={MAN * 5}
+              display={v => `${Math.floor(v / MAN).toLocaleString()}만 원`} parse={s => parseFloat(s) * MAN}
+              trackColor="bg-slate-400" thumbColor="bg-slate-600" onChange={setFixedCost('living')}
+            />
+            <InlineField
+              label="기타" value={fixedCosts.other}
+              min={0} max={MAN * 200} step={MAN * 5}
+              display={v => `${Math.floor(v / MAN).toLocaleString()}만 원`} parse={s => parseFloat(s) * MAN}
+              trackColor="bg-slate-400" thumbColor="bg-slate-600" onChange={setFixedCost('other')}
+            />
+          </div>
+        </div>
+
+        {/* 월 가용자금 요약 */}
+        <div className={`animate-fade-in rounded-2xl p-5 border ${availableFunds >= 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+          <p className="text-[11px] font-bold text-navy-500 mb-2">월 가용자금</p>
+          <div className="flex items-baseline justify-between mb-3">
+            <span className={`text-2xl font-extrabold ${availableFunds >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+              {(availableFunds < 0 ? '−' : '')}{Math.abs(Math.floor(availableFunds / MAN)).toLocaleString()}만 원
+            </span>
+            {availableFunds < 0 && <span className="text-[11px] font-bold text-red-500">적자 구조</span>}
+          </div>
+          <div className="space-y-1 text-[11px] text-navy-500">
+            <div className="flex justify-between"><span>월 소득</span><span className="font-semibold text-navy-700">{Math.floor(monthlyIncomeApprox / MAN).toLocaleString()}만 원</span></div>
+            <div className="flex justify-between"><span>− 고정비 합계</span><span className="font-semibold text-navy-700">{Math.floor(totalFixedCosts / MAN).toLocaleString()}만 원</span></div>
+            <div className="flex justify-between"><span>− 현재 투자·보장성보험 합계</span><span className="font-semibold text-navy-700">{Math.floor(totalCurrentContrib / MAN).toLocaleString()}만 원</span></div>
+          </div>
+        </div>
+        </>
+        )}
+
+        {step === 2 && (
+        <>
         <CollapsibleSection icon="💰" title="현재 준비 현황" subtitle="지금 가지고 있는 돈">
         <div className="animate-fade-in" style={{ animationDelay: '240ms', animationFillMode: 'both' }}>
           <div className="mb-2 flex items-center gap-2">
@@ -942,7 +1081,11 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
         </div>
 
         </CollapsibleSection>
+        </>
+        )}
 
+        {step === 3 && (
+        <>
         <CollapsibleSection icon="📊" title="자산별 정밀 배분" subtitle="계좌별 수익률·납입기간 설정">
         <div className="animate-fade-in" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>
           <button type="button" onClick={() => setBucketOpen(p => !p)}
@@ -1197,50 +1340,6 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
           )}
         </div>
 
-        {/* 월 보장성 보험료 */}
-        <div className="animate-fade-in" style={{ animationDelay: '355ms', animationFillMode: 'both' }}>
-          <DualInput
-            label="월 보장성 보험료" sublabel="실손·암·종신 등 보장성 합계"
-            tooltip="현재 내고 계신 보장성 보험료 전체 합산 금액입니다. 저축성 보험은 제외하고 순수 보장성만 입력해주세요."
-            value={v.monthlyProtectionInsurance ?? 0} min={0} max={MAN * 200} step={MAN * 5} unit="만 원"
-            display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
-            trackColor="bg-rose-500" onChange={set('monthlyProtectionInsurance')}
-          />
-          {(() => {
-            const age = v.currentAge;
-            const hints =
-              age < 30 ? [{ label: '30대', avg: 18 }] :
-              age < 40 ? [{ label: '30대', avg: 18 }, { label: '40대', avg: 26 }] :
-              age < 50 ? [{ label: '40대', avg: 26 }, { label: '50대', avg: 35 }] :
-              age < 60 ? [{ label: '50대', avg: 35 }, { label: '60대', avg: 42 }] :
-              [{ label: '60대', avg: 42 }];
-            return (
-              <div className="mt-1.5 rounded-xl bg-slate-50 px-3 py-2 space-y-1">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-[10px] font-bold text-slate-400 shrink-0">💡 나이대별 평균</span>
-                  {hints.map((h) => (
-                    <span key={h.label} className="inline-flex items-center gap-1 rounded-full bg-white border border-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
-                      {h.label} <span className="text-toss-blue font-bold">{h.avg}만원</span>
-                    </span>
-                  ))}
-                </div>
-                <p className="text-[10px] text-slate-400">모르시면 0으로 두고 상담 시 확인해도 됩니다</p>
-              </div>
-            );
-          })()}
-        </div>
-
-        {/* 품격 유지 월 생활비 */}
-        <div className="animate-fade-in" style={{ animationDelay: '360ms', animationFillMode: 'both' }}>
-          <DualInput
-            label="품격 유지 월 생활비" sublabel="은퇴 후 희망 생활비 (현재 가치)" icon={<Coffee size={16} />}
-            value={v.monthlyExpense} min={MAN * 100} max={MAN * 1000} step={MAN * 10} unit="만 원"
-            display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
-            trackColor="bg-navy-500" onChange={set('monthlyExpense')}
-          />
-        </div>
-
-        {/* ── 생애주기 설정 (Plus) ── */}
         </CollapsibleSection>
 
         {/* 퇴직급여 - 직장인만 표시 */}
@@ -1455,15 +1554,33 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
             · 은행·증권 <strong>이자소득세 15.4%</strong> 과세, 보험 <strong>비과세</strong> 자동 적용 (현행 세법 기준)
           </p>
         </div>
+        </>
+        )}
       </div>
 
-      <div className="sticky bottom-0 z-10 px-4 pb-10 pt-3 bg-white/95 backdrop-blur border-t border-navy-100">
-        <button onClick={() => onSimulate(v)}
-          className="w-full bg-gradient-to-r from-navy-800 to-navy-700 hover:from-navy-700 hover:to-navy-600 active:scale-[0.98] text-white font-bold text-base rounded-2xl py-4 flex items-center justify-center gap-2 transition-all shadow-xl shadow-navy-900/30 border border-gold-600/30">
-          <span className="text-gold-400">▶</span>
-          내 품격 유지 한계선 진단하기
-          <ChevronRight size={18} />
-        </button>
+      <div className="sticky bottom-0 z-10 px-4 pb-10 pt-3 bg-white/95 backdrop-blur border-t border-navy-100 flex gap-2">
+        {step > 1 && (
+          <button onClick={() => goToStep((step - 1) as 1 | 2 | 3)}
+            className="shrink-0 px-5 rounded-2xl border-2 border-navy-200 text-navy-600 font-bold text-sm hover:bg-navy-50 transition-colors">
+            이전
+          </button>
+        )}
+        {step < 3 ? (
+          <button
+            onClick={() => goToStep((step + 1) as 1 | 2 | 3)}
+            disabled={step === 1 && !(v.annualSalary > 0)}
+            className="flex-1 bg-gradient-to-r from-navy-800 to-navy-700 hover:from-navy-700 hover:to-navy-600 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-base rounded-2xl py-4 flex items-center justify-center gap-2 transition-all shadow-xl shadow-navy-900/30 border border-gold-600/30">
+            다음
+            <ChevronRight size={18} />
+          </button>
+        ) : (
+          <button onClick={() => onSimulate(v)}
+            className="flex-1 bg-gradient-to-r from-navy-800 to-navy-700 hover:from-navy-700 hover:to-navy-600 active:scale-[0.98] text-white font-bold text-base rounded-2xl py-4 flex items-center justify-center gap-2 transition-all shadow-xl shadow-navy-900/30 border border-gold-600/30">
+            <span className="text-gold-400">▶</span>
+            내 품격 유지 한계선 진단하기
+            <ChevronRight size={18} />
+          </button>
+        )}
       </div>
     </div>
   );
