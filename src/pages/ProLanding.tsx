@@ -80,7 +80,7 @@ const FAQS = [
   },
   {
     q: 'Basic에서 Pro로 업그레이드하려면 어떻게 하나요?',
-    a: '담당자에게 문의해 주시면 등급을 바로 올려드려요. 별도의 복잡한 절차 없이 다음 로그인부터 바로 Pro 기능을 이용할 수 있어요.',
+    a: 'henry-lim@naver.com으로 문의해 주시면 등급을 바로 올려드려요. 별도의 복잡한 절차 없이 다음 로그인부터 바로 Pro 기능을 이용할 수 있어요.',
   },
   {
     q: '여러 기기에서 동시에 로그인할 수 있나요?',
@@ -377,7 +377,7 @@ function PlansTab() {
         </ul>
       </div>
 
-      <p className="text-center text-[11px] text-slate-400">결제 방법에 대해 궁금한 점은 담당 설계사에게 문의해 주세요.</p>
+      <p className="text-center text-[11px] text-slate-400">결제 방법에 대해 궁금한 점은 henry-lim@naver.com으로 문의해 주세요.</p>
     </div>
   );
 }
