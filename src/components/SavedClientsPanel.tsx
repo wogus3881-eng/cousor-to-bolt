@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Users, Save, Trash2 } from 'lucide-react';
+import { Users, Save, Trash2, ChevronDown } from 'lucide-react';
 import type { SimulatorInputs } from '../lib/calculator';
 import { listSavedClients, saveClient, deleteSavedClient, type SavedClient } from '../lib/savedClients';
 
@@ -12,6 +12,7 @@ export default function SavedClientsPanel({ currentInputs, onLoad }: Props) {
   const [clients, setClients] = useState<SavedClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [open, setOpen] = useState(true);
 
   async function refresh() {
     setLoading(true);
@@ -44,28 +45,35 @@ export default function SavedClientsPanel({ currentInputs, onLoad }: Props) {
 
   return (
     <div className="animate-fade-in bg-white rounded-2xl p-4 shadow-sm border border-navy-100">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Users size={16} className="text-navy-500" />
-          <p className="text-[13px] font-bold text-navy-900">저장된 고객</p>
-        </div>
+      <div className={`flex items-center justify-between ${open ? 'mb-3' : ''}`}>
         <button
           type="button"
-          onClick={handleSave}
+          onClick={() => setOpen((p) => !p)}
+          className="flex min-w-0 flex-1 items-center gap-2 text-left"
+        >
+          <Users size={16} className="shrink-0 text-navy-500" />
+          <p className="text-[13px] font-bold text-navy-900">
+            저장된 고객{clients.length > 0 ? ` (${clients.length})` : ''}
+          </p>
+          <ChevronDown size={14} className={`shrink-0 text-navy-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+        </button>
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); handleSave(); }}
           disabled={saving}
-          className="flex items-center gap-1 rounded-lg bg-navy-800 px-2.5 py-1.5 text-[11px] font-bold text-white disabled:opacity-50"
+          className="ml-2 flex shrink-0 items-center gap-1 rounded-lg bg-navy-800 px-2.5 py-1.5 text-[11px] font-bold text-white disabled:opacity-50"
         >
           <Save size={12} />
           {saving ? '저장 중…' : '현재 입력 저장'}
         </button>
       </div>
 
-      {loading ? (
+      {open && (loading ? (
         <p className="text-[11px] text-slate-400">불러오는 중…</p>
       ) : clients.length === 0 ? (
         <p className="text-[11px] text-slate-400">저장된 고객이 없어요. 입력 후 &apos;현재 입력 저장&apos;을 눌러보세요.</p>
       ) : (
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 max-h-64 overflow-y-auto pr-0.5">
           {clients.map((c) => (
             <div key={c.id} className="flex items-center gap-2 rounded-xl bg-navy-50/60 px-3 py-2">
               <button
@@ -88,7 +96,7 @@ export default function SavedClientsPanel({ currentInputs, onLoad }: Props) {
             </div>
           ))}
         </div>
-      )}
+      ))}
     </div>
   );
 }
