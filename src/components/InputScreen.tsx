@@ -11,11 +11,14 @@ import { proFeatures, type ProTier } from '../lib/proTier';
 import ProUpgradePrompt from './ProUpgradePrompt';
 import SavedClientsPanel from './SavedClientsPanel';
 import { DEFAULT_FIXED_COSTS, type FixedCosts } from '../lib/savedClients';
+import type { ActiveClient } from './SavedClientsPanel';
 
 interface Props {
   onSimulate: (inputs: SimulatorInputs, fixedCosts: FixedCosts) => void;
   initialInputs?: SimulatorInputs;
   initialFixedCosts?: FixedCosts;
+  activeClient?: ActiveClient | null;
+  onActiveClientChange?: (client: ActiveClient | null) => void;
   tier?: ProTier;
 }
 
@@ -696,7 +699,11 @@ function calcDefaultPensionYears(currentAge: number) {
 }
 
 // ── InputScreen ────────────────────────────────────────────────────────────────
-export default function InputScreen({ onSimulate, initialInputs, initialFixedCosts, tier = 'plus' }: Props) {
+export default function InputScreen({
+  onSimulate, initialInputs, initialFixedCosts,
+  activeClient = null, onActiveClientChange = () => {},
+  tier = 'plus',
+}: Props) {
   const features = proFeatures(tier);
   const [v, setV] = useState<SimulatorInputs>(() => initialInputs ?? DEFAULT_INPUTS);
 
@@ -807,6 +814,8 @@ export default function InputScreen({ onSimulate, initialInputs, initialFixedCos
             currentInputs={v}
             currentFixedCosts={fixedCosts}
             onLoad={(inputs, costs) => { setV(inputs); setFixedCosts(costs); }}
+            activeClient={activeClient}
+            onActiveClientChange={onActiveClientChange}
           />
         ) : (
           <ProUpgradePrompt

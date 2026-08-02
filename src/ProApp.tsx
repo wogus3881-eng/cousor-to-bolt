@@ -9,6 +9,7 @@ import type { SimulatorInputs, SimulationResult } from './lib/calculator';
 import { peekHandoffSimulatorInputs, clearLiteProHandoffStorage } from './lib/liteProHandoff';
 import { proFeatures, PRO_TIER_META, type ProTier } from './lib/proTier';
 import { DEFAULT_FIXED_COSTS, type FixedCosts } from './lib/savedClients';
+import type { ActiveClient } from './components/SavedClientsPanel';
 import {
   canRunBasicSimulation,
   canRunTrialSimulation,
@@ -36,6 +37,7 @@ function ProAppContent({ tier }: Props) {
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [savedInputs, setSavedInputs] = useState<SimulatorInputs | undefined>(undefined);
   const [savedFixedCosts, setSavedFixedCosts] = useState<FixedCosts>(DEFAULT_FIXED_COSTS);
+  const [activeClient, setActiveClient] = useState<ActiveClient | null>(null);
   const [handoffBanner, setHandoffBanner] = useState(false);
   const [limitMessage, setLimitMessage] = useState<string | null>(null);
   const handoffBootRef = useRef(false);
@@ -144,6 +146,8 @@ function ProAppContent({ tier }: Props) {
           onSimulate={handleSimulate}
           initialInputs={savedInputs}
           initialFixedCosts={savedFixedCosts}
+          activeClient={activeClient}
+          onActiveClientChange={setActiveClient}
           tier={tier}
         />
       </div>

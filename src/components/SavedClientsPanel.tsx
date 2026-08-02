@@ -6,18 +6,23 @@ import {
   DEFAULT_FIXED_COSTS, type SavedClient, type FixedCosts,
 } from '../lib/savedClients';
 
+export interface ActiveClient { id: string; label: string }
+
 interface Props {
   currentInputs: SimulatorInputs;
   currentFixedCosts: FixedCosts;
   onLoad: (inputs: SimulatorInputs, fixedCosts: FixedCosts) => void;
+  activeClient: ActiveClient | null;
+  onActiveClientChange: (client: ActiveClient | null) => void;
 }
 
-export default function SavedClientsPanel({ currentInputs, currentFixedCosts, onLoad }: Props) {
+export default function SavedClientsPanel({
+  currentInputs, currentFixedCosts, onLoad, activeClient, onActiveClientChange: setActiveClient,
+}: Props) {
   const [clients, setClients] = useState<SavedClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState(true);
-  const [activeClient, setActiveClient] = useState<{ id: string; label: string } | null>(null);
 
   async function refresh() {
     setLoading(true);
