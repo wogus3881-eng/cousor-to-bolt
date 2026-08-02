@@ -521,10 +521,14 @@ const INS_THEME: BucketTheme = {
   badge: '비과세', badgeColor: 'bg-gold-100 text-gold-700',
 };
 
-function BucketCard({ theme, amount, rate, onAmountChange, onRateChange, paymentYears, onPaymentYearsChange }: {
+function BucketCard({
+  theme, amount, rate, onAmountChange, onRateChange, paymentYears, onPaymentYearsChange,
+  elapsedMonths, onElapsedMonthsChange,
+}: {
   theme: BucketTheme; amount: number; rate: number;
   onAmountChange: (v: number) => void; onRateChange: (v: number) => void;
   paymentYears?: number; onPaymentYearsChange?: (v: number) => void;
+  elapsedMonths?: number; onElapsedMonthsChange?: (v: number) => void;
 }) {
   const showPaymentYears = paymentYears !== undefined && onPaymentYearsChange !== undefined;
   const isBank = theme === BANK_THEME;
@@ -572,7 +576,7 @@ function BucketCard({ theme, amount, rate, onAmountChange, onRateChange, payment
         {showPaymentYears && (
           <>
             <InlineField
-              label="납입 기간"
+              label="총 납입 기간"
               value={paymentYears}
               min={1} max={240} step={1}
               display={v => `${v}개월 (${Math.floor(v/12)}년 ${v%12}개월)`}
@@ -580,6 +584,20 @@ function BucketCard({ theme, amount, rate, onAmountChange, onRateChange, payment
               trackColor={theme.trackAmount} thumbColor={theme.thumbAmount}
               onChange={onPaymentYearsChange}
             />
+
+            {elapsedMonths !== undefined && onElapsedMonthsChange !== undefined && (
+              <InlineField
+                label="이미 납입한 기간"
+                value={Math.min(elapsedMonths, paymentYears)}
+                min={0} max={paymentYears} step={1}
+                display={v => `${v}개월 (${Math.floor(v/12)}년 ${v%12}개월)`}
+                parse={v => parseInt(v.replace(/[^0-9]/g, ''))}
+                trackColor={theme.trackAmount} thumbColor={theme.thumbAmount}
+                onChange={onElapsedMonthsChange}
+                tooltip="이미 가입해서 몇 개월 납입해오셨는지 입력하면, 남은 납입기간만큼만 앞으로의 시뮬레이션에 반영돼요. 현재까지 쌓인 금액은 위 '현재 준비 현황 > 보험 해지환급금'에 입력해주세요."
+              />
+            )}
+
             <div className="flex items-start gap-2 bg-gold-50 rounded-xl px-3 py-2.5 border border-gold-200">
               <span className="text-gold-600 mt-0.5 shrink-0">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 0a6 6 0 100 12A6 6 0 006 0zm.75 9H5.25V5.25h1.5V9zm0-5.25H5.25v-1.5h1.5v1.5z"/></svg>
@@ -640,6 +658,7 @@ const DEFAULT_INPUTS: SimulatorInputs = {
   monthlyInsurance: MAN * 20,
   insuranceRate: DEFAULT_INS_RATE,
   insurancePaymentYears: 120,
+  insuranceElapsedMonths: 0,
   monthlyPensionSavings: 0,
   pensionSavingsRate: 5.0,
   savingsPensionSavings: 0,
@@ -665,7 +684,6 @@ const DEFAULT_INPUTS: SimulatorInputs = {
   pensionStartAge: 65,
   isaMonthly: 0,
   isaRate: DEFAULT_STOCK_RATE,
-  isaTermYears: 5,
   employmentType: 'employee',
   pensionBaseIncome: MAN * 100,
   businessAsset: 0,
@@ -716,7 +734,6 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
   const pension401kPaymentYears = v.pension401kPaymentYears ?? pension401kPayYearsDefault;
   const pensionStartAge = v.pensionStartAge ?? 65;
   const isaRate = v.isaRate ?? v.stockRate;
-  const isaTermYears = v.isaTermYears ?? 5;
   const employmentType = v.employmentType ?? 'employee';
   const isSelfEmployed = employmentType === 'self-employed';
   const pensionBaseIncome = v.pensionBaseIncome ?? MAN * 100;
@@ -996,7 +1013,7 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
 
               <BucketCard theme={BANK_THEME} amount={v.monthlyBank} rate={v.bankRate} onAmountChange={set('monthlyBank')} onRateChange={set('bankRate')} />
               <BucketCard theme={STOCK_THEME} amount={v.monthlyStock} rate={v.stockRate} onAmountChange={set('monthlyStock')} onRateChange={set('stockRate')} />
-              <BucketCard theme={INS_THEME} amount={v.monthlyInsurance} rate={v.insuranceRate} onAmountChange={set('monthlyInsurance')} onRateChange={set('insuranceRate')} paymentYears={v.insurancePaymentYears ?? 10} onPaymentYearsChange={set('insurancePaymentYears')} />
+              <BucketCard theme={INS_THEME} amount={v.monthlyInsurance} rate={v.insuranceRate} onAmountChange={set('monthlyInsurance')} onRateChange={set('insuranceRate')} paymentYears={v.insurancePaymentYears ?? 10} onPaymentYearsChange={set('insurancePaymentYears')} elapsedMonths={v.insuranceElapsedMonths ?? 0} onElapsedMonthsChange={set('insuranceElapsedMonths')} />
 
               {/* 만기 환급금 재투자 전략 - BucketCard 외부 */}
               {(v.monthlyInsurance ?? 0) > 0 && (
@@ -1087,15 +1104,12 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
                     onChange={set('isaRate')}
                     decimalPlaces={1}
                   />
-                  <DualInput
-                    label="납입 기간"
-                    value={isaTermYears}
-                    min={1} max={5} step={1} unit="년"
-                    display={String} parse={parseInt}
-                    trackColor="bg-emerald-500"
-                    onChange={set('isaTermYears')}
-                    tooltip="ISA는 최소 3년 이상 유지해야 비과세 혜택이 적용돼요."
-                  />
+                  <div className="rounded-xl bg-emerald-50 border border-emerald-100 px-3 py-2.5">
+                    <p className="text-[10px] text-emerald-900 leading-relaxed">
+                      ISA는 정해진 납입 기간이 없어요. 총 납입한도(1억 원)에 도달할 때까지 매월 자동으로 계속 넣는 걸로 계산하고,
+                      한도를 채우면 그 뒤로는 추가 납입 없이 계속 굴러가요. 최소 3년 이상 유지해야 비과세 혜택이 적용돼요.
+                    </p>
+                  </div>
                 </div>
               )}
 

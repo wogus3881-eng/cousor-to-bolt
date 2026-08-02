@@ -10,7 +10,8 @@ export interface SimulatorInputs {
   stockRate: number;           // 증권 수익률 % (기본 5.0)
   monthlyInsurance: number;    // 보험/비과세 연금 (비과세)
   insuranceRate: number;       // 보험 수익률 % (기본 3.5)
-  insurancePaymentYears: number; // 보험 납입 기간 (년, 기본 10)
+  insurancePaymentYears: number; // 보험 총 납입 기간 (개월)
+  insuranceElapsedMonths?: number; // 이미 납입한 기간 (개월)
   /** @deprecated 이전 호환용 */
   monthlyContribution?: number;
   /** @deprecated expectedReturn → stockRate 로 대체 */
@@ -45,7 +46,6 @@ export interface SimulatorInputs {
   pensionStartAge?: number;
   isaMonthly?: number;
   isaRate?: number;
-  isaTermYears?: number;
   /** 현재 은행/CMA 보유액 */
   savingsBank?: number;
   /** 현재 증권/ETF 보유액 */
@@ -154,7 +154,7 @@ const PENSION401K_TAX_RATE_HIGH = 0.055;
 const ISA_TAX_FREE_GAIN_LIMIT = 2000000;
 const ISA_TAX_RATE = 0.099;
 const ISA_MAX_MONTHLY = 2000000;
-const DEFAULT_ISA_TERM_YEARS = 5;
+const ISA_TOTAL_LIMIT = 100000000; // 총 납입한도 1억 원 (기간 제한 없음)
 const DEFAULT_PENSION_START_AGE = 65;
 const DEFAULT_PENSION_BASE_INCOME = 1000000;
 
@@ -199,6 +199,30 @@ function fvAnnuity(monthly: number, annualRate: number, years: number): number {
 function fv(pv: number, rate: number, years: number): number {
   if (years <= 0) return pv;
   return pv * Math.pow(1 + rate, years);
+}
+
+/** 월 적립을 매달 복리로 굴리되, 누적 납입액(시작 잔액 포함)이 totalCap에 도달하면
+ *  그 이후로는 신규 납입 없이 잔액만 계속 복리로 굴러갑니다. (예: ISA 총 납입한도) */
+function projectCappedAnnuity(
+  startBalance: number,
+  monthly: number,
+  annualRate: number,
+  years: number,
+  totalCap: number,
+): { balance: number; contributed: number } {
+  const monthlyRate = annualRate / 12;
+  const totalMonths = Math.round(Math.max(0, years) * 12);
+  let balance = startBalance;
+  let cumulativeIn = startBalance;
+  let contributed = 0;
+  for (let m = 0; m < totalMonths; m++) {
+    const room = Math.max(0, totalCap - cumulativeIn);
+    const deposit = Math.min(Math.max(0, monthly), room);
+    balance = balance * (1 + monthlyRate) + deposit;
+    cumulativeIn += deposit;
+    contributed += deposit;
+  }
+  return { balance, contributed };
 }
 
 function applyTaxOnReturn(balance: number, rate: number): { netBalance: number; taxPaid: number } {
@@ -302,7 +326,7 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
     pensionStartAge: inputs.pensionStartAge ?? DEFAULT_PENSION_START_AGE,
     isaMonthly: Math.min(inputs.isaMonthly ?? 0, ISA_MAX_MONTHLY),
     isaRate: inputs.isaRate ?? (inputs.stockRate ?? (inputs.expectedReturn ?? DEFAULT_STOCK_RATE)),
-    isaTermYears: Math.min(inputs.isaTermYears ?? DEFAULT_ISA_TERM_YEARS, DEFAULT_ISA_TERM_YEARS),
+    insuranceElapsedMonths: inputs.insuranceElapsedMonths ?? 0,
     employmentType: inputs.employmentType ?? 'employee',
     pensionBaseIncome: inputs.pensionBaseIncome ?? DEFAULT_PENSION_BASE_INCOME,
     businessAsset: inputs.businessAsset ?? 0,
@@ -319,7 +343,7 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
     currentSavings, monthlyBank, bankRate: bankRatePct,
     monthlyStock, stockRate: stockRatePct,
     monthlyInsurance, insuranceRate: insRatePct,
-    insurancePaymentYears,
+    insurancePaymentYears, insuranceElapsedMonths,
     annualSalary, monthlyExpense,
     activeEndAge, medicalCostEnabled, monthlyMedicalCost,
   } = norm;
@@ -328,7 +352,6 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
   const pension401kPaymentYears = norm.pension401kPaymentYears ?? yearsToRetirementPre;
   const isaMonthly = norm.isaMonthly ?? 0;
   const isaRatePct = norm.isaRate ?? (norm.stockRate ?? DEFAULT_STOCK_RATE);
-  const isaTermYears = norm.isaTermYears ?? DEFAULT_ISA_TERM_YEARS;
 
   let pensionStartAge = Math.min(70, Math.max(60, norm.pensionStartAge ?? DEFAULT_PENSION_START_AGE));
   if (pensionStartAge < retirementAge) pensionStartAge = retirementAge;
@@ -380,9 +403,11 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
   // retirementBalanceInsurance는 아래에서 계산되므로 placeholder로 선언 후 나중에 재정의
 
   // retirementBalanceBank는 보험 계산 후 정의
-  // 보험: 납입기간(insurancePaymentYears)만 납입 후 은퇴까지 복리 증식
-  // insurancePaymentYears는 개월 단위
-  const insPayYears = Math.min((insurancePaymentYears) / 12, yearsToRetirement);
+  // 보험: 총 납입기간(insurancePaymentYears) 중 이미 낸 기간(insuranceElapsedMonths)을 뺀
+  // 남은 기간만 앞으로 더 납입하고, 그 이후 은퇴까지 복리 증식 (단위: 개월)
+  const insElapsedMonths = Math.min(Math.max(0, insuranceElapsedMonths ?? 0), insurancePaymentYears);
+  const insRemainingMonths = insurancePaymentYears - insElapsedMonths;
+  const insPayYears = Math.min(insRemainingMonths / 12, yearsToRetirement);
   const insBalanceAtPaymentEnd = fv(savingsInsurance, insR, insPayYears)
     + fvAnnuity(monthlyInsurance, insR, insPayYears);
   const yearsCompoundAfterPayment = yearsToRetirement - insPayYears;
@@ -417,19 +442,14 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
   const retirementBalancePension401k = fv(savingsPension401k + severanceToIRP, pension401kR, yearsToRetirement)
     + fvAnnuity(effectiveMonthlyPension401k, pension401kR, pension401kPayYears);
 
-  const isaContributionYears = Math.min(isaTermYears, yearsToRetirement);
-  const isaFromMonthly = isaContributionYears > 0
-    ? fvAnnuity(isaMonthly, isaR, isaContributionYears)
-    : 0;
-  const isaMatureBalance = fv(savingsIsa, isaR, isaContributionYears) + isaFromMonthly;
-  const isaContributions = isaMonthly * 12 * isaContributionYears;
-  const isaInterest = Math.max(0, isaMatureBalance - isaContributions);
+  // ISA는 정해진 납입 기간이 없어 총 납입한도(1억원)에 도달할 때까지 계속 납입하는 걸로 계산
+  const isaProjection = projectCappedAnnuity(savingsIsa, isaMonthly, isaR, yearsToRetirement, ISA_TOTAL_LIMIT);
+  const isaRetirementBalance = isaProjection.balance;
+  const isaContributions = isaProjection.contributed;
+  const isaInterest = Math.max(0, isaRetirementBalance - savingsIsa - isaContributions);
   const isaTax = Math.max(0, isaInterest - ISA_TAX_FREE_GAIN_LIMIT) * ISA_TAX_RATE;
   const regularAccountTax = isaInterest * FINANCIAL_INCOME_TAX;
   const isaTaxSaved = Math.max(0, regularAccountTax - isaTax);
-  const isaRetirementBalance = yearsToRetirement >= isaTermYears && isaTermYears > 0
-    ? fv(isaMatureBalance, stockR, yearsToRetirement - isaTermYears)
-    : isaMatureBalance;
 
 
   const retirementBalance = retirementBalanceBank + retirementBalanceStock + retirementBalanceInsurance + businessAsset;
