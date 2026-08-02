@@ -13,8 +13,9 @@ import SavedClientsPanel from './SavedClientsPanel';
 import { DEFAULT_FIXED_COSTS, type FixedCosts } from '../lib/savedClients';
 
 interface Props {
-  onSimulate: (inputs: SimulatorInputs) => void;
+  onSimulate: (inputs: SimulatorInputs, fixedCosts: FixedCosts) => void;
   initialInputs?: SimulatorInputs;
+  initialFixedCosts?: FixedCosts;
   tier?: ProTier;
 }
 
@@ -695,7 +696,7 @@ function calcDefaultPensionYears(currentAge: number) {
 }
 
 // ── InputScreen ────────────────────────────────────────────────────────────────
-export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }: Props) {
+export default function InputScreen({ onSimulate, initialInputs, initialFixedCosts, tier = 'plus' }: Props) {
   const features = proFeatures(tier);
   const [v, setV] = useState<SimulatorInputs>(() => initialInputs ?? DEFAULT_INPUTS);
 
@@ -714,7 +715,7 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
   const [pensionAutoSet, setPensionAutoSet] = useState(!initialInputs);
   const [bucketOpen, setBucketOpen] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [fixedCosts, setFixedCosts] = useState<FixedCosts>(DEFAULT_FIXED_COSTS);
+  const [fixedCosts, setFixedCosts] = useState<FixedCosts>(() => initialFixedCosts ?? DEFAULT_FIXED_COSTS);
 
   function setFixedCost<K extends keyof FixedCosts>(key: K) {
     return (val: number) => setFixedCosts(prev => ({ ...prev, [key]: val }));
@@ -1606,7 +1607,7 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
             <ChevronRight size={18} />
           </button>
         ) : (
-          <button onClick={() => onSimulate(v)}
+          <button onClick={() => onSimulate(v, fixedCosts)}
             className="flex-1 bg-gradient-to-r from-navy-800 to-navy-700 hover:from-navy-700 hover:to-navy-600 active:scale-[0.98] text-white font-bold text-base rounded-2xl py-4 flex items-center justify-center gap-2 transition-all shadow-xl shadow-navy-900/30 border border-gold-600/30">
             <span className="text-gold-400">▶</span>
             내 품격 유지 한계선 진단하기

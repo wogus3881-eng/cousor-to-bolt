@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Users, Save, Trash2, ChevronDown } from 'lucide-react';
+import { Users, Save, Trash2, ChevronDown, RefreshCw } from 'lucide-react';
 import type { SimulatorInputs } from '../lib/calculator';
 import {
-  listSavedClients, saveClient, deleteSavedClient,
+  listSavedClients, saveClient, updateClient, deleteSavedClient,
   DEFAULT_FIXED_COSTS, type SavedClient, type FixedCosts,
 } from '../lib/savedClients';
 
@@ -17,6 +17,7 @@ export default function SavedClientsPanel({ currentInputs, currentFixedCosts, on
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState(true);
+  const [activeClient, setActiveClient] = useState<{ id: string; label: string } | null>(null);
 
   async function refresh() {
     setLoading(true);
@@ -29,21 +30,45 @@ export default function SavedClientsPanel({ currentInputs, currentFixedCosts, on
   }, []);
 
   async function handleSave() {
+    if (activeClient) {
+      setSaving(true);
+      const { error } = await updateClient(activeClient.id, currentInputs, currentFixedCosts);
+      setSaving(false);
+      if (error) { window.alert(error); return; }
+      refresh();
+      return;
+    }
     const label = window.prompt('고객 이름 또는 메모를 입력하세요 (예: 김철수님 - 2026.08 상담)');
     if (!label || !label.trim()) return;
     setSaving(true);
-    const { error } = await saveClient(label.trim(), currentInputs, currentFixedCosts);
+    const { error, id } = await saveClient(label.trim(), currentInputs, currentFixedCosts);
     setSaving(false);
     if (error) {
       window.alert(error);
       return;
     }
+    if (id) setActiveClient({ id, label: label.trim() });
+    refresh();
+  }
+
+  async function handleSaveAsNew() {
+    const label = window.prompt('새로 저장할 이름 또는 메모를 입력하세요');
+    if (!label || !label.trim()) return;
+    setSaving(true);
+    const { error, id } = await saveClient(label.trim(), currentInputs, currentFixedCosts);
+    setSaving(false);
+    if (error) {
+      window.alert(error);
+      return;
+    }
+    if (id) setActiveClient({ id, label: label.trim() });
     refresh();
   }
 
   async function handleDelete(id: string) {
     if (!window.confirm('이 고객 정보를 삭제할까요?')) return;
     await deleteSavedClient(id);
+    if (activeClient?.id === id) setActiveClient(null);
     refresh();
   }
 
@@ -67,10 +92,26 @@ export default function SavedClientsPanel({ currentInputs, currentFixedCosts, on
           disabled={saving}
           className="ml-2 flex shrink-0 items-center gap-1 rounded-lg bg-navy-800 px-2.5 py-1.5 text-[11px] font-bold text-white disabled:opacity-50"
         >
-          <Save size={12} />
-          {saving ? '저장 중…' : '현재 입력 저장'}
+          {activeClient ? <RefreshCw size={12} /> : <Save size={12} />}
+          {saving ? '저장 중…' : activeClient ? `${activeClient.label} 업데이트` : '현재 입력 저장'}
         </button>
       </div>
+
+      {activeClient && (
+        <div className="mb-3 flex items-center justify-between rounded-xl bg-navy-50 px-3 py-2">
+          <p className="text-[10px] text-navy-500">
+            <strong className="text-navy-700">{activeClient.label}</strong>님 정보 수정 중 · 저장하면 덮어써요
+          </p>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); handleSaveAsNew(); }}
+            disabled={saving}
+            className="shrink-0 text-[10px] font-bold text-navy-600 underline underline-offset-2 disabled:opacity-50"
+          >
+            다른 이름으로 저장
+          </button>
+        </div>
+      )}
 
       {open && (loading ? (
         <p className="text-[11px] text-slate-400">불러오는 중…</p>
@@ -79,10 +120,10 @@ export default function SavedClientsPanel({ currentInputs, currentFixedCosts, on
       ) : (
         <div className="space-y-1.5 max-h-64 overflow-y-auto pr-0.5">
           {clients.map((c) => (
-            <div key={c.id} className="flex items-center gap-2 rounded-xl bg-navy-50/60 px-3 py-2">
+            <div key={c.id} className={`flex items-center gap-2 rounded-xl px-3 py-2 ${activeClient?.id === c.id ? 'bg-navy-100 ring-1 ring-navy-300' : 'bg-navy-50/60'}`}>
               <button
                 type="button"
-                onClick={() => onLoad(c.inputs, c.fixed_costs ?? DEFAULT_FIXED_COSTS)}
+                onClick={() => { onLoad(c.inputs, c.fixed_costs ?? DEFAULT_FIXED_COSTS); setActiveClient({ id: c.id, label: c.label }); }}
                 className="min-w-0 flex-1 text-left"
               >
                 <p className="truncate text-[12px] font-bold text-navy-800">{c.label}</p>

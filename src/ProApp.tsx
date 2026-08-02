@@ -8,6 +8,7 @@ import { simulate } from './lib/calculator';
 import type { SimulatorInputs, SimulationResult } from './lib/calculator';
 import { peekHandoffSimulatorInputs, clearLiteProHandoffStorage } from './lib/liteProHandoff';
 import { proFeatures, PRO_TIER_META, type ProTier } from './lib/proTier';
+import { DEFAULT_FIXED_COSTS, type FixedCosts } from './lib/savedClients';
 import {
   canRunBasicSimulation,
   canRunTrialSimulation,
@@ -34,6 +35,7 @@ function ProAppContent({ tier }: Props) {
   const features = proFeatures(tier);
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [savedInputs, setSavedInputs] = useState<SimulatorInputs | undefined>(undefined);
+  const [savedFixedCosts, setSavedFixedCosts] = useState<FixedCosts>(DEFAULT_FIXED_COSTS);
   const [handoffBanner, setHandoffBanner] = useState(false);
   const [limitMessage, setLimitMessage] = useState<string | null>(null);
   const handoffBootRef = useRef(false);
@@ -57,7 +59,7 @@ function ProAppContent({ tier }: Props) {
     return () => document.removeEventListener('contextmenu', preventAction);
   }, []);
 
-  function handleSimulate(inputs: SimulatorInputs) {
+  function handleSimulate(inputs: SimulatorInputs, fixedCosts: FixedCosts) {
     if (tier === 'trial') {
       if (isTrialExpired()) {
         setLimitMessage(`체험판 이용 기간(${PRO_TRIAL_LIMITS.validDays}일)이 종료되었어요. Basic 이상으로 업그레이드해 주세요.`);
@@ -81,6 +83,7 @@ function ProAppContent({ tier }: Props) {
       setLimitMessage(null);
     }
     setSavedInputs(inputs);
+    setSavedFixedCosts(fixedCosts);
     setResult(simulate(inputs));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -137,7 +140,12 @@ function ProAppContent({ tier }: Props) {
         </div>
       )}
       <div className="flex-grow">
-        <InputScreen onSimulate={handleSimulate} initialInputs={savedInputs} tier={tier} />
+        <InputScreen
+          onSimulate={handleSimulate}
+          initialInputs={savedInputs}
+          initialFixedCosts={savedFixedCosts}
+          tier={tier}
+        />
       </div>
       {footer}
     </div>

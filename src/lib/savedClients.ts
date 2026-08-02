@@ -39,17 +39,32 @@ export async function saveClient(
   label: string,
   inputs: SimulatorInputs,
   fixedCosts: FixedCosts
-): Promise<{ error: string | null }> {
-  if (!supabase) return { error: 'Supabase가 설정되지 않았습니다.' };
+): Promise<{ error: string | null; id: string | null }> {
+  if (!supabase) return { error: 'Supabase가 설정되지 않았습니다.', id: null };
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: '로그인 계정으로만 저장할 수 있어요.' };
+  if (!user) return { error: '로그인 계정으로만 저장할 수 있어요.', id: null };
 
-  const { error } = await supabase.from('saved_clients').insert({
+  const { data, error } = await supabase.from('saved_clients').insert({
     user_id: user.id,
     label,
     inputs,
     fixed_costs: fixedCosts,
-  });
+  }).select('id').single();
+  if (error) return { error: error.message, id: null };
+  return { error: null, id: data.id as string };
+}
+
+export async function updateClient(
+  id: string,
+  inputs: SimulatorInputs,
+  fixedCosts: FixedCosts
+): Promise<{ error: string | null }> {
+  if (!supabase) return { error: 'Supabase가 설정되지 않았습니다.' };
+  const { error } = await supabase.from('saved_clients').update({
+    inputs,
+    fixed_costs: fixedCosts,
+    updated_at: new Date().toISOString(),
+  }).eq('id', id);
   if (error) return { error: error.message };
   return { error: null };
 }
