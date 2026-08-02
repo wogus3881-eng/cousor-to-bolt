@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
-  ChevronRight, ChevronDown, User, Briefcase, PiggyBank, TrendingUp,
+  ChevronRight, ChevronDown, ChevronLeft, User, Briefcase, PiggyBank, TrendingUp,
   Coffee, BarChart2, CalendarDays, HeartPulse, Activity, HelpCircle,
   Landmark, Shield, AlertTriangle,
 } from 'lucide-react';
@@ -727,6 +728,9 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
     <div className="flex flex-col min-h-screen bg-navy-950">
       {/* Hero Header */}
       <div className="bg-gradient-to-b from-navy-900 to-navy-800 px-5 pt-14 pb-8 border-b border-navy-700">
+        <Link to="/pro" className="inline-flex items-center text-white/80 hover:text-white mb-3 -ml-1">
+          <ChevronLeft size={22} />
+        </Link>
         <span className="inline-block text-[10px] font-bold tracking-[0.2em] text-gold-400 uppercase bg-navy-800 border border-gold-700/40 px-3 py-1 rounded-full mb-4">
           보험 전문가용 노후 시뮬레이터
         </span>
