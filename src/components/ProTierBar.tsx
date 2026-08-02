@@ -31,7 +31,7 @@ export default function ProTierBar({ tier }: Props) {
             {usage.printLimit > 0 ? ` · 리포트 ${usage.prints}/${usage.printLimit}` : ''}
           </span>
         )}
-        <Link to="/invite" className="hidden text-[10px] font-medium text-navy-400 hover:text-navy-600 sm:inline">
+        <Link to="/invite" className="shrink-0 text-[10px] font-medium text-navy-400 hover:text-navy-600">
           🎁 친구 초대
         </Link>
         {tier === 'plus' ? (
