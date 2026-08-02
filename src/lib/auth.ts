@@ -29,9 +29,18 @@ async function claimSession(userId: string): Promise<void> {
   });
 }
 
-export async function signUp(email: string, password: string): Promise<{ error: string | null; loggedIn: boolean }> {
+export async function signUp(
+  email: string,
+  password: string,
+  referralCode?: string
+): Promise<{ error: string | null; loggedIn: boolean }> {
   if (!supabase) return { error: 'Supabase가 설정되지 않았습니다.', loggedIn: false };
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const ref = referralCode?.trim().toUpperCase();
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: ref ? { data: { ref } } : undefined,
+  });
   if (error) return { error: error.message, loggedIn: false };
   // profiles row는 DB 트리거(on_auth_user_created)가 자동으로 만들어줍니다.
   // 이메일 인증이 켜져있어 아직 로그인 세션이 없는 상태에서도 안정적으로 동작합니다.
@@ -115,6 +124,19 @@ export async function checkSessionValidity(userId: string): Promise<boolean> {
     return false;
   }
   return true;
+}
+
+export interface ReferralStats {
+  referralCode: string;
+  referredCount: number;
+}
+
+/** 본인의 추천 코드와 지금까지 이 코드로 가입한 인원 수를 가져옵니다. */
+export async function getMyReferralStats(): Promise<ReferralStats | null> {
+  if (!supabase) return null;
+  const { data, error } = await supabase.rpc('get_my_referral_stats');
+  if (error || !data || data.length === 0) return null;
+  return { referralCode: data[0].referral_code, referredCount: Number(data[0].referred_count) };
 }
 
 /** 일정 주기로 세션 유효성을 확인하는 워처를 시작합니다.

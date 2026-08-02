@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Check, X } from 'lucide-react';
 
 type TabKey = 'notice' | 'review' | 'guide' | 'faq' | 'plans';
@@ -378,6 +378,9 @@ function PlansTab() {
       </div>
 
       <p className="text-center text-[11px] text-slate-400">결제 방법에 대해 궁금한 점은 henry-lim@naver.com으로 문의해 주세요.</p>
+      <p className="text-center text-[11px] text-slate-400">
+        <Link to="/terms" className="underline underline-offset-2">이용약관</Link> 보기
+      </p>
     </div>
   );
 }

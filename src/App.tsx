@@ -4,6 +4,8 @@ import LiteFlowV2 from './LiteFlowV2';
 import ProApp from './ProApp';
 import BlockedPage from './pages/BlockedPage';
 import ProLanding from './pages/ProLanding';
+import TermsPage from './pages/TermsPage';
+import InvitePage from './pages/InvitePage';
 
 /**
  * 코드 없이 /pro로 들어오면 소개 랜딩 페이지를 보여줍니다.
@@ -34,6 +36,8 @@ export default function App() {
         <Route path="/v2" element={<LiteFlowV2 />} />
         <Route path="/lite" element={<Navigate to="/v2" replace />} />
         <Route path="/blocked" element={<BlockedPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/invite" element={<InvitePage />} />
         <Route path="/pro/trial" element={<ProApp tier="trial" />} />
         <Route path="/pro/basic" element={<ProApp tier="basic" />} />
         <Route path="/pro/plus" element={<ProApp tier="plus" />} />

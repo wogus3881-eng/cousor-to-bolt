@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { signIn, signInWithKakao, signUp } from '../lib/auth';
 
 interface Props {
@@ -6,9 +7,11 @@ interface Props {
 }
 
 export default function LoginScreen({ onSuccess }: Props) {
+  const [searchParams] = useSearchParams();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [referralCode, setReferralCode] = useState(searchParams.get('ref') ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [signupDone, setSignupDone] = useState(false);
@@ -48,7 +51,7 @@ export default function LoginScreen({ onSuccess }: Props) {
         }
         onSuccess();
       } else {
-        const { error: err, loggedIn } = await signUp(email.trim(), password);
+        const { error: err, loggedIn } = await signUp(email.trim(), password, referralCode);
         if (err) {
           setError(err);
           return;
@@ -133,6 +136,19 @@ export default function LoginScreen({ onSuccess }: Props) {
             />
           </div>
 
+          {mode === 'signup' && (
+            <div>
+              <label className="text-[11px] font-bold text-slate-500 mb-1 block">추천인 코드 (선택)</label>
+              <input
+                type="text"
+                value={referralCode}
+                onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                placeholder="예: AB12CD"
+                className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm uppercase focus:outline-none focus:ring-2 focus:ring-navy-200"
+              />
+            </div>
+          )}
+
           {error && (
             <p className="text-[12px] text-red-600 font-medium">{error}</p>
           )}
@@ -145,6 +161,16 @@ export default function LoginScreen({ onSuccess }: Props) {
             {loading ? '처리 중...' : mode === 'signin' ? '로그인' : '가입하기'}
           </button>
         </form>
+
+        {mode === 'signup' && (
+          <p className="text-center text-[10px] text-slate-300 mt-3">
+            가입 시{' '}
+            <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
+              이용약관
+            </a>
+            에 동의하는 것으로 간주됩니다.
+          </p>
+        )}
 
         <p className="text-center text-[12px] text-slate-400 mt-4">
           {mode === 'signin' ? (
