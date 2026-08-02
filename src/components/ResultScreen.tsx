@@ -175,7 +175,37 @@ function StatCard({ label, value, sub, accent = false, danger = false }: {
 
 const MAN_R = 10000;
 
-
+/** 헤드라인 배너용 원형 진행률 배지 — dignityEndAge(자산 고갈 예상 나이)를 100세 기준으로 환산해 시각화. 새 산식 없음, 기존 값을 나이 스케일(0~100)로만 표현. */
+function ReadinessRing({ dignityEndAge, isSafe }: { dignityEndAge: number | null; isSafe: boolean }) {
+  const pct = Math.max(0, Math.min(100, Math.round(((dignityEndAge ?? 100) / 100) * 100)));
+  const ringColor = isSafe ? GOLD : pct >= 70 ? EMERALD : pct >= 40 ? '#f59e0b' : RED;
+  const r = 26;
+  const circumference = 2 * Math.PI * r;
+  const offset = circumference * (1 - pct / 100);
+  return (
+    <div className="relative shrink-0 h-16 w-16">
+      <svg viewBox="0 0 64 64" className="h-16 w-16 -rotate-90">
+        <circle cx="32" cy="32" r={r} fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="6" />
+        <circle
+          cx="32"
+          cy="32"
+          r={r}
+          fill="none"
+          stroke={ringColor}
+          strokeWidth="6"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          className="transition-all duration-700"
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-[15px] font-extrabold text-white leading-none">{dignityEndAge ?? 100}</span>
+        <span className="text-[8px] font-medium text-navy-200 leading-none mt-0.5">세까지</span>
+      </div>
+    </div>
+  );
+}
 
 // ── 컴팩트 슬라이더 ────────────────────────────────────────────────────────────
 
@@ -840,7 +870,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
       {/* Sticky header */}
 
-      <div className="bg-navy-900 px-4 pt-12 pb-4 border-b border-navy-700 sticky top-0 z-20">
+      <div className="bg-gradient-to-r from-navy-900 to-navy-700 px-4 pt-12 pb-4 border-b border-navy-700 sticky top-0 z-20">
 
         <div className="flex items-center gap-3">
 
@@ -902,17 +932,23 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
         {!isSafe ? (
 
-          <div className="rounded-3xl bg-gradient-to-br from-navy-900 to-navy-800 text-white p-6 shadow-2xl border border-navy-700 transition-all duration-500">
+          <div className="rounded-3xl bg-gradient-to-br from-navy-800 to-navy-600 text-white p-6 shadow-2xl border border-navy-700 transition-all duration-500">
 
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-start justify-between gap-4 mb-3">
 
-              <AlertTriangle size={15} className="text-red-400" />
+              <div className="flex items-center gap-2">
 
-              <span className="text-[10px] font-bold tracking-[0.15em] uppercase text-red-400">노후 품격 위기 경보</span>
+                <AlertTriangle size={15} className="text-red-400" />
+
+                <span className="text-[10px] font-bold tracking-[0.15em] uppercase text-red-400">노후 품격 위기 경보</span>
+
+              </div>
+
+              <ReadinessRing dignityEndAge={dignityEndAge} isSafe={false} />
 
             </div>
 
-            <p className="text-[13px] text-navy-300 mb-2">현재 준비 상황을 기준으로</p>
+            <p className="text-[13px] text-navy-200 mb-2">현재 준비 상황을 기준으로</p>
 
             <p className="text-[22px] font-extrabold leading-tight transition-all duration-300">
 
@@ -924,7 +960,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
             <div className="h-px bg-gold-600/30 my-4" />
 
-            <p className="text-[12px] text-navy-300 leading-relaxed">
+            <p className="text-[12px] text-navy-200 leading-relaxed">
 
               인플레이션 반영 시 은퇴 후 원하는{' '}
 
@@ -942,13 +978,23 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
         ) : (
 
-          <div className="rounded-3xl bg-gradient-to-br from-navy-800 to-navy-700 text-white p-6 shadow-xl border border-gold-600/30">
+          <div className="rounded-3xl bg-gradient-to-br from-navy-700 to-navy-500 text-white p-6 shadow-xl border border-gold-600/30">
 
-            <p className="text-[11px] font-bold tracking-widest uppercase text-gold-400 mb-2">진단 결과</p>
+            <div className="flex items-start justify-between gap-4">
 
-            <p className="text-xl font-extrabold">100세까지 품격이 유지됩니다.</p>
+              <div>
 
-            <p className="text-sm text-navy-300 mt-2">현재 준비 상황으로 안정적인 노후가 가능합니다.</p>
+                <p className="text-[11px] font-bold tracking-widest uppercase text-gold-400 mb-2">진단 결과</p>
+
+                <p className="text-xl font-extrabold">100세까지 품격이 유지됩니다.</p>
+
+                <p className="text-sm text-navy-200 mt-2">현재 준비 상황으로 안정적인 노후가 가능합니다.</p>
+
+              </div>
+
+              <ReadinessRing dignityEndAge={dignityEndAge} isSafe={true} />
+
+            </div>
 
           </div>
 
@@ -964,13 +1010,19 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
             <AlertTriangle size={18} className="text-amber-500 shrink-0 mt-0.5" />
 
-            <p className="text-[12px] text-amber-900 leading-relaxed font-medium">
+            <div>
 
-              <strong>경고: 국민연금 납입 기간이 짧아 노후 기초 자산이 매우 취약합니다.</strong><br />
+              <span className="inline-block mb-1.5 rounded-full bg-amber-500 px-2 py-0.5 text-[9px] font-extrabold text-white">가입기간 부족</span>
 
-              개인 연금을 통한 강제 저축이 시급합니다.
+              <p className="text-[12px] text-amber-900 leading-relaxed font-medium">
 
-            </p>
+                <strong>경고: 국민연금 납입 기간이 짧아 노후 기초 자산이 매우 취약합니다.</strong><br />
+
+                개인 연금을 통한 강제 저축이 시급합니다.
+
+              </p>
+
+            </div>
 
           </div>
 
@@ -2082,7 +2134,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
         {features.solutionInsightBox && (
         <div
           className="rounded-3xl text-white p-6 shadow-xl border border-gold-600/30"
-          style={{ background: 'linear-gradient(135deg, #0f2057 0%, #162d6b 100%)' }}
+          style={{ background: 'linear-gradient(135deg, #162d6b 0%, #2d4d9e 100%)' }}
         >
           <div className="flex items-center gap-2 mb-3">
             <Lightbulb size={16} className="text-gold-400" />
