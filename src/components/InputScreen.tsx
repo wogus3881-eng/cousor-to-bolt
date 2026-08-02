@@ -727,8 +727,8 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
   return (
     <div className="flex flex-col min-h-screen bg-navy-950">
       {/* Hero Header */}
-      <div className="bg-gradient-to-b from-navy-900 to-navy-800 px-5 pt-14 pb-8 border-b border-navy-700">
-        <Link to="/pro" className="inline-flex items-center text-white/80 hover:text-white mb-3 -ml-1">
+      <div className="relative bg-gradient-to-b from-navy-900 to-navy-800 px-5 pt-14 pb-8 border-b border-navy-700">
+        <Link to="/pro" className="absolute top-4 left-4 text-white/80 hover:text-white">
           <ChevronLeft size={22} />
         </Link>
         <span className="inline-block text-[10px] font-bold tracking-[0.2em] text-gold-400 uppercase bg-navy-800 border border-gold-700/40 px-3 py-1 rounded-full mb-4">
