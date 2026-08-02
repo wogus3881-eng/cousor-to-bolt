@@ -957,16 +957,6 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
           })()}
         </div>
 
-        {/* 품격 유지 월 생활비 */}
-        <div className="animate-fade-in">
-          <DualInput
-            label="품격 유지 월 생활비" sublabel="은퇴 후 희망 생활비 (현재 가치)" icon={<Coffee size={16} />}
-            value={v.monthlyExpense} min={MAN * 100} max={MAN * 1000} step={MAN * 10} unit="만 원"
-            display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
-            trackColor="bg-navy-500" onChange={set('monthlyExpense')}
-          />
-        </div>
-
         {/* 월 고정비 세부 입력 */}
         <div className="animate-fade-in bg-white rounded-2xl p-5 shadow-sm border border-navy-100">
           <div className="mb-3">
@@ -1027,6 +1017,16 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
             <div className="flex justify-between"><span>− 고정비 합계</span><span className="font-semibold text-navy-700">{Math.floor(totalFixedCosts / MAN).toLocaleString()}만 원</span></div>
             <div className="flex justify-between"><span>− 현재 투자·보장성보험 합계</span><span className="font-semibold text-navy-700">{Math.floor(totalCurrentContrib / MAN).toLocaleString()}만 원</span></div>
           </div>
+        </div>
+
+        {/* 품격 유지 월 생활비 — 지금까지 파악한 소득·고정비를 본 다음 마지막에 묻는 목표 질문 */}
+        <div className="animate-fade-in">
+          <DualInput
+            label="그래서, 얼마로 살고 싶으세요?" sublabel="품격 유지 월 생활비 · 은퇴 후 희망 생활비 (현재 가치)" icon={<Coffee size={16} />}
+            value={v.monthlyExpense} min={MAN * 100} max={MAN * 1000} step={MAN * 10} unit="만 원"
+            display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
+            trackColor="bg-navy-500" onChange={set('monthlyExpense')}
+          />
         </div>
         </>
         )}
@@ -1091,6 +1091,33 @@ export default function InputScreen({ onSimulate, initialInputs, tier = 'plus' }
 
         {step === 3 && (
         <>
+        {/* 월 가용자금 대비 납입 현황 — 슬라이더 조정할 때마다 실시간으로 갱신 */}
+        <div className={`animate-fade-in rounded-2xl p-4 border ${availableFunds >= 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[11px] font-bold text-navy-500">월 가용자금 대비 납입 현황</p>
+              <p className="text-[10px] text-navy-400 mt-0.5">
+                투자·보장성보험 합계 {Math.floor(totalCurrentContrib / MAN).toLocaleString()}만 원 / 소득-고정비 {Math.floor((monthlyIncomeApprox - totalFixedCosts) / MAN).toLocaleString()}만 원
+              </p>
+            </div>
+            <span className={`shrink-0 text-lg font-extrabold ${availableFunds >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+              {(availableFunds < 0 ? '−' : '')}{Math.abs(Math.floor(availableFunds / MAN)).toLocaleString()}만 원
+            </span>
+          </div>
+          {availableFunds < 0 && (
+            <div className="mt-3 rounded-xl bg-white/70 border border-red-200 p-3">
+              <p className="text-[11px] font-bold text-red-600 mb-1">⚠ 월 가용자금을 초과했어요</p>
+              <p className="text-[10px] text-red-500 leading-relaxed">
+                납입 비율을 조절하거나, 1단계로 돌아가 고정비를 줄이면 가용자금을 늘릴 수 있어요.
+              </p>
+              <button type="button" onClick={() => goToStep(1)}
+                className="mt-2 text-[10px] font-bold text-red-600 underline underline-offset-2">
+                1단계로 돌아가 고정비 줄이기
+              </button>
+            </div>
+          )}
+        </div>
+
         <CollapsibleSection icon="📊" title="자산별 정밀 배분" subtitle="계좌별 수익률·납입기간 설정">
         <div className="animate-fade-in" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>
           <button type="button" onClick={() => setBucketOpen(p => !p)}
