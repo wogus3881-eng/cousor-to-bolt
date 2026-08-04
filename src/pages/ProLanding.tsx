@@ -24,6 +24,12 @@ function Placeholder({ title }: { title: string }) {
 
 const NOTICES = [
   {
+    date: '2026.08.04',
+    tag: '이벤트',
+    title: 'Trial 무료 체험 5회로 확대',
+    body: '체험판에 대한 뜨거운 관심에 힘입어, 무료 체험 횟수를 3회에서 5회로 늘렸습니다. 상담 전 연습용으로 한 번, 실제 고객 상담용으로 여러 번 여유 있게 써보세요.',
+  },
+  {
     date: '2026.08.02',
     tag: '이벤트',
     title: '친구 초대하면 다음 달 반값',
