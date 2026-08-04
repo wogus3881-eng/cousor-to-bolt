@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Check, X, GraduationCap, Award } from 'lucide-react';
+import { Check, X, GraduationCap, Award, Users } from 'lucide-react';
 
 type TabKey = 'notice' | 'events' | 'review' | 'guide' | 'faq' | 'plans';
 
@@ -535,6 +535,22 @@ function WhyUseSection() {
               <li>· 기존 고객을 재진단해서, 새 영업 없이 추가 계약 기회를 만들어요</li>
               <li>· 특정 상품 추천이 없는 중립적 진단이라 고객 신뢰도가 높아요</li>
               <li>· 세금·건보료·인플레이션까지 반영한 세후 실수령액을 보여줘요</li>
+            </ul>
+          </div>
+          <div className="rounded-2xl border-2 border-emerald-200 bg-emerald-50 p-4 shadow-sm">
+            <div className="flex items-center gap-2 mb-2.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500">
+                <Users size={16} className="text-white" />
+              </div>
+              <p className="text-[13px] font-extrabold text-emerald-900">지점장·팀 리더라면</p>
+            </div>
+            <ul className="space-y-1.5 text-[12px] text-emerald-800 leading-relaxed">
+              <li>· <strong className="font-bold">결제 부담 없이 소개만 하면 돼요</strong> — 각자 결제하는 구조라 예산 승인 없이 바로 시작할 수 있어요</li>
+              <li>· 원하는 사람만 먼저 써보고, 반응이 확인된 뒤 자연스럽게 팀에 확산돼요</li>
+              <li>· 보험을 넘어선 전문 금융 그룹이라는 <strong className="font-bold">리쿠르팅 무기</strong>가 생겨요</li>
+              <li>· 팀원 1인당 1건만 성사돼도 팀 전체 계약고가 커져요</li>
+              <li>· 신규 합류자도 빠르게 안정적인 상담 퀄리티를 낼 수 있어요</li>
+              <li>· 지점·팀 단위로 도입하시면 별도 할인 상담도 가능해요 (문의)</li>
             </ul>
           </div>
         </div>
