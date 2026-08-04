@@ -51,6 +51,14 @@ const NOTICES = [
 function NoticeTab() {
   return (
     <div className="space-y-3">
+      <div className="rounded-2xl border-2 border-gold-300 bg-white p-4 shadow-sm">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-base">📌</span>
+          <span className="text-[13px] font-extrabold text-navy-900">필독 — 왜 이 툴을 상담 현장에서 써야 할까요?</span>
+        </div>
+        <WhyUseSection />
+      </div>
+
       {NOTICES.map((n) => (
         <div key={n.title} className="rounded-2xl bg-white p-4 border border-navy-100 shadow-sm">
           <div className="flex items-center gap-2 mb-1.5">
