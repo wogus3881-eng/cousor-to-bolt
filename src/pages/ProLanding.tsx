@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Check, X, GraduationCap, Award } from 'lucide-react';
 
-type TabKey = 'notice' | 'review' | 'guide' | 'faq' | 'plans';
+type TabKey = 'notice' | 'events' | 'review' | 'guide' | 'faq' | 'plans';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'notice', label: '공지사항' },
+  { key: 'events', label: '이벤트' },
   { key: 'review', label: '후기' },
   { key: 'guide', label: '사용 방법' },
   { key: 'faq', label: 'FAQ' },
@@ -48,6 +49,24 @@ const NOTICES = [
   },
 ];
 
+const EVENTS = NOTICES.filter((n) => n.tag === '이벤트');
+const REGULAR_NOTICES = NOTICES.filter((n) => n.tag !== '이벤트');
+
+function NoticeCard({ n }: { n: (typeof NOTICES)[number] }) {
+  return (
+    <div className="rounded-2xl bg-white p-4 border border-navy-100 shadow-sm">
+      <div className="flex items-center gap-2 mb-1.5">
+        <span className="shrink-0 rounded-full bg-navy-100 px-2 py-0.5 text-[10px] font-bold text-navy-700">
+          {n.tag}
+        </span>
+        <span className="text-[11px] text-slate-400">{n.date}</span>
+      </div>
+      <p className="text-[13px] font-bold text-navy-900 mb-1">{n.title}</p>
+      <p className="text-[12px] leading-relaxed text-slate-500">{n.body}</p>
+    </div>
+  );
+}
+
 function NoticeTab() {
   return (
     <div className="space-y-3">
@@ -59,17 +78,21 @@ function NoticeTab() {
         <WhyUseSection />
       </div>
 
-      {NOTICES.map((n) => (
-        <div key={n.title} className="rounded-2xl bg-white p-4 border border-navy-100 shadow-sm">
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="shrink-0 rounded-full bg-navy-100 px-2 py-0.5 text-[10px] font-bold text-navy-700">
-              {n.tag}
-            </span>
-            <span className="text-[11px] text-slate-400">{n.date}</span>
-          </div>
-          <p className="text-[13px] font-bold text-navy-900 mb-1">{n.title}</p>
-          <p className="text-[12px] leading-relaxed text-slate-500">{n.body}</p>
-        </div>
+      {REGULAR_NOTICES.map((n) => (
+        <NoticeCard key={n.title} n={n} />
+      ))}
+    </div>
+  );
+}
+
+function EventsTab() {
+  if (EVENTS.length === 0) {
+    return <Placeholder title="진행 중인 이벤트" />;
+  }
+  return (
+    <div className="space-y-3">
+      {EVENTS.map((n) => (
+        <NoticeCard key={n.title} n={n} />
       ))}
     </div>
   );
@@ -579,19 +602,23 @@ export default function ProLanding() {
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`shrink-0 px-4 py-3 text-[13px] font-bold border-b-2 transition-colors ${
+            className={`relative shrink-0 px-4 py-3 text-[13px] font-bold border-b-2 transition-colors ${
               tab === t.key
                 ? 'border-navy-900 text-navy-900'
                 : 'border-transparent text-slate-400 hover:text-navy-600'
             }`}
           >
             {t.label}
+            {t.key === 'events' && EVENTS.length > 0 && (
+              <span className="absolute top-1.5 right-0.5 h-1.5 w-1.5 rounded-full bg-red-500" />
+            )}
           </button>
         ))}
       </nav>
 
       <main className="mx-auto max-w-lg px-4 py-6 pb-24 space-y-4">
         {tab === 'notice' && <NoticeTab />}
+        {tab === 'events' && <EventsTab />}
         {tab === 'review' && <Placeholder title="후기" />}
         {tab === 'guide' && <GuideTab />}
         {tab === 'faq' && <FaqTab />}
