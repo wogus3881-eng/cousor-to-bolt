@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Check, X } from 'lucide-react';
+import { Check, X, GraduationCap, Award } from 'lucide-react';
 
 type TabKey = 'notice' | 'review' | 'guide' | 'faq' | 'plans';
 
@@ -348,20 +348,82 @@ const DEAL_MECHANISM = [
   { step: '고객이 먼저 물어본다', result: '→ "그럼 저는 어떻게 하면 돼요?"' },
 ];
 
+const MARKET_TRENDS = [
+  { title: 'DB 시장의 포화', desc: '보장분석 위주 시장은 1~2년 내 한계 도래' },
+  { title: '3040세대의 공포', desc: '부모 세대 보며 스스로 노후 공포 인지 시작' },
+  { title: '국민연금 개혁 가속', desc: '보험료 인상, 수령액 최저 방어선으로 전락' },
+  { title: '베이비부머 은퇴 대란', desc: '2~3년 후 은퇴 러시로 연금 시장 초황금기' },
+];
+
+const MARKET_REASONS = [
+  '세제혜택 인식 보편화 — IRP·연금저축 세액공제가 대중 재테크 상식으로',
+  '상향된 금융지식 — 미국주식·ETF 투자로 장기 복리 심리적 장벽 완화',
+  '보험 연금의 숨겨진 가치 — 종소세·건보료 배제되는 완전 비과세',
+  '연말정산 공제의 착시 — 한도까지만 가입, 초과 자산 대안 설계 부족',
+  '1인 가구·비혼 인구 급증 — 자녀에게 기댈 수 없는 노후',
+  '상속·증여 트렌드 변화 — 세대 간 자산 이전 수단으로 연금 주목',
+  '정년 연장 논의 확산 — 늘어난 소득 공백기를 메울 가교연금 수요',
+];
+
 function WhyUseSection() {
   return (
     <div className="space-y-4">
+      <div className="rounded-2xl border border-gold-600/30 bg-navy-950 p-5 text-center">
+        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold-400 mb-3">Q1</p>
+        <p className="text-[17px] font-extrabold leading-relaxed text-white">
+          지나가는 사람에게<br />
+          &quot;매월 50만원씩 10년&quot;간<br />
+          줄 수 있나요?
+        </p>
+      </div>
+
       <div className="rounded-2xl border border-navy-100 bg-white p-4 shadow-sm">
         <p className="text-[11px] font-bold text-navy-400 mb-1">고객 심리 인사이트</p>
         <p className="text-[13px] font-bold text-navy-900 leading-relaxed mb-2">
           고객이 노후 준비를 미루는 건 게을러서가 아니에요.
         </p>
-        <p className="text-[12px] text-slate-500 leading-relaxed">
+        <p className="text-[12px] text-slate-500 leading-relaxed mb-3">
           UCLA 안더슨 경영대학원 할 허시필드 교수의 fMRI 연구에 따르면, 사람이 &apos;10년 뒤의 나&apos;를 생각할 때
           뇌 활성 부위는 &apos;완전한 타인&apos;을 생각할 때와 똑같아요. 연금을 기피하는 건 미련해서가 아니라,
-          뇌가 본능적으로 남에게 돈을 주는 것처럼 느끼기 때문이에요. 그래서 숫자와 그래프로 &apos;미래의 나&apos;를
-          구체적으로 보여주는 게 중요합니다.
+          뇌가 본능적으로 남에게 돈을 주는 것처럼 느끼기 때문이에요.
         </p>
+        <div className="rounded-xl bg-navy-50 border border-navy-100 px-3 py-2.5">
+          <p className="text-[11px] font-bold text-navy-700 mb-1">우리의 역할 — 미래의 나와 친밀도 쌓기</p>
+          <p className="text-[11.5px] text-navy-600 leading-relaxed">
+            서먹한 남에게 돈을 보낼 사람은 없어요. 설계사의 진짜 역할은 &apos;미래의 나&apos;와 고객을 친밀하게
+            대면시키는 일이에요. 65세 은퇴 후 마시는 커피 한 잔, 손주에게 용돈을 쥐어주는 순간까지 구체적으로
+            그려줄 때 고객의 뇌가 비로소 움직입니다.
+          </p>
+          <p className="mt-1.5 text-[11px] font-bold text-gold-600">당신의 책임이 아니에요 — 뇌가 원래 그렇게 생겼을 뿐이에요.</p>
+        </div>
+      </div>
+
+      <div className="rounded-2xl bg-white border border-navy-100 shadow-sm p-4">
+        <p className="text-[12.5px] font-bold text-navy-900 mb-1">왜 지금 연금 시장인가</p>
+        <p className="text-[11px] text-slate-400 mb-3">연금 시대가 도래하는 4대 거시 흐름</p>
+        <div className="grid grid-cols-2 gap-2.5 mb-3">
+          {MARKET_TRENDS.map((t) => (
+            <div key={t.title} className="rounded-xl bg-slate-50 border border-slate-100 p-2.5">
+              <p className="text-[11px] font-bold text-navy-800 mb-0.5">{t.title}</p>
+              <p className="text-[10px] text-slate-500 leading-relaxed">{t.desc}</p>
+            </div>
+          ))}
+        </div>
+        <div className="rounded-xl bg-gold-50 border border-gold-200 px-3 py-2.5 mb-3">
+          <p className="text-[11px] text-gold-900 leading-relaxed">
+            실제로 만나본 고객 100명 중, 비과세 개인연금을 보유한 사람은 단 1~2명.
+            <strong className="block mt-0.5">시장은 이미 열렸지만, 아직 아무도 채우지 않았습니다.</strong>
+          </p>
+        </div>
+        <p className="text-[11px] font-bold text-navy-500 mb-2">연금이 넥스트 시장인 7가지 이유</p>
+        <ul className="space-y-1.5">
+          {MARKET_REASONS.map((r, i) => (
+            <li key={r} className="flex gap-2 text-[11px] leading-relaxed text-slate-600">
+              <span className="shrink-0 text-navy-300 font-bold">{String(i + 1).padStart(2, '0')}</span>
+              {r}
+            </li>
+          ))}
+        </ul>
       </div>
 
       <div className="rounded-2xl bg-white border border-navy-100 shadow-sm p-4">
@@ -396,23 +458,36 @@ function WhyUseSection() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-3">
-        <div className="rounded-2xl border border-navy-100 bg-white p-4 shadow-sm">
-          <p className="text-[12px] font-bold text-navy-900 mb-2">초보 설계사라면</p>
-          <ul className="space-y-1.5 text-[11.5px] text-slate-500 leading-relaxed">
-            <li>· 지식 없어도 계산기가 설득을 대신해요 — 첫날부터 전문가처럼 상담</li>
-            <li>· 말실수·계산 실수 걱정 없이, 숫자는 계산기가 설명은 화면이 해요</li>
-            <li>· 거절당한 고객에게 &quot;한번 계산해드릴게요&quot;로 자연스럽게 재접근할 수 있어요</li>
-          </ul>
-        </div>
-        <div className="rounded-2xl border border-navy-100 bg-white p-4 shadow-sm">
-          <p className="text-[12px] font-bold text-navy-900 mb-2">경력 설계사라면</p>
-          <ul className="space-y-1.5 text-[11.5px] text-slate-500 leading-relaxed">
-            <li>· 30분 걸리던 설명이 3분이면 끝나요</li>
-            <li>· 기존 고객을 재진단해서, 새 영업 없이 추가 계약 기회를 만들어요</li>
-            <li>· 특정 상품 추천이 없는 중립적 진단이라 고객 신뢰도가 높아요</li>
-            <li>· 세금·건보료·인플레이션까지 반영한 세후 실수령액을 보여줘요</li>
-          </ul>
+      <div>
+        <p className="text-[14px] font-extrabold text-navy-900 mb-3 text-center">누구에게나 통하는 이유</p>
+        <div className="grid grid-cols-1 gap-3">
+          <div className="rounded-2xl border-2 border-sky-200 bg-sky-50 p-4 shadow-sm">
+            <div className="flex items-center gap-2 mb-2.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-sky-500">
+                <GraduationCap size={16} className="text-white" />
+              </div>
+              <p className="text-[13px] font-extrabold text-sky-900">초보 설계사라면</p>
+            </div>
+            <ul className="space-y-1.5 text-[12px] text-sky-800 leading-relaxed">
+              <li>· <strong className="font-bold">지식 없어도 계산기가 설득을 대신해요</strong> — 첫날부터 전문가처럼 상담</li>
+              <li>· 말실수·계산 실수 걱정 없이, 숫자는 계산기가 설명은 화면이 해요</li>
+              <li>· 거절당한 고객에게 &quot;한번 계산해드릴게요&quot;로 자연스럽게 재접근할 수 있어요</li>
+            </ul>
+          </div>
+          <div className="rounded-2xl border-2 border-gold-300 bg-gold-50 p-4 shadow-sm">
+            <div className="flex items-center gap-2 mb-2.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gold-500">
+                <Award size={16} className="text-white" />
+              </div>
+              <p className="text-[13px] font-extrabold text-gold-900">경력 설계사라면</p>
+            </div>
+            <ul className="space-y-1.5 text-[12px] text-gold-900 leading-relaxed">
+              <li>· <strong className="font-bold">30분 걸리던 설명이 3분이면 끝나요</strong></li>
+              <li>· 기존 고객을 재진단해서, 새 영업 없이 추가 계약 기회를 만들어요</li>
+              <li>· 특정 상품 추천이 없는 중립적 진단이라 고객 신뢰도가 높아요</li>
+              <li>· 세금·건보료·인플레이션까지 반영한 세후 실수령액을 보여줘요</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
