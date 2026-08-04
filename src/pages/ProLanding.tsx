@@ -547,6 +547,17 @@ function PlansTab() {
 
       <PriceCards />
 
+      <div className="rounded-2xl border border-gold-200 bg-gold-50 p-4 text-center">
+        <p className="text-[12px] font-bold text-navy-900 mb-1">지점·팀 단위로 도입하고 싶으신가요?</p>
+        <p className="text-[11px] text-navy-500 leading-relaxed">
+          여러 명이 함께 쓰시면 단체 결제 할인 상담이 가능해요.{' '}
+          <a href="mailto:henry-lim@naver.com" className="font-bold text-navy-700 underline underline-offset-2">
+            henry-lim@naver.com
+          </a>
+          으로 문의해 주세요.
+        </p>
+      </div>
+
       <div className="overflow-x-auto rounded-2xl border border-navy-100 bg-white shadow-sm">
         <table className="w-full text-[11.5px]">
           <thead>
