@@ -70,11 +70,11 @@ function NoticeTab() {
 const FAQS = [
   {
     q: 'Trial(체험판)은 정말 무료인가요?',
-    a: '네, 완전 무료예요. 카드 등록도 필요 없고 카카오 로그인만 하면 바로 시작할 수 있어요. 단, 시뮬레이션은 3회까지, 리포트 PDF 저장은 Basic 이상부터 가능해요.',
+    a: '네, 완전 무료예요. 카드 등록도 필요 없고 카카오 로그인만 하면 바로 시작할 수 있어요. 단, 시뮬레이션은 5회까지, 리포트 PDF 저장은 Basic 이상부터 가능해요.',
   },
   {
     q: 'Trial은 언제까지 쓸 수 있나요?',
-    a: '가입 후 14일 동안, 총 3회의 시뮬레이션을 이용할 수 있어요. 기간이나 횟수가 지나면 Basic 또는 Pro로 업그레이드해야 계속 이용할 수 있어요.',
+    a: '가입 후 14일 동안, 총 5회의 시뮬레이션을 이용할 수 있어요. 기간이나 횟수가 지나면 Basic 또는 Pro로 업그레이드해야 계속 이용할 수 있어요.',
   },
   {
     q: '계산 결과는 얼마나 정확한가요?',
@@ -272,9 +272,10 @@ type CellValue = boolean | string;
 const FEATURE_ROWS: { label: string; trial: CellValue; basic: CellValue; pro: CellValue }[] = [
   { label: '기본 은퇴 진단 (자산 고갈 시점 · 국민연금 분석)', trial: true, basic: true, pro: true },
   { label: '계좌별 자산 정밀 입력', trial: true, basic: true, pro: true },
-  { label: '시뮬레이션 횟수', trial: '3회 (1회성)', basic: '월 30회', pro: '무제한' },
+  { label: '시뮬레이션 횟수', trial: '5회 (1회성)', basic: '월 30회', pro: '무제한' },
   { label: 'PDF 리포트 저장', trial: false, basic: '월 5회 (워터마크)', pro: '무제한' },
   { label: '워터마크 없는 리포트', trial: false, basic: false, pro: true },
+  { label: '고객 정보 저장 · 불러오기', trial: false, basic: false, pro: true },
   { label: '실시간 슬라이더 조정', trial: false, basic: false, pro: true },
   { label: '3버킷 시나리오 비교 (보수·현재·낙관)', trial: false, basic: false, pro: true },
   { label: '연도별 상세 현금흐름 테이블', trial: false, basic: false, pro: true },
@@ -295,7 +296,7 @@ function Cell({ value }: { value: CellValue }) {
 }
 
 const PRICE_PLANS = [
-  { key: 'trial', name: 'Trial', monthly: '무료', yearly: null, note: '14일 · 3회 한정' },
+  { key: 'trial', name: 'Trial', monthly: '무료', yearly: null, note: '14일 · 5회 한정' },
   { key: 'basic', name: 'Basic', monthly: '29,000원', yearly: '290,000원', note: '연 결제 시 2개월 무료' },
   { key: 'pro', name: 'Pro', monthly: '49,000원', yearly: '490,000원', note: '연 결제 시 2개월 무료', highlight: true },
 ] as const;
@@ -332,10 +333,98 @@ const REFUND_POLICY = [
   '서비스 오류 등 회사 귀책 사유로 정상적으로 이용하지 못한 기간이 있다면 해당 기간만큼 별도로 보상해 드려요.',
 ];
 
+const PAIN_POINTS = [
+  '엑셀·암산으로 즉석 설명 — 고객 앞에서 계산하느라 시간도 걸리고, 신뢰도까지 떨어져요',
+  '"고객님 노후는 몇 세에 끝난다"를 즉석에서 숫자로 보여주기 힘들어요',
+  '고객 자산 상황에 맞춘 세금·건보료 리스크를 그 자리에서 계산하기 어려워요',
+  '보수적·현재·낙관적 3가지 시나리오를 손으로 비교하는 건 사실상 불가능해요',
+];
+
+const DEAL_MECHANISM = [
+  { step: '고객이 직접 자기 정보를 입력한다', result: '→ "내 얘기"가 된다' },
+  { step: '보험 없을 때 자산 고갈 나이를 먼저 보여준다', result: '→ 손실 회피 심리가 작동한다' },
+  { step: '보험 포함 시나리오와 비교한다', result: '→ 미래의 나와 마주하게 된다' },
+  { step: '숫자가 설득하고 화면이 설명한다', result: '→ 이성과 감성을 동시에 자극한다' },
+  { step: '고객이 먼저 물어본다', result: '→ "그럼 저는 어떻게 하면 돼요?"' },
+];
+
+function WhyUseSection() {
+  return (
+    <div className="space-y-4">
+      <div className="rounded-2xl border border-navy-100 bg-white p-4 shadow-sm">
+        <p className="text-[11px] font-bold text-navy-400 mb-1">고객 심리 인사이트</p>
+        <p className="text-[13px] font-bold text-navy-900 leading-relaxed mb-2">
+          고객이 노후 준비를 미루는 건 게을러서가 아니에요.
+        </p>
+        <p className="text-[12px] text-slate-500 leading-relaxed">
+          UCLA 안더슨 경영대학원 할 허시필드 교수의 fMRI 연구에 따르면, 사람이 &apos;10년 뒤의 나&apos;를 생각할 때
+          뇌 활성 부위는 &apos;완전한 타인&apos;을 생각할 때와 똑같아요. 연금을 기피하는 건 미련해서가 아니라,
+          뇌가 본능적으로 남에게 돈을 주는 것처럼 느끼기 때문이에요. 그래서 숫자와 그래프로 &apos;미래의 나&apos;를
+          구체적으로 보여주는 게 중요합니다.
+        </p>
+      </div>
+
+      <div className="rounded-2xl bg-white border border-navy-100 shadow-sm p-4">
+        <p className="text-[12.5px] font-bold text-navy-900 mb-3">이렇게 상담하고 계신가요?</p>
+        <ul className="space-y-2">
+          {PAIN_POINTS.map((p) => (
+            <li key={p} className="flex gap-2 text-[12px] leading-relaxed text-slate-600">
+              <X size={14} className="mt-0.5 shrink-0 text-red-400" />
+              {p}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="rounded-2xl bg-gradient-to-br from-navy-900 to-navy-800 p-4">
+        <p className="text-[12.5px] font-bold text-gold-400 mb-3">왜 이 계산기로 계약이 성사될까요?</p>
+        <ol className="space-y-2.5">
+          {DEAL_MECHANISM.map((d, i) => (
+            <li key={d.step} className="flex gap-2.5">
+              <span className="shrink-0 flex h-5 w-5 items-center justify-center rounded-full bg-gold-400 text-[10px] font-extrabold text-navy-900">
+                {i + 1}
+              </span>
+              <div>
+                <p className="text-[12px] font-semibold text-white leading-snug">{d.step}</p>
+                <p className="text-[11px] text-gold-300 mt-0.5">{d.result}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <p className="mt-3 border-t border-navy-700 pt-3 text-[11px] text-navy-300 leading-relaxed">
+          설계사를 &apos;판매자&apos;에서 &apos;진단자&apos;로 바꿔주는 도구예요.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3">
+        <div className="rounded-2xl border border-navy-100 bg-white p-4 shadow-sm">
+          <p className="text-[12px] font-bold text-navy-900 mb-2">초보 설계사라면</p>
+          <ul className="space-y-1.5 text-[11.5px] text-slate-500 leading-relaxed">
+            <li>· 지식 없어도 계산기가 설득을 대신해요 — 첫날부터 전문가처럼 상담</li>
+            <li>· 말실수·계산 실수 걱정 없이, 숫자는 계산기가 설명은 화면이 해요</li>
+            <li>· 거절당한 고객에게 &quot;한번 계산해드릴게요&quot;로 자연스럽게 재접근할 수 있어요</li>
+          </ul>
+        </div>
+        <div className="rounded-2xl border border-navy-100 bg-white p-4 shadow-sm">
+          <p className="text-[12px] font-bold text-navy-900 mb-2">경력 설계사라면</p>
+          <ul className="space-y-1.5 text-[11.5px] text-slate-500 leading-relaxed">
+            <li>· 30분 걸리던 설명이 3분이면 끝나요</li>
+            <li>· 기존 고객을 재진단해서, 새 영업 없이 추가 계약 기회를 만들어요</li>
+            <li>· 특정 상품 추천이 없는 중립적 진단이라 고객 신뢰도가 높아요</li>
+            <li>· 세금·건보료·인플레이션까지 반영한 세후 실수령액을 보여줘요</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PlansTab() {
   const proExclusiveCount = FEATURE_ROWS.filter((r) => r.pro === true && r.basic === false).length;
   return (
     <div className="space-y-4">
+      <WhyUseSection />
+
       <div className="rounded-2xl bg-gradient-to-br from-navy-900 to-navy-800 p-4 text-center">
         <p className="text-[12px] font-bold text-gold-400 mb-1">Pro 전용 기능 {proExclusiveCount}가지</p>
         <p className="text-[13px] font-bold text-white leading-relaxed">

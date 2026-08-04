@@ -51,7 +51,7 @@ export const PRO_BASIC_LIMITS = {
 
 /** Trial은 매달 리셋되는 Basic과 달리, 가입 후 기간·총 횟수로 한 번만 한도가 소진됩니다. */
 export const PRO_TRIAL_LIMITS = {
-  simulationsTotal: 3,
+  simulationsTotal: 5,
   validDays: 14,
 } as const;
 
