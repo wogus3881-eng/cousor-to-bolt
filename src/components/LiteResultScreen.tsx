@@ -10,9 +10,10 @@ import { LITE_COLUMN_CLASS } from './liteLayout';
 interface Props {
   result: SimulationResult;
   onBack: () => void;
+  hideConsultation?: boolean;
 }
 
-export default function LiteResultScreen({ result, onBack }: Props) {
+export default function LiteResultScreen({ result, onBack, hideConsultation = false }: Props) {
   const { inputs, dignityEndAge, weakPension } = result;
 
   const isSafe = dignityEndAge === null;
@@ -82,15 +83,17 @@ export default function LiteResultScreen({ result, onBack }: Props) {
         </div>
       </div>
 
-      <div id="lite-consult" className={`${LITE_COLUMN_CLASS} scroll-mt-6 px-3 pb-6`}>
-        <div className="mb-2.5 rounded-2xl border border-toss-blue/25 bg-gradient-to-r from-blue-50 to-sky-50 px-3.5 py-3 text-center shadow-sm ring-1 ring-toss-blue/10">
-          <p className="text-[12px] font-bold text-toss-ink">1분이면 접수 끝 — 먼저 연락드릴게요</p>
-          <p className="mt-1 text-[10px] leading-relaxed text-toss-sub">
-            위 진단 숫자를 바탕으로, 빈칸만 채워 주세요. 부담 없이 가능한 범위부터 상담해 드려요.
-          </p>
+      {!hideConsultation && (
+        <div id="lite-consult" className={`${LITE_COLUMN_CLASS} scroll-mt-6 px-3 pb-6`}>
+          <div className="mb-2.5 rounded-2xl border border-toss-blue/25 bg-gradient-to-r from-blue-50 to-sky-50 px-3.5 py-3 text-center shadow-sm ring-1 ring-toss-blue/10">
+            <p className="text-[12px] font-bold text-toss-ink">1분이면 접수 끝 — 먼저 연락드릴게요</p>
+            <p className="mt-1 text-[10px] leading-relaxed text-toss-sub">
+              위 진단 숫자를 바탕으로, 빈칸만 채워 주세요. 부담 없이 가능한 범위부터 상담해 드려요.
+            </p>
+          </div>
+          <ConsultationForm inputs={inputs} />
         </div>
-        <ConsultationForm inputs={inputs} />
-      </div>
+      )}
     </div>
   );
 }

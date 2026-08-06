@@ -9,8 +9,12 @@ import { liteInputToSimulator } from './lib/liteToSimulator';
 
 type Phase = 'input' | 'bridge' | 'result';
 
+interface Props {
+  hideConsultation?: boolean;
+}
+
 /** v2 — 카드형 질문지 입력 + 결과 전 응원 브릿지 */
-export default function LiteFlowV2() {
+export default function LiteFlowV2({ hideConsultation = false }: Props) {
   const [phase, setPhase] = useState<Phase>('input');
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [savedLite, setSavedLite] = useState<LiteInputValues | undefined>(undefined);
@@ -42,7 +46,7 @@ export default function LiteFlowV2() {
   if (phase === 'result' && result) {
     return (
       <div className="flex min-h-screen flex-col bg-toss-canvas select-none">
-        <LiteResultScreen result={result} onBack={handleBackToInput} />
+        <LiteResultScreen result={result} onBack={handleBackToInput} hideConsultation={hideConsultation} />
         <footer className="mt-auto border-t border-toss-line bg-white py-8 text-center">
           <div className={`${LITE_COLUMN_CLASS} px-3`}>
             <p className="text-[10px] font-medium text-toss-sub">

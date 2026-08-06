@@ -34,6 +34,7 @@ export default function App() {
         <Route path="/" element={<Navigate to="/v2" replace />} />
         <Route path="/v1" element={<LiteFlow />} />
         <Route path="/v2" element={<LiteFlowV2 />} />
+        <Route path="/self" element={<LiteFlowV2 hideConsultation />} />
         <Route path="/lite" element={<Navigate to="/v2" replace />} />
         <Route path="/blocked" element={<BlockedPage />} />
         <Route path="/terms" element={<TermsPage />} />

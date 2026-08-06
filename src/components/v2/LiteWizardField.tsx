@@ -1,3 +1,5 @@
+import { useRef } from 'react';
+
 interface Props {
   label: string;
   hint?: string;
@@ -20,6 +22,7 @@ export default function LiteWizardField({
   step = 1,
 }: Props) {
   const clamped = Math.min(max, Math.max(min, value || 0));
+  const justSelectedRef = useRef(false);
 
   return (
     <div>
@@ -27,12 +30,32 @@ export default function LiteWizardField({
       {hint ? <p className="mt-1 text-[12px] leading-relaxed text-toss-sub">{hint}</p> : null}
       <div className="mt-4 flex items-baseline justify-end gap-1.5">
         <input
-          type="number"
-          min={min}
-          max={max}
-          step={step}
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
           value={Number.isFinite(value) ? value : min}
-          onChange={(e) => onChange(Number(e.target.value))}
+          onChange={(e) => {
+            const cleaned = e.target.value.replace(/\D/g, '').replace(/^0+(?=\d)/, '');
+            if (cleaned !== e.target.value) e.target.value = cleaned;
+            onChange(Number(cleaned || 0));
+          }}
+          onFocus={(e) => {
+            e.target.select();
+            justSelectedRef.current = true;
+          }}
+          onMouseUp={(e) => {
+            if (justSelectedRef.current) {
+              e.preventDefault();
+              justSelectedRef.current = false;
+            }
+          }}
+          onTouchEnd={(e) => {
+            if (justSelectedRef.current) {
+              e.preventDefault();
+              justSelectedRef.current = false;
+              e.currentTarget.select();
+            }
+          }}
           className="min-w-0 flex-1 border-0 border-b-2 border-toss-line bg-transparent py-1 text-right text-[28px] font-bold leading-none tracking-tight text-toss-ink outline-none transition-colors focus:border-toss-blue"
           autoFocus
         />
