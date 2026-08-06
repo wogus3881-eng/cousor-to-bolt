@@ -69,7 +69,7 @@ export function liteInputToSimulator(raw: LiteInputValues): SimulatorInputs {
     stockRate: DEFAULT_STOCK_RATE,
     monthlyInsurance,
     insuranceRate: DEFAULT_INS_RATE,
-    insurancePaymentYears: 10,
+    insurancePaymentYears: 10 * 12, // 단위: 개월 (10년 납입 가정)
     annualSalary: raw.annualSalaryMan * MAN,
     monthlyExpense: raw.monthlyExpenseMan * MAN,
     activeEndAge: 78,
