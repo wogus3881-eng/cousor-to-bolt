@@ -26,7 +26,7 @@ export const WIZARD_STEPS: WizardStepMeta[] = [
   {
     id: 'currentAge',
     title: '먼저, 현재 나이를 알려주세요',
-    subtitle: '25세부터 58세까지 입력할 수 있어요.',
+    subtitle: '20세부터 75세까지 입력할 수 있어요.',
   },
   {
     id: 'retirementAge',
@@ -77,9 +77,9 @@ export function canAdvanceStep(stepId: WizardStepId, values: LiteInputValues): b
     case 'welcome':
       return true;
     case 'currentAge':
-      return values.currentAge >= 25 && values.currentAge <= 58;
+      return values.currentAge >= 20 && values.currentAge <= 75;
     case 'retirementAge':
-      return values.retirementAge > values.currentAge && values.retirementAge <= 75;
+      return values.retirementAge > values.currentAge && values.retirementAge <= 80;
     case 'annualSalary':
       return values.annualSalaryMan >= 3000;
     case 'privatePension':

@@ -119,12 +119,12 @@ export default function LiteWizardScreen({ onSubmit, initialValues }: Props) {
               setValues((prev) => {
                 const age = n;
                 let retire = prev.retirementAge;
-                if (retire <= age) retire = Math.min(75, age + 1);
+                if (retire <= age) retire = Math.min(80, age + 1);
                 return { ...prev, currentAge: age, retirementAge: retire };
               });
             }}
-            min={25}
-            max={58}
+            min={20}
+            max={75}
             suffix="세"
           />
         );
@@ -137,7 +137,7 @@ export default function LiteWizardScreen({ onSubmit, initialValues }: Props) {
               value={values.retirementAge}
               onChange={set('retirementAge')}
               min={values.currentAge + 1}
-              max={75}
+              max={80}
               suffix="세"
             />
             {values.retirementAge <= values.currentAge && (
