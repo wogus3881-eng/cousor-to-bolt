@@ -703,7 +703,7 @@ export default function ProLanding() {
           onClick={() => navigate('/pro/trial')}
           className="mx-auto block w-full max-w-lg rounded-2xl bg-gradient-to-r from-navy-800 to-navy-700 py-4 text-sm font-bold text-white shadow-lg shadow-navy-900/30"
         >
-          무료로 체험하기 →
+          계산기 바로가기 →
         </button>
       </div>
     </div>
