@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Copy, Users } from 'lucide-react';
 import { getCurrentUser, getMyReferralStats, type ReferralStats } from '../lib/auth';
 import { getMyLeads, type Lead } from '../lib/leads';
+import { getMyAgentProfile, updateMyAgentProfile } from '../lib/agentProfile';
 import { PRO_TIER_META } from '../lib/proTier';
 import LoginScreen from '../components/LoginScreen';
 
@@ -19,6 +20,13 @@ export default function MyLeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [copied, setCopied] = useState(false);
 
+  const [displayName, setDisplayName] = useState('');
+  const [agentTitle, setAgentTitle] = useState('');
+  const [agentBio, setAgentBio] = useState('');
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileSaved, setProfileSaved] = useState(false);
+  const [profileError, setProfileError] = useState('');
+
   async function load() {
     setChecking(true);
     const user = await getCurrentUser();
@@ -31,11 +39,31 @@ export default function MyLeadsPage() {
     const pro = user.tier === 'pro';
     setIsPro(pro);
     if (pro) {
-      const [s, l] = await Promise.all([getMyReferralStats(), getMyLeads()]);
+      const [s, l, p] = await Promise.all([getMyReferralStats(), getMyLeads(), getMyAgentProfile(user.id)]);
       setStats(s);
       setLeads(l);
+      if (p) {
+        setDisplayName(p.display_name ?? '');
+        setAgentTitle(p.agent_title ?? '');
+        setAgentBio(p.agent_bio ?? '');
+      }
     }
     setChecking(false);
+  }
+
+  async function handleSaveProfile(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingProfile(true);
+    setProfileError('');
+    setProfileSaved(false);
+    const { error } = await updateMyAgentProfile(displayName, agentTitle, agentBio);
+    setSavingProfile(false);
+    if (error) {
+      setProfileError(error);
+      return;
+    }
+    setProfileSaved(true);
+    setTimeout(() => setProfileSaved(false), 2000);
   }
 
   useEffect(() => {
@@ -73,7 +101,7 @@ export default function MyLeadsPage() {
     );
   }
 
-  const myLink = stats ? `${window.location.origin}/v2?agent=${stats.referralCode}` : '';
+  const myLink = stats ? `${window.location.origin}/intro?agent=${stats.referralCode}` : '';
 
   async function handleCopy() {
     if (!myLink) return;
@@ -111,6 +139,44 @@ export default function MyLeadsPage() {
             </div>
           </div>
         )}
+
+        <form onSubmit={handleSaveProfile} className="mb-4 rounded-2xl border border-navy-100 bg-white p-5 shadow-sm">
+          <p className="text-[13px] font-bold text-navy-900 mb-1">내 소개 (소개 페이지에 표시)</p>
+          <p className="text-[11px] text-slate-400 mb-3">
+            고객이 링크를 열면 진단 전에 이 정보가 먼저 보여요. 비워두면 소개 화면 없이 바로 진단으로 넘어가요.
+          </p>
+          <div className="space-y-2.5">
+            <input
+              type="text"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="이름 (예: 홍길동)"
+              className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm outline-none focus:border-navy-300 focus:ring-2 focus:ring-navy-100"
+            />
+            <input
+              type="text"
+              value={agentTitle}
+              onChange={(e) => setAgentTitle(e.target.value)}
+              placeholder="소속 (예: OO생명 강남지점)"
+              className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm outline-none focus:border-navy-300 focus:ring-2 focus:ring-navy-100"
+            />
+            <textarea
+              value={agentBio}
+              onChange={(e) => setAgentBio(e.target.value)}
+              placeholder="소개글 (예: 고객님의 노후를 제 일처럼 설계해 드립니다.)"
+              rows={3}
+              className="w-full resize-none rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm outline-none focus:border-navy-300 focus:ring-2 focus:ring-navy-100"
+            />
+          </div>
+          {profileError && <p className="mt-2 text-[11px] font-medium text-red-500">{profileError}</p>}
+          <button
+            type="submit"
+            disabled={savingProfile}
+            className="mt-3 w-full rounded-xl bg-navy-900 py-2.5 text-[12px] font-bold text-white disabled:opacity-50"
+          >
+            {savingProfile ? '저장 중...' : profileSaved ? '저장됨' : '저장'}
+          </button>
+        </form>
 
         <div className="rounded-2xl border border-navy-100 bg-white p-5 shadow-sm">
           <p className="text-[13px] font-bold text-navy-900 mb-3">받은 리드 ({leads.length}건)</p>

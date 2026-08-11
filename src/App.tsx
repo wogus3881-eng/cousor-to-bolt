@@ -7,6 +7,7 @@ import ProLanding from './pages/ProLanding';
 import TermsPage from './pages/TermsPage';
 import InvitePage from './pages/InvitePage';
 import MyLeadsPage from './pages/MyLeadsPage';
+import AgentIntroPage from './pages/AgentIntroPage';
 
 /**
  * 코드 없이 /pro로 들어오면 소개 랜딩 페이지를 보여줍니다.
@@ -47,6 +48,7 @@ export default function App() {
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/invite" element={<InvitePage />} />
         <Route path="/leads" element={<MyLeadsPage />} />
+        <Route path="/intro" element={<AgentIntroPage />} />
         <Route path="/pro/trial" element={<ProApp tier="trial" />} />
         <Route path="/pro/basic" element={<ProApp tier="basic" />} />
         <Route path="/pro/pro" element={<ProApp tier="pro" />} />
