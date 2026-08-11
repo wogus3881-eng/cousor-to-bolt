@@ -2,15 +2,14 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Check, X, GraduationCap, Award, Users } from 'lucide-react';
 
-type TabKey = 'notice' | 'events' | 'review' | 'guide' | 'faq' | 'plans';
+type TabKey = 'notice' | 'events' | 'plans' | 'guide' | 'faq';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'notice', label: '공지사항' },
   { key: 'events', label: '이벤트' },
-  { key: 'review', label: '후기' },
+  { key: 'plans', label: '요금제' },
   { key: 'guide', label: '사용 방법' },
   { key: 'faq', label: 'FAQ' },
-  { key: 'plans', label: 'Trial/Basic/Pro' },
 ];
 
 function Placeholder({ title }: { title: string }) {
@@ -664,10 +663,9 @@ export default function ProLanding() {
       <main className="mx-auto max-w-lg px-4 py-6 pb-24 space-y-4">
         {tab === 'notice' && <NoticeTab />}
         {tab === 'events' && <EventsTab />}
-        {tab === 'review' && <Placeholder title="후기" />}
+        {tab === 'plans' && <PlansTab />}
         {tab === 'guide' && <GuideTab />}
         {tab === 'faq' && <FaqTab />}
-        {tab === 'plans' && <PlansTab />}
       </main>
 
       <div className="fixed bottom-0 left-0 right-0 border-t border-navy-100 bg-white/95 backdrop-blur px-4 py-4">
