@@ -84,9 +84,14 @@ export default function TermsPage() {
           ))}
         </div>
 
-        <p className="mt-4 text-center text-[11px] text-slate-400">
-          문의: <a href="mailto:henry-lim@naver.com" className="underline underline-offset-2">henry-lim@naver.com</a>
-        </p>
+        <div className="mt-4 space-y-0.5 rounded-2xl border border-navy-100 bg-white p-4 text-center text-[11px] text-slate-400">
+          <p className="font-bold text-slate-500">제이하이브(JHIVE)</p>
+          <p>대표: 임재현 | 사업자등록번호: 380-16-02676</p>
+          <p>대구광역시 중구 국채보상로 655, 2321호 (동인동2가, 국채보상공원 화성파크드림CITY)</p>
+          <p>
+            문의: <a href="mailto:henry-lim@naver.com" className="underline underline-offset-2">henry-lim@naver.com</a>
+          </p>
+        </div>
 
         <Link to="/pro" className="mt-6 block text-center text-[12px] font-bold text-navy-600 underline underline-offset-2">
           Pro 홈으로 돌아가기
