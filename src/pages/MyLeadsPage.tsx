@@ -128,6 +128,7 @@ export default function MyLeadsPage() {
                   </div>
                   <p className="text-[11px] text-slate-500">
                     {l.phone} · 희망시간 {l.preferred_time}
+                    {l.location ? ` · ${l.location}` : ''}
                   </p>
                   <p className="mt-1 text-[11px] text-slate-400">
                     {l.current_age ?? '-'}세 → {l.retirement_age ?? '-'}세 은퇴 · 월 희망생활비{' '}

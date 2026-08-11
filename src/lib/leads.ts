@@ -5,6 +5,7 @@ export interface Lead {
   name: string;
   phone: string;
   preferred_time: string;
+  location: string | null;
   current_age: number | null;
   retirement_age: number | null;
   annual_salary: number | null;
@@ -18,7 +19,7 @@ export async function getMyLeads(): Promise<Lead[]> {
   if (!supabase) return [];
   const { data, error } = await supabase
     .from('consultations')
-    .select('id, name, phone, preferred_time, current_age, retirement_age, annual_salary, monthly_expense, created_at')
+    .select('id, name, phone, preferred_time, location, current_age, retirement_age, annual_salary, monthly_expense, created_at')
     .order('created_at', { ascending: false });
   if (error) return [];
   return data ?? [];
