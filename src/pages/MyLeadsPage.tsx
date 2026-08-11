@@ -73,7 +73,7 @@ export default function MyLeadsPage() {
     );
   }
 
-  const myLink = stats ? `${window.location.origin}/self?agent=${stats.referralCode}` : '';
+  const myLink = stats ? `${window.location.origin}/v2?agent=${stats.referralCode}` : '';
 
   async function handleCopy() {
     if (!myLink) return;
