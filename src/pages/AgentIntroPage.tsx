@@ -19,7 +19,7 @@ export default function AgentIntroPage() {
         return;
       }
       const p = await getAgentPublicProfile(agentCode);
-      const hasContent = p && (p.display_name || p.agent_title || p.agent_bio);
+      const hasContent = p && (p.display_name || p.agent_title || p.agent_bio || p.agent_photo_url);
       if (!hasContent) {
         // 프로필을 아직 안 채웠으면 소개 화면 없이 바로 진단으로 보냅니다.
         if (!cancelled) navigate(`/v2?agent=${encodeURIComponent(agentCode)}`, { replace: true });
@@ -48,9 +48,15 @@ export default function AgentIntroPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-toss-canvas px-6 py-10">
       <div className="w-full max-w-sm rounded-[24px] border border-toss-line bg-white p-8 text-center shadow-sm">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-toss-blue/10">
-          <User size={28} className="text-toss-blue" />
-        </div>
+        {profile?.agent_photo_url ? (
+          <div className="mx-auto mb-4 h-40 w-[120px] overflow-hidden rounded-2xl border border-toss-line">
+            <img src={profile.agent_photo_url} alt={profile.display_name ?? '프로필 사진'} className="h-full w-full object-cover" />
+          </div>
+        ) : (
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-toss-blue/10">
+            <User size={28} className="text-toss-blue" />
+          </div>
+        )}
         {profile?.display_name && (
           <h1 className="text-lg font-extrabold text-toss-ink">{profile.display_name}</h1>
         )}

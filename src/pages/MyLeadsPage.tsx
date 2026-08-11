@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Copy, Users } from 'lucide-react';
+import { Copy, Users, Camera } from 'lucide-react';
 import { getCurrentUser, getMyReferralStats, type ReferralStats } from '../lib/auth';
 import { getMyLeads, type Lead } from '../lib/leads';
-import { getMyAgentProfile, updateMyAgentProfile } from '../lib/agentProfile';
+import { getMyAgentProfile, updateMyAgentProfile, uploadAgentPhoto } from '../lib/agentProfile';
 import { PRO_TIER_META } from '../lib/proTier';
 import LoginScreen from '../components/LoginScreen';
 
@@ -20,9 +20,12 @@ export default function MyLeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [copied, setCopied] = useState(false);
 
+  const [userId, setUserId] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [agentTitle, setAgentTitle] = useState('');
   const [agentBio, setAgentBio] = useState('');
+  const [photoUrl, setPhotoUrl] = useState('');
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
   const [profileError, setProfileError] = useState('');
@@ -36,6 +39,7 @@ export default function MyLeadsPage() {
       return;
     }
     setLoggedIn(true);
+    setUserId(user.id);
     const pro = user.tier === 'pro';
     setIsPro(pro);
     if (pro) {
@@ -46,6 +50,7 @@ export default function MyLeadsPage() {
         setDisplayName(p.display_name ?? '');
         setAgentTitle(p.agent_title ?? '');
         setAgentBio(p.agent_bio ?? '');
+        setPhotoUrl(p.agent_photo_url ?? '');
       }
     }
     setChecking(false);
@@ -56,7 +61,7 @@ export default function MyLeadsPage() {
     setSavingProfile(true);
     setProfileError('');
     setProfileSaved(false);
-    const { error } = await updateMyAgentProfile(displayName, agentTitle, agentBio);
+    const { error } = await updateMyAgentProfile(displayName, agentTitle, agentBio, photoUrl);
     setSavingProfile(false);
     if (error) {
       setProfileError(error);
@@ -64,6 +69,24 @@ export default function MyLeadsPage() {
     }
     setProfileSaved(true);
     setTimeout(() => setProfileSaved(false), 2000);
+  }
+
+  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !userId) return;
+    setUploadingPhoto(true);
+    setProfileError('');
+    const { url, error } = await uploadAgentPhoto(userId, file);
+    if (error || !url) {
+      setUploadingPhoto(false);
+      setProfileError(error ?? '사진 업로드에 실패했어요.');
+      return;
+    }
+    setPhotoUrl(url);
+    const { error: saveError } = await updateMyAgentProfile(displayName, agentTitle, agentBio, url);
+    setUploadingPhoto(false);
+    if (saveError) setProfileError(saveError);
   }
 
   useEffect(() => {
@@ -145,6 +168,29 @@ export default function MyLeadsPage() {
           <p className="text-[11px] text-slate-400 mb-3">
             고객이 링크를 열면 진단 전에 이 정보가 먼저 보여요. 비워두면 소개 화면 없이 바로 진단으로 넘어가요.
           </p>
+
+          <div className="mb-3 flex items-center gap-3">
+            <div className="relative h-24 w-[72px] shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+              {photoUrl ? (
+                <img src={photoUrl} alt="프로필 사진" className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-slate-300">
+                  <Camera size={22} />
+                </div>
+              )}
+            </div>
+            <label className="cursor-pointer rounded-lg border border-slate-200 px-3 py-1.5 text-[11px] font-bold text-slate-600 hover:border-slate-300">
+              {uploadingPhoto ? '업로드 중...' : photoUrl ? '사진 변경' : '사진 업로드'}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                disabled={uploadingPhoto}
+                onChange={handlePhotoChange}
+              />
+            </label>
+          </div>
+
           <div className="space-y-2.5">
             <input
               type="text"
