@@ -1,4 +1,5 @@
-import { ChevronLeft, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ChevronLeft, ChevronDown, AlertTriangle, ShieldCheck } from 'lucide-react';
 import ConsultationForm from './ConsultationForm';
 import LiteLegalDisclaimer from './LiteLegalDisclaimer';
 import LiteResultCharts from './LiteResultCharts';
@@ -17,6 +18,23 @@ export default function LiteResultScreen({ result, onBack, hideConsultation = fa
   const { inputs, dignityEndAge, weakPension } = result;
 
   const isSafe = dignityEndAge === null;
+
+  const consultRef = useRef<HTMLDivElement>(null);
+  const [showJumpButton, setShowJumpButton] = useState(!hideConsultation);
+
+  useEffect(() => {
+    if (hideConsultation || !consultRef.current) return;
+    const el = consultRef.current;
+    const observer = new IntersectionObserver(([entry]) => setShowJumpButton(!entry.isIntersecting), {
+      threshold: 0.1,
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hideConsultation]);
+
+  function scrollToConsult() {
+    document.getElementById('lite-consult')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-toss-canvas">
@@ -84,7 +102,7 @@ export default function LiteResultScreen({ result, onBack, hideConsultation = fa
       </div>
 
       {!hideConsultation && (
-        <div id="lite-consult" className={`${LITE_COLUMN_CLASS} scroll-mt-6 px-3 pb-6`}>
+        <div id="lite-consult" ref={consultRef} className={`${LITE_COLUMN_CLASS} scroll-mt-6 px-3 pb-6`}>
           <div className="mb-2.5 rounded-2xl border border-toss-blue/25 bg-gradient-to-r from-blue-50 to-sky-50 px-3.5 py-3 text-center shadow-sm ring-1 ring-toss-blue/10">
             <p className="text-[12px] font-bold text-toss-ink">1분이면 접수 끝 — 먼저 연락드릴게요</p>
             <p className="mt-1 text-[10px] leading-relaxed text-toss-sub">
@@ -93,6 +111,17 @@ export default function LiteResultScreen({ result, onBack, hideConsultation = fa
           </div>
           <ConsultationForm inputs={inputs} />
         </div>
+      )}
+
+      {showJumpButton && (
+        <button
+          type="button"
+          onClick={scrollToConsult}
+          aria-label="상담 신청란으로 이동"
+          className="fixed bottom-5 right-5 z-30 flex h-12 w-12 animate-bounce items-center justify-center rounded-full bg-toss-blue text-white shadow-lg shadow-toss-blue/30 transition hover:bg-toss-bluePress"
+        >
+          <ChevronDown size={22} strokeWidth={2.5} />
+        </button>
       )}
     </div>
   );
