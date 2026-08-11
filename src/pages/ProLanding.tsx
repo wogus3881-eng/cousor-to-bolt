@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Check, X, GraduationCap, Award, Users } from 'lucide-react';
 
-type TabKey = 'notice' | 'events' | 'plans' | 'guide' | 'faq';
+type TabKey = 'notice' | 'events' | 'plans' | 'review' | 'guide' | 'faq';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'notice', label: '공지사항' },
   { key: 'events', label: '이벤트' },
   { key: 'plans', label: '요금제' },
+  { key: 'review', label: '후기' },
   { key: 'guide', label: '사용 방법' },
   { key: 'faq', label: 'FAQ' },
 ];
@@ -110,6 +111,34 @@ function EventsTab() {
     <div className="space-y-3">
       {EVENTS.map((n) => (
         <NoticeCard key={n.title} n={n} />
+      ))}
+    </div>
+  );
+}
+
+const REVIEWS = [
+  {
+    name: '설계사 A님',
+    quote:
+      '고객 니즈를 끌어올리기에 이것만으로도 충분해요. 접점이나 TA로 활용하기도 너무 좋아요. 굳이 니즈를 심어주지 않아도 본인이 스스로 찾아오게 만들어져 있더라고요.',
+  },
+  {
+    name: '설계사 B님',
+    quote: '자가진단 은퇴계산기가 있길래 저부터 계산해봤는데.. 음, 더 열심히 벌어야겠더라고요 ㅎㅎ',
+  },
+];
+
+function ReviewTab() {
+  if (REVIEWS.length === 0) {
+    return <Placeholder title="후기" />;
+  }
+  return (
+    <div className="space-y-3">
+      {REVIEWS.map((r) => (
+        <div key={r.name} className="rounded-2xl bg-white p-4 border border-navy-100 shadow-sm">
+          <p className="text-[12px] leading-relaxed text-slate-600 mb-2">"{r.quote}"</p>
+          <p className="text-[11px] font-bold text-navy-500">— {r.name}</p>
+        </div>
       ))}
     </div>
   );
@@ -664,6 +693,7 @@ export default function ProLanding() {
         {tab === 'notice' && <NoticeTab />}
         {tab === 'events' && <EventsTab />}
         {tab === 'plans' && <PlansTab />}
+        {tab === 'review' && <ReviewTab />}
         {tab === 'guide' && <GuideTab />}
         {tab === 'faq' && <FaqTab />}
       </main>
