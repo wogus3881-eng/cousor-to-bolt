@@ -134,7 +134,7 @@ function ProAppContent({ tier }: Props) {
         <div className="mx-4 mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[12px] leading-relaxed text-amber-900">
           {limitMessage}{' '}
           <Link
-            to={tier === 'trial' ? PRO_TIER_META.basic.path : PRO_TIER_META.plus.path}
+            to={tier === 'trial' ? PRO_TIER_META.basic.path : PRO_TIER_META.pro.path}
             className="font-bold underline underline-offset-2"
           >
             {tier === 'trial' ? 'Basic 보기' : 'Pro 보기'}

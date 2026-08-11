@@ -23,10 +23,10 @@ export default function ProUpgradePrompt({ title, description, compact }: Props)
           <p className="text-[12px] font-bold text-navy-900">{title}</p>
           <p className="mt-1 text-[11px] leading-relaxed text-navy-600">{description}</p>
           <Link
-            to={PRO_TIER_META.plus.path}
+            to={PRO_TIER_META.pro.path}
             className="mt-2 inline-flex items-center text-[11px] font-bold text-navy-800 underline decoration-gold-400 underline-offset-4 hover:text-navy-950"
           >
-            {PRO_TIER_META.plus.label}로 업그레이드 →
+            {PRO_TIER_META.pro.label}로 업그레이드 →
           </Link>
         </div>
       </div>

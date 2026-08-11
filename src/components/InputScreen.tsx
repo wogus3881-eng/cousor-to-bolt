@@ -702,7 +702,7 @@ function calcDefaultPensionYears(currentAge: number) {
 export default function InputScreen({
   onSimulate, initialInputs, initialFixedCosts,
   activeClient = null, onActiveClientChange = () => {},
-  tier = 'plus',
+  tier = 'pro',
 }: Props) {
   const features = proFeatures(tier);
   const [v, setV] = useState<SimulatorInputs>(() => initialInputs ?? DEFAULT_INPUTS);
@@ -1579,8 +1579,8 @@ export default function InputScreen({
         ) : (
           <ProUpgradePrompt
             compact
-            title="생애주기·의료비 세부 설정은 Plus"
-            description="Basic은 표준 가정(활동종료 78세, 80세+ 의료비 반영)으로 계산합니다. 고객별로 조정하려면 Plus를 이용해 주세요."
+            title="생애주기·의료비 세부 설정은 Pro"
+            description="Basic은 표준 가정(활동종료 78세, 80세+ 의료비 반영)으로 계산합니다. 고객별로 조정하려면 Pro를 이용해 주세요."
           />
         )}
 

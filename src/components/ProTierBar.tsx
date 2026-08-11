@@ -9,7 +9,7 @@ interface Props {
 const BADGE_CLASS: Record<ProTier, string> = {
   trial: 'bg-slate-200 text-slate-700',
   basic: 'bg-navy-100 text-navy-700',
-  plus: 'bg-gold-100 text-gold-800',
+  pro: 'bg-gold-100 text-gold-800',
 };
 
 export default function ProTierBar({ tier }: Props) {
@@ -34,13 +34,13 @@ export default function ProTierBar({ tier }: Props) {
         <Link to="/invite" className="shrink-0 text-[10px] font-medium text-navy-400 hover:text-navy-600">
           🎁 친구 초대
         </Link>
-        {tier === 'plus' ? (
+        {tier === 'pro' ? (
           <Link to={PRO_TIER_META.basic.path} className="text-[10px] font-medium text-navy-400 hover:text-navy-600">
             Basic
           </Link>
         ) : (
           <Link
-            to={tier === 'trial' ? PRO_TIER_META.basic.path : PRO_TIER_META.plus.path}
+            to={tier === 'trial' ? PRO_TIER_META.basic.path : PRO_TIER_META.pro.path}
             className="rounded-lg bg-navy-900 px-2.5 py-1 text-[10px] font-bold text-gold-300 hover:bg-navy-800"
           >
             {tier === 'trial' ? 'Basic 결제' : 'Pro'}

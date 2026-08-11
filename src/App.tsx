@@ -24,7 +24,13 @@ function ProAutoRedirect() {
   if (code.startsWith('BASIC')) {
     return <Navigate to={`/pro/basic${search}`} replace />;
   }
-  return <Navigate to={`/pro/plus${search}`} replace />;
+  return <Navigate to={`/pro/pro${search}`} replace />;
+}
+
+/** 예전 /pro/plus 링크(북마크 등) 호환용 — /pro/pro로 그대로 넘겨줍니다. */
+function LegacyPlusRedirect() {
+  const { search } = useLocation();
+  return <Navigate to={`/pro/pro${search}`} replace />;
 }
 
 export default function App() {
@@ -41,7 +47,8 @@ export default function App() {
         <Route path="/invite" element={<InvitePage />} />
         <Route path="/pro/trial" element={<ProApp tier="trial" />} />
         <Route path="/pro/basic" element={<ProApp tier="basic" />} />
-        <Route path="/pro/plus" element={<ProApp tier="plus" />} />
+        <Route path="/pro/pro" element={<ProApp tier="pro" />} />
+        <Route path="/pro/plus" element={<LegacyPlusRedirect />} />
         {/* /pro?code=BASIC-TEST01 → /pro/basic?code=BASIC-TEST01 자동 분기 */}
         <Route path="/pro" element={<ProAutoRedirect />} />
         <Route path="*" element={<Navigate to="/v2" replace />} />

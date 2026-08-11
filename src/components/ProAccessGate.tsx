@@ -7,7 +7,7 @@ import {
   verifyAccessCode,
 } from '../lib/accessCode';
 import { checkSessionValidity, getCurrentUser, startSessionWatcher, type AuthUser } from '../lib/auth';
-import type { ProTier } from '../lib/proTier';
+import { PRO_TIER_META, type ProTier } from '../lib/proTier';
 import LoginScreen from './LoginScreen';
 
 interface Props {
@@ -15,7 +15,7 @@ interface Props {
   children: ReactNode;
 }
 
-const TIER_RANK: Record<ProTier, number> = { trial: 0, basic: 1, plus: 2 };
+const TIER_RANK: Record<ProTier, number> = { trial: 0, basic: 1, pro: 2 };
 
 export default function ProAccessGate({ tier, children }: Props) {
   const navigate = useNavigate();
@@ -37,6 +37,13 @@ export default function ProAccessGate({ tier, children }: Props) {
         // 밀려나지 않았는지 즉시 확인합니다. 탭을 계속 켜둔 채로만 감지되는
         // 워처(30초 주기)와 달리, 매번 새로 접속하는 경우까지 확실히 막습니다.
         const valid = await checkSessionValidity(user.id);
+        if (valid && user.tier !== tier && TIER_RANK[user.tier] > TIER_RANK[tier]) {
+          // 내 등급이 지금 보고 있는 페이지보다 높으면(예: Pro 회원이 Trial 페이지로 로그인)
+          // 업그레이드 버튼을 누를 필요 없이 바로 내 등급 페이지로 보냅니다.
+          const query = searchParams.toString();
+          if (!cancelled) navigate(`${PRO_TIER_META[user.tier].path}${query ? `?${query}` : ''}`, { replace: true });
+          return;
+        }
         if (valid && TIER_RANK[user.tier] >= TIER_RANK[tier]) {
           if (!cancelled) {
             setAuthUser(user);
@@ -123,7 +130,10 @@ export default function ProAccessGate({ tier, children }: Props) {
         <LoginScreen
           onSuccess={async () => {
             const user = await getCurrentUser();
-            if (user && TIER_RANK[user.tier] >= TIER_RANK[tier]) {
+            if (user && user.tier !== tier && TIER_RANK[user.tier] > TIER_RANK[tier]) {
+              const query = searchParams.toString();
+              navigate(`${PRO_TIER_META[user.tier].path}${query ? `?${query}` : ''}`, { replace: true });
+            } else if (user && TIER_RANK[user.tier] >= TIER_RANK[tier]) {
               setAuthUser(user);
               setShowLogin(false);
               setKickedMessage(null);

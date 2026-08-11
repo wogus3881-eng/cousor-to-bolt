@@ -637,7 +637,7 @@ function LivePensionSlider({
 
 
 
-export default function ResultScreen({ result: initialResult, onBack, tier = 'plus' }: Props) {
+export default function ResultScreen({ result: initialResult, onBack, tier = 'pro' }: Props) {
 
   const features = proFeatures(tier);
   const [showTable, setShowTable] = useState(false);
@@ -1272,7 +1272,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
 
 
-        {/* ── 세금/건보료 섹션 (Plus) ── */}
+        {/* ── 세금/건보료 섹션 (Pro) ── */}
 
         {features.taxDetailSection && (healthInsuranceTriggered || totalTaxBurden > 0) && (
 
@@ -1553,7 +1553,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
 
 
 
-        {/* ── 실시간 자산 조정 패널 (Plus) ── */}
+        {/* ── 실시간 자산 조정 패널 (Pro) ── */}
 
         <div className="pdf-exclude">
         {features.liveAdjustment ? (
@@ -1858,7 +1858,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
             <div className="mt-3">
               <ProUpgradePrompt
                 compact
-                title="과세 vs 비과세 시나리오 비교는 Plus"
+                title="과세 vs 비과세 시나리오 비교는 Pro"
                 description="전액 과세·전액 비과세 그래프로 세금·건보료 영향을 한눈에 보여주는 기능입니다."
               />
             </div>
@@ -2045,7 +2045,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
           </div>
         </div>
 
-        {/* ── 연도별 상세 데이터 (Plus) ── */}
+        {/* ── 연도별 상세 데이터 (Pro) ── */}
         {features.yearByYearTable ? (
         <div className="bg-white rounded-2xl border border-navy-100 shadow-sm overflow-hidden">
           <button
@@ -2130,7 +2130,7 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pl
           </div>
         )}
 
-        {/* ── 해결책 박스 (Plus) ── */}
+        {/* ── 해결책 박스 (Pro) ── */}
         {features.solutionInsightBox && (
         <div
           className="rounded-3xl text-white p-6 shadow-xl border border-gold-600/30"

@@ -18,7 +18,7 @@
 
 @media print {
   .pro-print-basic::after {
-    content: 'Pro Basic · Plus 업그레이드 시 워터마크 제거';
+    content: 'Pro Basic · Pro 업그레이드 시 워터마크 제거';
     position: fixed;
     left: 50%;
     top: 50%;
