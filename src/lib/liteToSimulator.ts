@@ -22,12 +22,21 @@ export interface LiteInputValues {
   monthlyExpenseMan: number;
 }
 
-/** 월 저축을 3버킷으로 나누는 비율 (합계 1). 상품 정책에 맞게 수정 가능 */
+/** 개인연금(보험) 버킷 비율. 나머지(은행·증권)는 나이대별로 나눕니다 */
 export const LITE_BUCKET_RATIO = {
-  bank: 0.3,
-  stock: 0.5,
   insurance: 0.2,
 } as const;
+
+/** 나이대가 올라갈수록 안전자산(은행) 비중을 높이는 간단한 스냅샷 배분.
+ *  30대 3:7, 40대 4:6, 50대 5:5, 60대 6:4 (은행:증권) 패턴을 20·70대까지 확장. */
+export function bankShareForAge(age: number): number {
+  if (age < 30) return 0.2;
+  if (age < 40) return 0.3;
+  if (age < 50) return 0.4;
+  if (age < 60) return 0.5;
+  if (age < 70) return 0.6;
+  return 0.7;
+}
 
 function calcDefaultPensionYears(currentAge: number) {
   return Math.min(40, Math.max(10, Math.max(0, 60 - currentAge)));
@@ -40,8 +49,7 @@ function calcDefaultPensionYears(currentAge: number) {
 export function liteInputToSimulator(raw: LiteInputValues): SimulatorInputs {
   const monthlyTotal = raw.monthlySavingTotalMan * MAN;
   const defaultInsurance = monthlyTotal * LITE_BUCKET_RATIO.insurance;
-  const bankStockSum = LITE_BUCKET_RATIO.bank + LITE_BUCKET_RATIO.stock;
-  const bankOfRemainder = LITE_BUCKET_RATIO.bank / bankStockSum;
+  const bankOfRemainder = bankShareForAge(raw.currentAge);
 
   let monthlyInsurance: number;
   let remainderForBankStock: number;

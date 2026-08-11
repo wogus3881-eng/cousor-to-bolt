@@ -5,7 +5,7 @@ import LiteLegalDisclaimer from './LiteLegalDisclaimer';
 import LiteResultCharts from './LiteResultCharts';
 import LiteResultDashboard from './LiteResultDashboard';
 import { DEFAULT_BANK_RATE, DEFAULT_INS_RATE, DEFAULT_STOCK_RATE, type SimulationResult } from '../lib/calculator';
-import { LITE_BUCKET_RATIO } from '../lib/liteToSimulator';
+import { LITE_BUCKET_RATIO, bankShareForAge } from '../lib/liteToSimulator';
 import { LITE_COLUMN_CLASS } from './liteLayout';
 
 interface Props {
@@ -18,6 +18,10 @@ export default function LiteResultScreen({ result, onBack, hideConsultation = fa
   const { inputs, dignityEndAge, weakPension } = result;
 
   const isSafe = dignityEndAge === null;
+
+  const bankShare = bankShareForAge(inputs.currentAge);
+  const bankPct = Math.round(bankShare * 100);
+  const stockPct = 100 - bankPct;
 
   const consultRef = useRef<HTMLDivElement>(null);
   const [showJumpButton, setShowJumpButton] = useState(!hideConsultation);
@@ -85,10 +89,11 @@ export default function LiteResultScreen({ result, onBack, hideConsultation = fa
 
           <div className="space-y-1.5 rounded-2xl border border-toss-line bg-white px-3.5 py-2.5 text-[10px] leading-relaxed text-toss-sub">
             <p>
-              <strong className="text-toss-ink">간편 진단 가정:</strong> 월 저축 합계는 입력하신 개인연금 월 납입(있을
-              경우)을 반영한 뒤, 나머지를 은행·증권 비율({Math.round(LITE_BUCKET_RATIO.bank * 100)}% :{' '}
-              {Math.round(LITE_BUCKET_RATIO.stock * 100)}%)로 나누었습니다. 개인연금·보험 적립 부분은 시뮬레이터의 연금/보험
-              버킷에 반영됩니다. 활동 종료 나이·의료비 등은 표준값을 사용했습니다.
+              <strong className="text-toss-ink">간편 진단 가정:</strong> 월 저축 합계 중 개인연금(연금저축·IRP 등) 월
+              납입분(있을 경우 실제 입력값, 없으면 전체의 {Math.round(LITE_BUCKET_RATIO.insurance * 100)}%)을 먼저 뗀 뒤,
+              나머지를 입력하신 나이({inputs.currentAge}세)에 맞춰 은행 {bankPct}% : 증권 {stockPct}% 비율로
+              나누었습니다(나이대가 높을수록 은행 비중을 높이는 방식). 개인연금·보험 적립 부분은 시뮬레이터의 연금/보험 버킷에
+              반영됩니다. 활동 종료 나이·의료비 등은 표준값을 사용했습니다.
             </p>
             <p>
               은행 연 {DEFAULT_BANK_RATE}%, 개인연금/보험연금 연 {DEFAULT_INS_RATE}%, 증권은 장기 투자형 가정 연{' '}
