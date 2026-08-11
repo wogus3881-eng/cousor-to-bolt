@@ -350,6 +350,7 @@ const FEATURE_ROWS: { label: string; trial: CellValue; basic: CellValue; pro: Ce
   { label: '기본 은퇴 진단 (자산 고갈 시점 · 국민연금 분석)', trial: true, basic: true, pro: true },
   { label: '계좌별 자산 정밀 입력', trial: true, basic: true, pro: true },
   { label: '시뮬레이션 횟수', trial: '5회 (1회성)', basic: '월 30회', pro: '무제한' },
+  { label: '고객용 링크 · 내 리드 자동 수집', trial: false, basic: false, pro: true },
   { label: 'PDF 리포트 저장', trial: false, basic: '월 5회 (워터마크)', pro: '무제한' },
   { label: '워터마크 없는 리포트', trial: false, basic: false, pro: true },
   { label: '고객 정보 저장 · 불러오기', trial: false, basic: false, pro: true },
