@@ -34,6 +34,11 @@ export default function ProTierBar({ tier }: Props) {
         <Link to="/invite" className="shrink-0 text-[10px] font-medium text-navy-400 hover:text-navy-600">
           🎁 친구 초대
         </Link>
+        {tier === 'pro' && (
+          <Link to="/leads" className="shrink-0 text-[10px] font-medium text-navy-400 hover:text-navy-600">
+            📋 내 리드
+          </Link>
+        )}
         {tier === 'pro' ? (
           <Link to={PRO_TIER_META.basic.path} className="text-[10px] font-medium text-navy-400 hover:text-navy-600">
             Basic
