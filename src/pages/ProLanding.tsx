@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Check, X, GraduationCap, Award, Users } from 'lucide-react';
 
-type TabKey = 'notice' | 'events' | 'plans' | 'review' | 'guide' | 'faq';
+type TabKey = 'notice' | 'updates' | 'events' | 'plans' | 'review' | 'guide' | 'faq';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'notice', label: '공지사항' },
+  { key: 'updates', label: '업데이트' },
   { key: 'events', label: '이벤트' },
   { key: 'plans', label: '요금제' },
   { key: 'review', label: '후기' },
@@ -67,6 +68,59 @@ const NOTICES = [
   },
 ];
 
+const UPDATES = [
+  {
+    date: '2026.08.11',
+    title: 'Pro 전용 "내 고객용 링크" + 받은 리드 보기 추가',
+    body: '고객에게 내 소개와 함께 진단 링크를 보낼 수 있어요. 고객이 링크에서 진단·상담 신청을 하면 "받은 리드" 목록에 자동으로 쌓여요.',
+  },
+  {
+    date: '2026.08.11',
+    title: '설계사 공개 프로필 페이지 추가',
+    body: '내 고객용 링크에 사진과 소개글이 담긴 프로필 페이지가 함께 열려요. 프로필 사진은 크롭 없이 세로 프레임 그대로 업로드돼요.',
+  },
+  {
+    date: '2026.08.11',
+    title: '받은 리드 목록에 상담 희망 지역 표시',
+    body: '고객이 남긴 상담 희망 지역을 리드 목록에서 바로 확인할 수 있어요.',
+  },
+  {
+    date: '2026.08.11',
+    title: '결과 화면에 상담 신청 플로팅 버튼 추가',
+    body: '진단 결과를 보다가 바로 상담 신청란으로 스크롤 이동할 수 있는 버튼이 추가됐어요.',
+  },
+  {
+    date: '2026.08.11',
+    title: '간편 진단 자산 배분을 나이대별 스냅샷으로 개선',
+    body: '은행·증권 자산 배분을 입력할 때, 나이대별 평균 배분을 참고할 수 있도록 바뀌었어요.',
+  },
+  {
+    date: '2026.08.11',
+    title: '요금제 비교표에 고객용 링크·리드 기능 노출',
+    body: '요금제 탭 비교표에서 Pro 전용 고객용 링크·리드 수집 기능을 바로 확인할 수 있어요.',
+  },
+  {
+    date: '2026.08.11',
+    title: '연 구독 중도 해지 환불 정책 개선',
+    body: '연 구독을 중도 해지할 때, 실제 이용 기간을 정가로 재계산해 남은 금액을 환불해 드려요.',
+  },
+  {
+    date: '2026.08.06',
+    title: '상담 폼 없는 개인 링크(/self) 추가',
+    body: '상담 신청 없이 진단 결과만 보여주고 싶을 때 쓸 수 있는 링크가 추가됐어요.',
+  },
+  {
+    date: '2026.08.04',
+    title: 'Trial 무료 체험 5회로 확대',
+    body: '무료 체험 횟수를 3회에서 5회로 늘렸어요.',
+  },
+  {
+    date: '2026.08.02',
+    title: '카카오 계정 로그인 지원 시작',
+    body: '회원가입 없이 카카오 계정으로 바로 체험판을 시작할 수 있어요.',
+  },
+];
+
 const EVENTS = NOTICES.filter((n) => n.tag === '이벤트');
 const REGULAR_NOTICES = NOTICES.filter((n) => n.tag !== '이벤트');
 
@@ -81,6 +135,22 @@ function NoticeCard({ n }: { n: (typeof NOTICES)[number] }) {
       </div>
       <p className="text-[13px] font-bold text-navy-900 mb-1">{n.title}</p>
       <p className="text-[12px] leading-relaxed text-slate-500">{n.body}</p>
+    </div>
+  );
+}
+
+function UpdatesTab() {
+  return (
+    <div className="space-y-3">
+      {UPDATES.map((u) => (
+        <div key={u.title} className="rounded-2xl bg-white p-4 border border-navy-100 shadow-sm">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-[11px] text-slate-400">{u.date}</span>
+          </div>
+          <p className="text-[13px] font-bold text-navy-900 mb-1">{u.title}</p>
+          <p className="text-[12px] leading-relaxed text-slate-500">{u.body}</p>
+        </div>
+      ))}
     </div>
   );
 }
@@ -692,6 +762,7 @@ export default function ProLanding() {
 
       <main className="mx-auto max-w-lg px-4 py-6 pb-24 space-y-4">
         {tab === 'notice' && <NoticeTab />}
+        {tab === 'updates' && <UpdatesTab />}
         {tab === 'events' && <EventsTab />}
         {tab === 'plans' && <PlansTab />}
         {tab === 'review' && <ReviewTab />}
