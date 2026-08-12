@@ -751,7 +751,7 @@ export default function InputScreen({
 
   const totalMonthly = v.monthlyBank + v.monthlyStock + v.monthlyInsurance;
   const totalFixedCosts = fixedCosts.housing + fixedCosts.telecom + fixedCosts.loan + fixedCosts.car + fixedCosts.living + fixedCosts.other;
-  const totalCurrentContrib = totalMonthly + (v.monthlyPension401k ?? 0) + (v.isaMonthly ?? 0) + (v.monthlyPensionSavings ?? 0) + (v.monthlyProtectionInsurance ?? 0);
+  const totalCurrentContrib = totalMonthly + (v.monthlyPension401k ?? 0) + (v.isaMonthly ?? 0) + (v.monthlyPensionSavings ?? 0) + (v.monthlyProtectionInsurance ?? 0) + (v.usdInsuranceMonthlyUSD ?? 0) * (v.currentExchangeRate ?? 1350);
   const monthlyIncomeApprox = Math.round((v.annualSalary ?? 0) / 12);
   const availableFunds = monthlyIncomeApprox - totalFixedCosts - totalCurrentContrib;
   const pension401kPayYearsDefault = Math.max(1, Math.min(40, v.retirementAge - v.currentAge));
