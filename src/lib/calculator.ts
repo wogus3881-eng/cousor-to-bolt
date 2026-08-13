@@ -139,6 +139,7 @@ export interface SimulationResult {
   annualFinancialTaxAtRetirement: number; // 은퇴 첫해 과세자산 세금+건보료 합계
   retirementBalancePension401k: number;
   pension401kAnnuityMonthly: number;
+  pension401kAnnuityEndAge: number; // IRP·연금저축펀드 확정기간형 수령 종료 나이(공통)
   pension401kTotalTax: number;
   pensionAdjustmentRate: number;
   pensionBreakevenAge: number;
@@ -163,6 +164,9 @@ export interface SimulationResult {
 const INFLATION = 0.03;
 const PENSION_ANNUAL_INCREASE = 0.03;
 const LIFE_EXPECTANCY = 100;
+// IRP·연금저축펀드는 보험 종신연금과 달리 보험사가 장수 리스크를 보장하지 않는
+// 확정기간형 수령 계좌 — 잔액을 이 나이까지 나눠 받고 나면 지급이 끝남
+const PENSION_ANNUITY_END_AGE = 80;
 
 const PENSION_INCOME_CAP_MONTHLY = 6170000;
 const PENSION_INCOME_CAP_ANNUAL = PENSION_INCOME_CAP_MONTHLY * 12;
@@ -330,8 +334,8 @@ function applyTaxOnReturn(balance: number, rate: number): { netBalance: number; 
   return { netBalance: balance * (1 + rate) - tax - hi, taxPaid: tax + hi };
 }
 
-function calcAnnuityMonthly(balance: number, annualRatePct: number, retirementAge: number): number {
-  const annuityYears = Math.max(1, LIFE_EXPECTANCY - retirementAge);
+function calcAnnuityMonthly(balance: number, annualRatePct: number, retirementAge: number, endAge: number = LIFE_EXPECTANCY): number {
+  const annuityYears = Math.max(1, endAge - retirementAge);
   if (balance <= 0) return 0;
   const monthlyRate = (annualRatePct / 100) / 12;
   if (monthlyRate === 0) return balance / (annuityYears * 12);
@@ -625,9 +629,10 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
   const annualFinancialTaxAtRetirement = firstYearBankTax + firstYearStockTax;
 
   const insAnnuityMonthly = insMaturityReinvest === 'keep' ? calcAnnuityMonthly(retirementBalanceInsurance, insRatePct, retirementAge) : 0;
-  const pension401kAnnuityMonthly = calcAnnuityMonthly(retirementBalancePension401k, pension401kRatePct, retirementAge);
+  const pension401kAnnuityEndAge = Math.max(retirementAge + 1, PENSION_ANNUITY_END_AGE);
+  const pension401kAnnuityMonthly = calcAnnuityMonthly(retirementBalancePension401k, pension401kRatePct, retirementAge, pension401kAnnuityEndAge);
   const pensionSavingsRatePct = (norm.pensionSavingsRate ?? DEFAULT_STOCK_RATE);
-  const pensionSavingsAnnuityMonthly = calcAnnuityMonthly(retirementBalancePensionSavings, pensionSavingsRatePct, retirementAge);
+  const pensionSavingsAnnuityMonthly = calcAnnuityMonthly(retirementBalancePensionSavings, pensionSavingsRatePct, retirementAge, pension401kAnnuityEndAge);
   const pensionBreakevenAge = calcPensionBreakevenAge(
     pensionAtRetirement,
     pensionStartAge,
@@ -785,13 +790,15 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
     const yearlyDividend = posStock * DIVIDEND_RATE;
     const monthlyDividendIncome = yearlyDividend / 12;
 
-    const yearly401kGross = pension401kAnnuityMonthly > 0 ? pension401kAnnuityMonthly * 12 : 0;
+    // IRP·연금저축펀드는 확정기간형 수령 — pension401kAnnuityEndAge까지만 지급되고 이후 중단
+    const withinPensionAnnuityPeriod = age < pension401kAnnuityEndAge;
+    const yearly401kGross = withinPensionAnnuityPeriod && pension401kAnnuityMonthly > 0 ? pension401kAnnuityMonthly * 12 : 0;
     const yearly401kTax = calcPension401kWithdrawalTax(yearly401kGross);
     pension401kTotalTax += yearly401kTax;
     const yearly401kNet = yearly401kGross - yearly401kTax;
 
     // 연금저축펀드: IRP/401k와 동일한 저율(3.3~5.5%) 연금소득세 구조로 수령
-    const yearlyPensionSavingsGross = pensionSavingsAnnuityMonthly > 0 ? pensionSavingsAnnuityMonthly * 12 : 0;
+    const yearlyPensionSavingsGross = withinPensionAnnuityPeriod && pensionSavingsAnnuityMonthly > 0 ? pensionSavingsAnnuityMonthly * 12 : 0;
     const yearlyPensionSavingsTax = calcPension401kWithdrawalTax(yearlyPensionSavingsGross);
     pensionSavingsTotalTax += yearlyPensionSavingsTax;
     const yearlyPensionSavingsNet = yearlyPensionSavingsGross - yearlyPensionSavingsTax;
@@ -891,8 +898,8 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
       deficit: combinedBalance < 0 ? Math.abs(combinedBalance) : 0,
       isInsurancePaymentPhase: age < insurancePaymentEndAge,
       insuranceAnnuity: currentInsAnnuity,
-      pension401kAnnuity: pension401kAnnuityMonthly,
-      pensionSavingsAnnuity: pensionSavingsAnnuityMonthly,
+      pension401kAnnuity: withinPensionAnnuityPeriod ? pension401kAnnuityMonthly : 0,
+      pensionSavingsAnnuity: withinPensionAnnuityPeriod ? pensionSavingsAnnuityMonthly : 0,
       isPostDepletion: isPostDepletion && age > retirementAge,
     });
   }
@@ -980,6 +987,7 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
     annualFinancialTaxAtRetirement,
     retirementBalancePension401k,
     pension401kAnnuityMonthly,
+    pension401kAnnuityEndAge,
     pension401kTotalTax,
     pensionAdjustmentRate,
     pensionBreakevenAge,
