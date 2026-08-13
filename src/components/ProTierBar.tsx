@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { PRO_TIER_META, type ProTier } from '../lib/proTier';
 import { getBasicUsage, getTrialUsage } from '../lib/proUsageLimits';
+import { useProAccess } from './ProAccessGate';
 
 interface Props {
   tier: ProTier;
@@ -15,6 +16,7 @@ const BADGE_CLASS: Record<ProTier, string> = {
 export default function ProTierBar({ tier }: Props) {
   const meta = PRO_TIER_META[tier];
   const usage = tier === 'basic' ? getBasicUsage() : tier === 'trial' ? getTrialUsage() : null;
+  const { isAuthenticated } = useProAccess();
 
   return (
     <div className="flex shrink-0 items-center justify-between gap-3 border-b border-navy-200 bg-white px-4 py-2.5">
@@ -36,10 +38,12 @@ export default function ProTierBar({ tier }: Props) {
             {usage.printLimit > 0 ? ` · 리포트 ${usage.prints}/${usage.printLimit}` : ''}
           </span>
         )}
-        <Link to="/invite" className="shrink-0 text-[10px] font-medium text-navy-400 hover:text-navy-600">
-          🎁 친구 초대
-        </Link>
-        {tier === 'pro' && (
+        {isAuthenticated && (
+          <Link to="/invite" className="shrink-0 text-[10px] font-medium text-navy-400 hover:text-navy-600">
+            🎁 친구 초대
+          </Link>
+        )}
+        {isAuthenticated && tier === 'pro' && (
           <Link to="/leads" className="shrink-0 text-[10px] font-medium text-navy-400 hover:text-navy-600">
             📋 내 리드
           </Link>

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   clearStoredAccess,
@@ -16,6 +16,14 @@ interface Props {
 }
 
 const TIER_RANK: Record<ProTier, number> = { trial: 0, basic: 1, pro: 2 };
+
+/** 실제 계정으로 로그인해서 들어왔는지(내 리드·친구 초대 등 "내 정보" 기능 노출 가능)
+ *  vs 접근코드(강의·임시 공유용)로 들어왔는지 구분합니다. */
+const ProAccessContext = createContext<{ isAuthenticated: boolean }>({ isAuthenticated: false });
+
+export function useProAccess() {
+  return useContext(ProAccessContext);
+}
 
 export default function ProAccessGate({ tier, children }: Props) {
   const navigate = useNavigate();
@@ -150,5 +158,9 @@ export default function ProAccessGate({ tier, children }: Props) {
 
   if (!granted) return null;
 
-  return <>{children}</>;
+  return (
+    <ProAccessContext.Provider value={{ isAuthenticated: !!authUser }}>
+      {children}
+    </ProAccessContext.Provider>
+  );
 }
