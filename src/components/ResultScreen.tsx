@@ -2353,12 +2353,12 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pr
               {/* 수입: IRP 연금화 수령액 */}
               {retirementBalancePension401k > 0 && (
                 <Area type="monotone" dataKey="IRP연금" stroke="#6366f1" strokeWidth={2}
-                  fill="url(#irpAnnuityGrad)" dot={false} name="IRP 연금 (평생)" />
+                  fill="url(#irpAnnuityGrad)" dot={false} name="IRP 연금 (100세까지 정액 수령)" />
               )}
               {/* 수입: 연금저축펀드 연금화 수령액 */}
               {retirementBalancePensionSavings > 0 && (
                 <Area type="monotone" dataKey="연금저축연금" stroke="#a855f7" strokeWidth={2}
-                  fill="url(#psAnnuityGrad)" dot={false} name="연금저축 연금 (평생)" />
+                  fill="url(#psAnnuityGrad)" dot={false} name="연금저축 연금 (100세까지 정액 수령)" />
               )}
             </AreaChart>
           </ResponsiveContainer>
