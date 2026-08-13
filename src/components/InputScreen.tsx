@@ -407,11 +407,14 @@ function CollapsibleSection({ icon, title, subtitle, children, defaultOpen = tru
 // ── AddLifeEventForm ─────────────────────────────────────────────────────────
 function AddLifeEventForm({ minAge, maxAge, onAdd }: {
   minAge: number; maxAge: number;
-  onAdd: (ev: { age: number; amount: number; label: string; source: 'auto' }) => void;
+  onAdd: (ev: { age: number; amount: number; label: string; source: 'auto'; loanMonthlyPayment?: number; loanTermYears?: number }) => void;
 }) {
   const [age, setAge] = useState<number | ''>('');
   const [amount, setAmount] = useState<number | ''>('');
   const [label, setLabel] = useState('');
+  const [useLoan, setUseLoan] = useState(false);
+  const [loanMonthly, setLoanMonthly] = useState<number | ''>('');
+  const [loanTerm, setLoanTerm] = useState<number | ''>('');
   const MAN = 10000;
 
   const presets = [
@@ -449,7 +452,7 @@ function AddLifeEventForm({ minAge, maxAge, onAdd }: {
           />
         </div>
         <div className="flex flex-col gap-1 flex-1">
-          <p className="text-[9px] text-amber-600 font-medium">금액 (만원)</p>
+          <p className="text-[9px] text-amber-600 font-medium">{useLoan ? '자기자본 (만원)' : '금액 (만원)'}</p>
           <input type="number" min={0}
             value={amount}
             placeholder="5000"
@@ -466,16 +469,51 @@ function AddLifeEventForm({ minAge, maxAge, onAdd }: {
           className="w-full text-sm text-navy-900 border border-amber-200 rounded-lg px-2 py-1.5 bg-white"
         />
       </div>
+
+      <label className="flex items-center gap-1.5 cursor-pointer">
+        <input type="checkbox" checked={useLoan} onChange={e => setUseLoan(e.target.checked)} className="accent-amber-600" />
+        <span className="text-[10px] font-bold text-amber-700">대출 활용 (나머지는 대출로 충당)</span>
+      </label>
+      {useLoan && (
+        <div className="flex gap-2">
+          <div className="flex flex-col gap-1 flex-1">
+            <p className="text-[9px] text-amber-600 font-medium">대출 월 상환액 (만원)</p>
+            <input type="number" min={0}
+              value={loanMonthly}
+              placeholder="80"
+              onChange={e => setLoanMonthly(e.target.value === '' ? '' : Number(e.target.value))}
+              className="w-full text-sm font-bold text-navy-900 border border-amber-200 rounded-lg px-2 py-1.5 bg-white"
+            />
+          </div>
+          <div className="flex flex-col gap-1 w-24 shrink-0">
+            <p className="text-[9px] text-amber-600 font-medium">상환 기간 (년)</p>
+            <input type="number" min={1} max={40}
+              value={loanTerm}
+              placeholder="30"
+              onChange={e => setLoanTerm(e.target.value === '' ? '' : Number(e.target.value))}
+              className="w-full text-sm font-bold text-navy-900 border border-amber-200 rounded-lg px-2 py-1.5 bg-white text-center"
+            />
+          </div>
+        </div>
+      )}
+
       <button
         onClick={() => {
-          if (age && Number(age) > 0 && amount && Number(amount) > 0 && label.trim()) {
-            onAdd({ age: Number(age), amount: Number(amount) * MAN, label: label.trim(), source: 'auto' });
+          const loanOk = !useLoan || (loanMonthly && Number(loanMonthly) > 0 && loanTerm && Number(loanTerm) > 0);
+          if (age && Number(age) > 0 && amount && Number(amount) > 0 && label.trim() && loanOk) {
+            onAdd({
+              age: Number(age), amount: Number(amount) * MAN, label: label.trim(), source: 'auto',
+              ...(useLoan ? { loanMonthlyPayment: Number(loanMonthly) * MAN, loanTermYears: Number(loanTerm) } : {}),
+            });
             setAge('');
             setAmount('');
             setLabel('');
+            setUseLoan(false);
+            setLoanMonthly('');
+            setLoanTerm('');
           }
         }}
-        disabled={!age || !amount || !label.trim()}
+        disabled={!age || !amount || !label.trim() || (useLoan && (!loanMonthly || !loanTerm))}
         className="w-full bg-amber-500 text-white text-xs font-bold py-2 rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
         + 추가하기
       </button>
@@ -1516,6 +1554,9 @@ export default function InputScreen({
                 <div className="flex-1">
                   <p className="text-[11px] font-bold text-amber-800">{ev.age}세 · {ev.label}</p>
                   <p className="text-[10px] text-amber-600">-{Math.floor(ev.amount / MAN).toLocaleString()}만원 ({ev.source === 'bank' ? '은행' : ev.source === 'stock' ? '증권' : ev.source === 'insurance' ? '보험' : '자동'})</p>
+                  {ev.loanMonthlyPayment && ev.loanTermYears && (
+                    <p className="text-[10px] text-amber-500">+ 대출 월 {Math.floor(ev.loanMonthlyPayment / MAN).toLocaleString()}만원 × {ev.loanTermYears}년</p>
+                  )}
                 </div>
                 <button onClick={() => setV(prev => ({ ...prev, lifeEvents: (prev.lifeEvents ?? []).filter((_, j) => j !== i) }))}
                   className="w-6 h-6 rounded-full bg-amber-200 text-amber-700 flex items-center justify-center text-xs font-bold shrink-0">✕</button>

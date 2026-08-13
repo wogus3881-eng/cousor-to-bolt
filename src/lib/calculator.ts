@@ -38,7 +38,14 @@ export interface SimulatorInputs {
   usdInsuranceSurrenderRate?: number;
   currentExchangeRate?: number;
   usdInsuranceMaturityReinvest?: 'stock' | 'bank' | 'keep';
-  lifeEvents?: Array<{ age: number; amount: number; label: string; source: 'bank' | 'stock' | 'insurance' | 'auto' }>;
+  lifeEvents?: Array<{
+    age: number;
+    amount: number; // 자기자본 (즉시 차감)
+    label: string;
+    source: 'bank' | 'stock' | 'insurance' | 'auto';
+    loanMonthlyPayment?: number; // 대출 월 상환액 (있으면 상환 기간 동안 해당 버킷 월 납입액에서 우선 차감)
+    loanTermYears?: number;      // 대출 상환 기간(년)
+  }>;
   insuranceMaturityReinvest?: 'stock' | 'bank' | 'keep';
 
   // 퇴직급여
@@ -217,6 +224,68 @@ function fvAnnuity(monthly: number, annualRate: number, years: number): number {
 function fv(pv: number, rate: number, years: number): number {
   if (years <= 0) return pv;
   return pv * Math.pow(1 + rate, years);
+}
+
+type LifeEvent = NonNullable<SimulatorInputs['lifeEvents']>[number];
+
+/**
+ * 목적자금 이벤트(목돈 인출·대출)를 반영해 월 적립 버킷의 은퇴 시점 잔액을 계산합니다.
+ * 이벤트 시점에 자기자본(amount)을 즉시 차감하고, 대출이 있으면 상환 기간 동안
+ * 월 납입액에서 대출 상환액만큼 줄인(0 미만으로는 내려가지 않음) 뒤 이어서 복리로 굴립니다.
+ * paymentEndYears를 넘어서는 구간은 월 납입 없이 잔액만 복리로 굴러갑니다(보험 납입기간 등).
+ */
+function projectBucketWithLifeEvents(
+  startBalance: number,
+  baseMonthly: number,
+  annualRate: number,
+  currentAge: number,
+  retirementAge: number,
+  bucketKey: 'bank' | 'stock' | 'insurance',
+  events: LifeEvent[],
+  paymentEndYears: number = Infinity,
+): number {
+  const horizon = Math.max(0, retirementAge - currentAge);
+  const relevant = events.filter(ev => ev.source === bucketKey || (ev.source === 'auto' && bucketKey === 'bank'));
+
+  const breakpoints = new Set<number>([0, horizon]);
+  if (paymentEndYears > 0 && paymentEndYears < horizon) breakpoints.add(paymentEndYears);
+  for (const ev of relevant) {
+    const t = ev.age - currentAge;
+    if (t > 0 && t < horizon) breakpoints.add(t);
+    if (ev.loanMonthlyPayment && ev.loanTermYears) {
+      const loanEnd = t + ev.loanTermYears;
+      if (loanEnd > 0 && loanEnd < horizon) breakpoints.add(loanEnd);
+    }
+  }
+  const points = Array.from(breakpoints).sort((a, b) => a - b);
+
+  let balance = startBalance;
+  const applyLumpSumAt = (t: number) => {
+    for (const ev of relevant) {
+      if (ev.age - currentAge === t) balance = Math.max(0, balance - ev.amount);
+    }
+  };
+
+  for (let i = 0; i < points.length - 1; i++) {
+    const segStart = points[i];
+    const segEnd = points[i + 1];
+    applyLumpSumAt(segStart);
+
+    let loanReduction = 0;
+    for (const ev of relevant) {
+      if (!ev.loanMonthlyPayment || !ev.loanTermYears) continue;
+      const loanStart = ev.age - currentAge;
+      const loanEnd = loanStart + ev.loanTermYears;
+      if (segStart >= loanStart && segEnd <= loanEnd) loanReduction += ev.loanMonthlyPayment;
+    }
+
+    const effectiveMonthly = segStart < paymentEndYears ? Math.max(0, baseMonthly - loanReduction) : 0;
+    const segYears = segEnd - segStart;
+    balance = fv(balance, annualRate, segYears) + fvAnnuity(effectiveMonthly, annualRate, segYears);
+  }
+  applyLumpSumAt(horizon);
+
+  return balance;
 }
 
 /** 월 적립을 매달 복리로 굴리되, 누적 납입액(시작 잔액 포함)이 totalCap에 도달하면
@@ -444,10 +513,9 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
   const insElapsedMonths = Math.min(Math.max(0, insuranceElapsedMonths ?? 0), insurancePaymentYears);
   const insRemainingMonths = insurancePaymentYears - insElapsedMonths;
   const insPayYears = Math.min(insRemainingMonths / 12, yearsToRetirement);
-  const insBalanceAtPaymentEnd = fv(savingsInsurance, insR, insPayYears)
-    + fvAnnuity(monthlyInsurance, insR, insPayYears);
-  const yearsCompoundAfterPayment = yearsToRetirement - insPayYears;
-  const retirementBalanceInsurance1 = fv(insBalanceAtPaymentEnd, insR, yearsCompoundAfterPayment);
+  const retirementBalanceInsurance1 = projectBucketWithLifeEvents(
+    savingsInsurance, monthlyInsurance, insR, currentAge, retirementAge, 'insurance', norm.lifeEvents ?? [], insPayYears,
+  );
 
   // 원화보험 만기 재투자 분기
   const insMaturityToBank = insMaturityReinvest === 'bank' ? retirementBalanceInsurance1 : 0;
@@ -495,14 +563,14 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
   const regularAccountTax = isaInterest * FINANCIAL_INCOME_TAX;
   const isaTaxSaved = Math.max(0, regularAccountTax - isaTax);
 
-  // 은행/증권 은퇴자산 (보험 만기 재투자 포함, ISA 세후 잔액 + 한도 초과 이체분 포함)
-  const retirementBalanceBank = fv(savingsBank, bankR, yearsToRetirement)
-    + fvAnnuity(monthlyBank, bankR, yearsToRetirement)
-    + usdToBank + insMaturityToBank + ins2MaturityToBank + severanceToBank;
+  // 은행/증권 은퇴자산 (목적자금 이벤트·대출 반영, 보험 만기 재투자 포함, ISA 세후 잔액 + 한도 초과 이체분 포함)
+  const retirementBalanceBank = projectBucketWithLifeEvents(
+    savingsBank, monthlyBank, bankR, currentAge, retirementAge, 'bank', norm.lifeEvents ?? [],
+  ) + usdToBank + insMaturityToBank + ins2MaturityToBank + severanceToBank;
   // 일반 증권계좌만 따로 (ISA 제외, ISA 한도 초과 이체분은 포함) — 결과 화면에서 계좌별로 나눠 보여주기 위한 구분
-  const retirementBalanceStockOnly = fv(savingsStock, stockR, yearsToRetirement)
-    + fvAnnuity(monthlyStock, stockR, yearsToRetirement)
-    + usdToStock + insMaturityToStock + ins2MaturityToStock + isaProjection.overflowBalance;
+  const retirementBalanceStockOnly = projectBucketWithLifeEvents(
+    savingsStock, monthlyStock, stockR, currentAge, retirementAge, 'stock', norm.lifeEvents ?? [],
+  ) + usdToStock + insMaturityToStock + ins2MaturityToStock + isaProjection.overflowBalance;
   const retirementBalanceStock = retirementBalanceStockOnly + isaRetirementBalanceNet;
   // 연금저축펀드: IRP/401k와 동일하게 별도 버킷에서 축적 후 연금 수령 시 저율(3.3~5.5%) 연금소득세 적용
   const retirementBalancePensionSavings = fv(savingsPensionSavings, pensionSavingsR, yearsToRetirement)
@@ -580,13 +648,24 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
     for (let age = currentAge; age <= retirementAge; age++) {
       accRows.push({ age, bal: aBank + aStock + aIns + a401k, balBank: aBank, balStock: aStock, balIns: aIns, bal401k: a401k });
       if (age < retirementAge) {
+        // 이 나이에 활성화된 대출의 월 상환액 합계 (버킷별) — 목적자금 이벤트의 상환 기간 동안 월 납입액에서 우선 차감
+        const loanReductionFor = (bucketKey: 'bank' | 'stock' | 'insurance') =>
+          (norm.lifeEvents ?? [])
+            .filter(ev => (ev.source === bucketKey || (ev.source === 'auto' && bucketKey === 'bank'))
+              && ev.loanMonthlyPayment && ev.loanTermYears
+              && age >= ev.age && age < ev.age + ev.loanTermYears)
+            .reduce((sum, ev) => sum + (ev.loanMonthlyPayment ?? 0), 0);
+        const bankLoanReduction = loanReductionFor('bank');
+        const stockLoanReduction = loanReductionFor('stock');
+        const insLoanReduction = loanReductionFor('insurance');
+
         // 월 복리 12회 반복
         for (let m = 0; m < 12; m++) {
-          aBank = aBank * (1 + bankMR) + monthlyBank;
-          aStock = aStock * (1 + stockMR) + monthlyStock;
+          aBank = aBank * (1 + bankMR) + Math.max(0, monthlyBank - bankLoanReduction);
+          aStock = aStock * (1 + stockMR) + Math.max(0, monthlyStock - stockLoanReduction);
           // 보험: 납입 기간 내면 월납, 이후 복리만
           const yearsFromNow = (age - currentAge) + (m + 1) / 12;
-          const insContrib = yearsFromNow < insPayYears ? monthlyInsurance : 0;
+          const insContrib = yearsFromNow < insPayYears ? Math.max(0, monthlyInsurance - insLoanReduction) : 0;
           aIns = aIns * (1 + insMR) + insContrib;
           const pension401kContrib = yearsFromNow < pension401kPayYears ? effectiveMonthlyPension401k : 0;
           a401k = a401k * (1 + pension401kMR) + pension401kContrib;
