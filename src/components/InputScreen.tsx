@@ -559,7 +559,7 @@ function BucketCard({
         <InlineField
           label="매월 적립액"
           value={amount}
-          min={0} max={MAN * 300} step={MAN * 10}
+          min={0} max={MAN * 300} step={MAN * 1}
           display={v => `${Math.floor(v / MAN).toLocaleString()}만 원`}
           parse={s => parseFloat(s) * MAN}
           trackColor={theme.trackAmount} thumbColor={theme.thumbAmount}
@@ -894,7 +894,7 @@ export default function InputScreen({
               sublabel={isSelfEmployed ? "순이익(소득) 기준 · 매출 아님" : "고지서 기준"}
               icon={<CalendarDays size={16} />}
               value={pensionBaseIncome}
-              min={MAN * 35} max={MAN * 617} step={MAN * 10} unit="만 원"
+              min={MAN * 35} max={MAN * 617} step={MAN * 1} unit="만 원"
               display={val => Math.floor(val / MAN).toLocaleString()}
               parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
               trackColor="bg-navy-500"
@@ -1046,7 +1046,7 @@ export default function InputScreen({
         <div className="animate-fade-in">
           <DualInput
             label="그래서, 얼마로 살고 싶으세요?" sublabel="품격 유지 월 생활비 · 은퇴 후 희망 생활비 (현재 가치)" icon={<Coffee size={16} />}
-            value={v.monthlyExpense} min={MAN * 100} max={MAN * 1000} step={MAN * 10} unit="만 원"
+            value={v.monthlyExpense} min={MAN * 100} max={MAN * 1000} step={MAN * 1} unit="만 원"
             display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
             trackColor="bg-navy-500" onChange={set('monthlyExpense')}
           />
@@ -1274,27 +1274,14 @@ export default function InputScreen({
                     <p className="text-[10px] text-navy-400">환율 헷지 + 비과세</p>
                   </div>
                 </div>
-                <div className="bg-white rounded-xl p-3 border border-blue-100">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-xs text-navy-600 font-medium">월 납입액</p>
-                    <span className="text-lg font-bold text-navy-900">${(v.usdInsuranceMonthlyUSD ?? 0).toLocaleString()} USD</span>
-                  </div>
-                  <p className="text-[10px] text-blue-500 mb-2">≈ {Math.floor((v.usdInsuranceMonthlyUSD ?? 0) * (v.currentExchangeRate ?? 1350) / MAN).toLocaleString()}만원/월</p>
-                  <div className="relative h-1.5">
-                    <div className="absolute inset-0 rounded-full bg-navy-100" />
-                    <div className="absolute h-full rounded-full bg-blue-400 transition-all"
-                      style={{ width: `${Math.min(100, ((v.usdInsuranceMonthlyUSD ?? 0) / 1000) * 100)}%` }} />
-                    <input type="range" min={0} max={1000} step={10} value={v.usdInsuranceMonthlyUSD ?? 0}
-                      onChange={e => setV(prev => ({ ...prev, usdInsuranceMonthlyUSD: Number(e.target.value) }))}
-                      className="absolute inset-0 w-full opacity-0 cursor-pointer" />
-                    <div className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-blue-400 border-2 border-white shadow-md pointer-events-none"
-                      style={{ left: `calc(${Math.min(100, ((v.usdInsuranceMonthlyUSD ?? 0) / 1000) * 100)}% - 8px)` }} />
-                  </div>
-                  <div className="flex justify-between mt-1">
-                    <span className="text-[10px] text-navy-300">$0</span>
-                    <span className="text-[10px] text-navy-300">$1,000</span>
-                  </div>
-                </div>
+                <DualInput label="월 납입액"
+                  sublabel={`≈ ${Math.floor((v.usdInsuranceMonthlyUSD ?? 0) * (v.currentExchangeRate ?? 1350) / MAN).toLocaleString()}만원/월`}
+                  value={v.usdInsuranceMonthlyUSD ?? 0} min={0} max={1000} step={5} unit="USD"
+                  display={val => `$${val.toLocaleString()}`}
+                  parse={s => parseFloat(s.replace(/[^0-9.]/g, ''))}
+                  trackColor="bg-blue-400"
+                  onChange={val => setV(prev => ({ ...prev, usdInsuranceMonthlyUSD: val }))}
+                />
                 <DualInput label="총 납입 기간"
                   value={v.usdInsurancePaymentMonths ?? 120} min={1} max={360} step={1} unit="개월"
                   display={val => `${val}개월 (${Math.floor(val/12)}년 ${val%12}개월)`}
@@ -1354,7 +1341,7 @@ export default function InputScreen({
                     label="월 납입액"
                     sublabel={pension401kAutoSet ? '연봉의 8.3% 자동 계산됨(회사 DC 부담금) · 개인 IRP 추가납입은 직접 늘려주세요' : '직접 입력'}
                     value={v.monthlyPension401k ?? 0}
-                    min={0} max={MAN * 200} step={MAN * 10} unit="만 원"
+                    min={0} max={MAN * 200} step={MAN * 1} unit="만 원"
                     display={val => Math.floor(val / MAN).toLocaleString()}
                     parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
                     trackColor="bg-indigo-500"
@@ -1392,7 +1379,7 @@ export default function InputScreen({
                   <DualInput
                     label="월 납입액"
                     value={v.isaMonthly ?? 0}
-                    min={0} max={MAN * 200} step={MAN * 10} unit="만 원"
+                    min={0} max={MAN * 200} step={MAN * 1} unit="만 원"
                     display={val => Math.floor(val / MAN).toLocaleString()}
                     parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
                     trackColor="bg-emerald-500"

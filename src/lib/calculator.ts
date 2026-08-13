@@ -101,6 +101,8 @@ export interface SimulationResult {
   retirementBalance: number;
   retirementBalanceBank: number;
   retirementBalanceStock: number;
+  retirementBalanceStockOnly: number; // 일반 증권계좌만 (ISA 제외)
+  isaRetirementBalanceNet: number;    // ISA 세후 잔액 (증권 버킷에 합산되는 실제 금액)
   retirementBalanceInsurance: number;
   retirementBalanceInsurance2: number; // 원화 단기납 종신보험 (2번째 버킷) 만기 시점 평가액
   insurancePaymentEndAge2: number;     // 2번째 보험 납입 종료 나이
@@ -497,10 +499,11 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
   const retirementBalanceBank = fv(savingsBank, bankR, yearsToRetirement)
     + fvAnnuity(monthlyBank, bankR, yearsToRetirement)
     + usdToBank + insMaturityToBank + ins2MaturityToBank + severanceToBank;
-  const retirementBalanceStock = fv(savingsStock, stockR, yearsToRetirement)
+  // 일반 증권계좌만 따로 (ISA 제외, ISA 한도 초과 이체분은 포함) — 결과 화면에서 계좌별로 나눠 보여주기 위한 구분
+  const retirementBalanceStockOnly = fv(savingsStock, stockR, yearsToRetirement)
     + fvAnnuity(monthlyStock, stockR, yearsToRetirement)
-    + usdToStock + insMaturityToStock + ins2MaturityToStock
-    + isaRetirementBalanceNet + isaProjection.overflowBalance;
+    + usdToStock + insMaturityToStock + ins2MaturityToStock + isaProjection.overflowBalance;
+  const retirementBalanceStock = retirementBalanceStockOnly + isaRetirementBalanceNet;
   // 연금저축펀드: IRP/401k와 동일하게 별도 버킷에서 축적 후 연금 수령 시 저율(3.3~5.5%) 연금소득세 적용
   const retirementBalancePensionSavings = fv(savingsPensionSavings, pensionSavingsR, yearsToRetirement)
     + fvAnnuity(monthlyPensionSavings, pensionSavingsR, yearsToRetirement);
@@ -858,6 +861,8 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
     retirementBalance,
     retirementBalanceBank,
     retirementBalanceStock,
+    retirementBalanceStockOnly,
+    isaRetirementBalanceNet,
     retirementBalanceInsurance,
     retirementBalanceInsurance2,
     insurancePaymentEndAge2,

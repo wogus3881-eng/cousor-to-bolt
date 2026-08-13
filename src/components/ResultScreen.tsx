@@ -24,7 +24,7 @@ import {
 
 } from 'recharts';
 
-import { ChevronLeft, AlertTriangle, TrendingDown, Lightbulb, Table2, SlidersHorizontal, CalendarDays, BadgeAlert, ShieldAlert, Flame, ChevronRight, Info, Landmark, Shield, TrendingUp, AlertCircle } from 'lucide-react';
+import { ChevronLeft, AlertTriangle, TrendingDown, Lightbulb, Table2, SlidersHorizontal, CalendarDays, BadgeAlert, ShieldAlert, Flame, ChevronRight, Info, Landmark, Shield, TrendingUp, AlertCircle, PiggyBank } from 'lucide-react';
 
 import { simulate, formatKRW, formatMan, DEFAULT_BANK_RATE, DEFAULT_STOCK_RATE, DEFAULT_INS_RATE } from '../lib/calculator';
 
@@ -682,6 +682,14 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pr
 
     retirementBalanceStock,
 
+    retirementBalanceStockOnly,
+
+    isaRetirementBalanceNet,
+
+    retirementBalancePension401k,
+
+    retirementBalancePensionSavings,
+
     retirementBalanceInsurance,
 
     inflationAdjustedMonthlyExpense,
@@ -1125,6 +1133,43 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pr
             </div>
 
           </div>
+
+          {(retirementBalanceStockOnly + isaRetirementBalanceNet + retirementBalancePension401k + retirementBalancePensionSavings) > 0 && (
+            <div className="col-span-2 rounded-2xl p-4 bg-white border border-navy-100">
+              <p className="text-[11px] font-semibold text-navy-500 mb-3">계좌별 적립 현황</p>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-slate-50 rounded-xl p-2.5">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <TrendingUp size={12} className="text-blue-400" />
+                    <p className="text-[10px] text-slate-400">일반 증권계좌</p>
+                  </div>
+                  <p className="text-xs font-bold text-slate-700">{formatKRW(retirementBalanceStockOnly, true)}</p>
+                </div>
+                <div className="bg-slate-50 rounded-xl p-2.5">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <PiggyBank size={12} className="text-teal-500" />
+                    <p className="text-[10px] text-slate-400">ISA 계좌</p>
+                  </div>
+                  <p className="text-xs font-bold text-slate-700">{formatKRW(isaRetirementBalanceNet, true)}</p>
+                </div>
+                <div className="bg-slate-50 rounded-xl p-2.5">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Landmark size={12} className="text-indigo-500" />
+                    <p className="text-[10px] text-slate-400">IRP (퇴직연금)</p>
+                  </div>
+                  <p className="text-xs font-bold text-slate-700">{formatKRW(retirementBalancePension401k, true)}</p>
+                </div>
+                <div className="bg-slate-50 rounded-xl p-2.5">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <CalendarDays size={12} className="text-amber-500" />
+                    <p className="text-[10px] text-slate-400">연금저축펀드</p>
+                  </div>
+                  <p className="text-xs font-bold text-slate-700">{formatKRW(retirementBalancePensionSavings, true)}</p>
+                </div>
+              </div>
+              <p className="text-[9px] text-navy-400 mt-2">※ 위 '은퇴 시점 예상 자산' 합계에는 IRP·연금저축펀드가 포함되지 않아요 — 각각 은퇴 후 연금으로 별도 수령됩니다.</p>
+            </div>
+          )}
 
           <StatCard
 
