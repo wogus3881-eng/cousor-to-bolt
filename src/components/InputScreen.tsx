@@ -673,7 +673,6 @@ const DEFAULT_INPUTS: SimulatorInputs = {
   usdInsuranceRate: 4.0,
   usdInsuranceSurrenderRate: 125,
   currentExchangeRate: 1350,
-  usdInsuranceMaturityExchangeRate: 1400,
   usdInsuranceMaturityReinvest: 'stock' as const,
   lifeEvents: [] as Array<{ age: number; amount: number; label: string; source: 'bank' | 'stock' | 'insurance' | 'auto' }>,
   insuranceMaturityReinvest: 'keep' as const,
@@ -721,9 +720,7 @@ export default function InputScreen({
       .then(data => {
         const krw = Math.round(data.usd.krw);
         if (krw > 1000 && krw < 2500) {
-          setV(prev => ({ ...prev, currentExchangeRate: krw,
-            usdInsuranceMaturityExchangeRate: prev.usdInsuranceMaturityExchangeRate === 1400
-              ? Math.round(krw * 1.05) : prev.usdInsuranceMaturityExchangeRate }));
+          setV(prev => ({ ...prev, currentExchangeRate: krw }));
         }
       }).catch(() => {});
   }, []);
@@ -1321,21 +1318,11 @@ export default function InputScreen({
                   onChange={val => setV(prev => ({ ...prev, usdInsuranceSurrenderRate: val }))}
                   tooltip="상품마다 다른 값이에요(보통 125~131% 수준). 가입설계서의 '10년 시점 해지환급률'을 확인해서 입력하세요. 은퇴가 가입 후 10년 이전이면 이 환급률 대신 그때까지 낸 원금만 반영돼요."
                 />
-                <div className="bg-white rounded-xl p-3 border border-blue-100 flex flex-col gap-2">
-                  <p className="text-[10px] font-bold text-blue-800">환율 설정</p>
-                  <DualInput label="현재 환율"
-                    value={v.currentExchangeRate ?? 1350} min={1000} max={2000} step={10} unit="원/달러"
-                    display={val => val.toLocaleString()} parse={s => parseFloat(s.replace(/,/g, ''))}
-                    trackColor="bg-blue-400"
-                    onChange={val => setV(prev => ({ ...prev, currentExchangeRate: val }))}
-                  />
-                  <DualInput label="만기 예상 환율"
-                    value={v.usdInsuranceMaturityExchangeRate ?? 1400} min={1000} max={2500} step={10} unit="원/달러"
-                    display={val => val.toLocaleString()} parse={s => parseFloat(s.replace(/,/g, ''))}
-                    trackColor="bg-blue-600"
-                    onChange={val => setV(prev => ({ ...prev, usdInsuranceMaturityExchangeRate: val }))}
-                  />
+                <div className="bg-white rounded-xl p-3 border border-blue-100 flex items-center justify-between">
+                  <p className="text-[10px] text-blue-800">적용 환율 (실시간)</p>
+                  <p className="text-xs font-bold text-navy-900">{(v.currentExchangeRate ?? 1350).toLocaleString()}원/달러</p>
                 </div>
+                <p className="text-[10px] text-navy-400 -mt-1 px-1">미래 환율은 예측할 수 없어 상승·하락을 가정하지 않고 현재 환율을 만기 시점까지 그대로 적용해요.</p>
                 <div className="bg-white rounded-xl border border-blue-100 p-3">
                   <p className="text-[10px] font-bold text-navy-800 mb-2">만기 환급금 활용</p>
                   <div className="flex gap-2">

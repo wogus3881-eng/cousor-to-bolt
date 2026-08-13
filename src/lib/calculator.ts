@@ -37,7 +37,6 @@ export interface SimulatorInputs {
   /** 10년 시점 환급률(%). 상품마다 다름(125~131% 등). 공시이율 복리 대신 이 값으로 만기가치를 계산 */
   usdInsuranceSurrenderRate?: number;
   currentExchangeRate?: number;
-  usdInsuranceMaturityExchangeRate?: number;
   usdInsuranceMaturityReinvest?: 'stock' | 'bank' | 'keep';
   lifeEvents?: Array<{ age: number; amount: number; label: string; source: 'bank' | 'stock' | 'insurance' | 'auto' }>;
   insuranceMaturityReinvest?: 'stock' | 'bank' | 'keep';
@@ -341,7 +340,6 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
     usdInsuranceRate: inputs.usdInsuranceRate ?? 4.0,
     usdInsuranceSurrenderRate: inputs.usdInsuranceSurrenderRate ?? 125,
     currentExchangeRate: inputs.currentExchangeRate ?? 1350,
-    usdInsuranceMaturityExchangeRate: inputs.usdInsuranceMaturityExchangeRate ?? 1400,
     usdInsuranceMaturityReinvest: inputs.usdInsuranceMaturityReinvest ?? 'stock',
     lifeEvents: inputs.lifeEvents ?? [],
     insuranceMaturityReinvest: inputs.insuranceMaturityReinvest ?? 'keep',
@@ -416,7 +414,8 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
   const savingsPensionSavings = norm.savingsPensionSavings ?? 0;
   const monthlyPensionSavings = norm.monthlyPensionSavings ?? 0;
   const pensionSavingsR = (norm.pensionSavingsRate ?? DEFAULT_STOCK_RATE) / 100;
-  const maturityExRate = norm.usdInsuranceMaturityExchangeRate ?? 1400;
+  // 미래 환율은 예측할 수 없으므로 상승/하락을 가정하지 않고 현재 환율을 그대로 적용
+  const currentExRate = norm.currentExchangeRate ?? 1350;
   const usdMonthlyUSD = norm.usdInsuranceMonthlyUSD ?? 0;
   const usdTotalPaymentMonths = norm.usdInsurancePaymentMonths ?? 120;
   const usdElapsedMonths = Math.min(Math.max(0, norm.usdInsuranceElapsedMonths ?? 0), usdTotalPaymentMonths);
@@ -429,7 +428,7 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
   const usdValueAtRetirementUSD = usdPolicyAgeAtRetirementMonths >= 120
     ? usdTotalPremiumsUSD * (usdSurrenderRatePct / 100)
     : usdMonthlyUSD * Math.min(usdTotalPaymentMonths, usdPolicyAgeAtRetirementMonths);
-  const usdInsRetirementKRW = usdValueAtRetirementUSD * maturityExRate;
+  const usdInsRetirementKRW = usdValueAtRetirementUSD * currentExRate;
   const usdToStock = usdReinvest === 'stock' ? usdInsRetirementKRW : 0;
   const usdToBank = usdReinvest === 'bank' ? usdInsRetirementKRW : 0;
 
