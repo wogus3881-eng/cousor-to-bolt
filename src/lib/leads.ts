@@ -24,3 +24,11 @@ export async function getMyLeads(): Promise<Lead[]> {
   if (error) return [];
   return data ?? [];
 }
+
+/** 본인 리드 1건 삭제. RLS 정책이 본인 것만 삭제되도록 서버에서 걸러줍니다. */
+export async function deleteLead(id: string): Promise<{ error: string | null }> {
+  if (!supabase) return { error: '연결 오류가 발생했어요.' };
+  const { error } = await supabase.from('consultations').delete().eq('id', id);
+  if (error) return { error: error.message };
+  return { error: null };
+}

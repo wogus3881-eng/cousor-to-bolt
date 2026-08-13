@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Copy, Users, Camera } from 'lucide-react';
+import { Copy, Users, Camera, Search, Trash2 } from 'lucide-react';
 import { getCurrentUser, getMyReferralStats, type ReferralStats } from '../lib/auth';
-import { getMyLeads, type Lead } from '../lib/leads';
+import { getMyLeads, deleteLead, type Lead } from '../lib/leads';
 import { getMyAgentProfile, updateMyAgentProfile, uploadAgentPhoto } from '../lib/agentProfile';
 import { PRO_TIER_META } from '../lib/proTier';
 import LoginScreen from '../components/LoginScreen';
@@ -19,6 +19,8 @@ export default function MyLeadsPage() {
   const [stats, setStats] = useState<ReferralStats | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [copied, setCopied] = useState(false);
+  const [leadQuery, setLeadQuery] = useState('');
+  const [deletingLeadId, setDeletingLeadId] = useState<string | null>(null);
 
   const [userId, setUserId] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -133,6 +135,25 @@ export default function MyLeadsPage() {
     setTimeout(() => setCopied(false), 2000);
   }
 
+  const leadQueryTrimmed = leadQuery.trim();
+  const filteredLeads = !leadQueryTrimmed
+    ? leads
+    : leads.filter((l) =>
+        l.name.includes(leadQueryTrimmed) || l.phone.includes(leadQueryTrimmed) || (l.location ?? '').includes(leadQueryTrimmed)
+      );
+
+  async function handleDeleteLead(id: string) {
+    if (!window.confirm('이 리드를 삭제할까요? 삭제하면 되돌릴 수 없어요.')) return;
+    setDeletingLeadId(id);
+    const { error } = await deleteLead(id);
+    setDeletingLeadId(null);
+    if (error) {
+      window.alert(error);
+      return;
+    }
+    setLeads((prev) => prev.filter((l) => l.id !== id));
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 px-6 py-10">
       <div className="mx-auto max-w-sm">
@@ -226,17 +247,42 @@ export default function MyLeadsPage() {
 
         <div className="rounded-2xl border border-navy-100 bg-white p-5 shadow-sm">
           <p className="text-[13px] font-bold text-navy-900 mb-3">받은 리드 ({leads.length}건)</p>
+          {leads.length > 0 && (
+            <div className="mb-3 flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+              <Search size={14} className="shrink-0 text-slate-400" />
+              <input
+                type="text"
+                value={leadQuery}
+                onChange={(e) => setLeadQuery(e.target.value)}
+                placeholder="이름·전화번호·지역으로 검색"
+                className="w-full bg-transparent text-[12px] outline-none placeholder:text-slate-400"
+              />
+            </div>
+          )}
           {leads.length === 0 ? (
             <p className="text-[12px] text-slate-400">아직 신청한 고객이 없어요. 링크를 공유해 보세요.</p>
+          ) : filteredLeads.length === 0 ? (
+            <p className="text-[12px] text-slate-400">검색 결과가 없어요.</p>
           ) : (
             <div className="space-y-2">
-              {leads.map((l) => (
+              {filteredLeads.map((l) => (
                 <div key={l.id} className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                  <div className="mb-1 flex items-center justify-between">
+                  <div className="mb-1 flex items-center justify-between gap-2">
                     <p className="text-[13px] font-bold text-navy-900">{l.name}</p>
-                    <p className="text-[10px] text-slate-400">
-                      {new Date(l.created_at).toLocaleDateString('ko-KR')}
-                    </p>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <p className="text-[10px] text-slate-400">
+                        {new Date(l.created_at).toLocaleDateString('ko-KR')}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteLead(l.id)}
+                        disabled={deletingLeadId === l.id}
+                        aria-label="리드 삭제"
+                        className="rounded-lg p-1 text-slate-300 hover:bg-red-50 hover:text-red-500 disabled:opacity-50"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
                   </div>
                   <p className="text-[11px] text-slate-500">
                     {l.phone} · 희망시간 {l.preferred_time}
