@@ -213,6 +213,8 @@ function CompactSlider({
 
   label, value, min, max, step, display, track, thumb, onChange,
 
+  parse, decimalPlaces = 0, editSeed,
+
 }: {
 
   label: string; value: number; min: number; max: number; step: number;
@@ -221,9 +223,41 @@ function CompactSlider({
 
   onChange: (v: number) => void;
 
+  parse: (s: string) => number;
+
+  decimalPlaces?: number;
+
+  editSeed?: (v: number) => string;
+
 }) {
 
   const pct = Math.min(100, Math.max(0, ((value - min) / (max - min)) * 100));
+
+  const [editing, setEditing] = useState(false);
+
+  const [raw, setRaw] = useState('');
+
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function commitRaw(s: string) {
+
+    const parsed = parse(s);
+
+    if (!isNaN(parsed) && parsed >= min) onChange(parsed);
+
+    setEditing(false);
+
+  }
+
+  function startEditing() {
+
+    setRaw(editSeed ? editSeed(value) : (decimalPlaces > 0 ? value.toFixed(decimalPlaces) : display(value).replace(/[^0-9.]/g, '')));
+
+    setEditing(true);
+
+    setTimeout(() => inputRef.current?.select(), 0);
+
+  }
 
   return (
 
@@ -233,7 +267,39 @@ function CompactSlider({
 
         <span className="text-[10px] text-slate-500">{label}</span>
 
-        <span className="text-[11px] font-bold text-slate-800">{display(value)}</span>
+        {editing ? (
+
+          <input
+
+            ref={inputRef}
+
+            autoFocus
+
+            type="number"
+
+            step={decimalPlaces > 0 ? Math.pow(0.1, decimalPlaces) : 1}
+
+            className="w-20 text-right text-[11px] font-bold text-slate-800 border-b border-slate-400 outline-none bg-transparent"
+
+            value={raw}
+
+            onChange={(e) => setRaw(e.target.value)}
+
+            onBlur={(e) => commitRaw(e.target.value)}
+
+            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+
+          />
+
+        ) : (
+
+          <button type="button" className="text-[11px] font-bold text-slate-800 hover:text-navy-600 transition-colors" onClick={startEditing}>
+
+            {display(value)}
+
+          </button>
+
+        )}
 
       </div>
 
@@ -302,6 +368,12 @@ function LivePensionSlider({
   } = inputs;
 
 
+
+  const [editingPensionYears, setEditingPensionYears] = useState(false);
+
+  const [pensionYearsRaw, setPensionYearsRaw] = useState('');
+
+  const pensionYearsInputRef = useRef<HTMLInputElement>(null);
 
   const bankR = bankRate ?? DEFAULT_BANK_RATE;
 
@@ -373,11 +445,53 @@ function LivePensionSlider({
 
             </div>
 
-            <div>
+            <div className="flex items-center gap-1.5">
 
-              <span className="text-sm font-extrabold text-slate-900">{pensionYears}년</span>
+              {editingPensionYears ? (
 
-              <span className={`ml-1.5 text-[10px] font-bold ${tier.color}`}>{tier.label}</span>
+                <input
+
+                  ref={pensionYearsInputRef}
+
+                  autoFocus
+
+                  type="number"
+
+                  step={1}
+
+                  className="w-12 text-right text-sm font-extrabold text-slate-900 border-b border-slate-400 outline-none bg-transparent"
+
+                  value={pensionYearsRaw}
+
+                  onChange={(e) => setPensionYearsRaw(e.target.value)}
+
+                  onBlur={(e) => {
+
+                    const parsed = Math.round(Number(e.target.value));
+
+                    if (!isNaN(parsed)) onChange({ ...inputs, pensionYears: Math.min(40, Math.max(10, parsed)) });
+
+                    setEditingPensionYears(false);
+
+                  }}
+
+                  onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+
+                />
+
+              ) : (
+
+                <button type="button" className="text-sm font-extrabold text-slate-900 hover:text-navy-600 transition-colors"
+
+                  onClick={() => { setPensionYearsRaw(String(pensionYears)); setEditingPensionYears(true); setTimeout(() => pensionYearsInputRef.current?.select(), 0); }}>
+
+                  {pensionYears}년
+
+                </button>
+
+              )}
+
+              <span className={`text-[10px] font-bold ${tier.color}`}>{tier.label}</span>
 
             </div>
 
@@ -429,6 +543,8 @@ function LivePensionSlider({
 
               display={(v) => `${Math.floor(v / MAN_R)}만 원`}
 
+              parse={(s) => parseFloat(s.replace(/,/g, '')) * MAN_R}
+
               track="bg-slate-500" thumb="bg-slate-600"
 
               onChange={(v) => onChange({ ...inputs, monthlyBank: v })} />
@@ -438,6 +554,10 @@ function LivePensionSlider({
               value={bankR} min={0.5} max={15} step={0.5}
 
               display={(v) => `${v.toFixed(1)}%`}
+
+              parse={(s) => parseFloat(s)}
+
+              decimalPlaces={1}
 
               track="bg-slate-400" thumb="bg-slate-500"
 
@@ -471,6 +591,8 @@ function LivePensionSlider({
 
               display={(v) => `${Math.floor(v / MAN_R)}만 원`}
 
+              parse={(s) => parseFloat(s.replace(/,/g, '')) * MAN_R}
+
               track="bg-red-500" thumb="bg-red-600"
 
               onChange={(v) => onChange({ ...inputs, monthlyStock: v })} />
@@ -480,6 +602,10 @@ function LivePensionSlider({
               value={stockR} min={0.5} max={15} step={0.5}
 
               display={(v) => `${v.toFixed(1)}%`}
+
+              parse={(s) => parseFloat(s)}
+
+              decimalPlaces={1}
 
               track="bg-red-400" thumb="bg-red-500"
 
@@ -533,6 +659,8 @@ function LivePensionSlider({
 
               display={(v) => `${Math.floor(v / MAN_R)}만 원`}
 
+              parse={(s) => parseFloat(s.replace(/,/g, '')) * MAN_R}
+
               track="bg-amber-500" thumb="bg-amber-600"
 
               onChange={(v) => onChange({ ...inputs, monthlyInsurance: v })} />
@@ -543,6 +671,10 @@ function LivePensionSlider({
 
               display={(v) => `${v.toFixed(1)}%`}
 
+              parse={(s) => parseFloat(s)}
+
+              decimalPlaces={1}
+
               track="bg-amber-400" thumb="bg-amber-500"
 
               onChange={(v) => onChange({ ...inputs, insuranceRate: v })} />
@@ -552,6 +684,10 @@ function LivePensionSlider({
               value={inputs.insurancePaymentYears ?? 120} min={1} max={240} step={1}
 
               display={(v) => `${v}개월 (${Math.floor(v/12)}년 ${v%12 > 0 ? v%12 + '개월' : ''})`}
+
+              parse={(s) => parseFloat(s)}
+
+              editSeed={(v) => String(v)}
 
               track="bg-amber-300" thumb="bg-amber-500"
 
@@ -605,6 +741,8 @@ function LivePensionSlider({
 
               display={(v) => `${Math.floor(v / MAN_R)}만 원`}
 
+              parse={(s) => parseFloat(s.replace(/,/g, '')) * MAN_R}
+
               track="bg-indigo-500" thumb="bg-indigo-600"
 
               onChange={(v) => onChange({ ...inputs, monthlyPension401k: v })} />
@@ -614,6 +752,10 @@ function LivePensionSlider({
               value={pension401kR} min={0.5} max={15} step={0.5}
 
               display={(v) => `${v.toFixed(1)}%`}
+
+              parse={(s) => parseFloat(s)}
+
+              decimalPlaces={1}
 
               track="bg-indigo-400" thumb="bg-indigo-500"
 
@@ -647,6 +789,8 @@ function LivePensionSlider({
 
               display={(v) => `${Math.floor(v / MAN_R)}만 원`}
 
+              parse={(s) => parseFloat(s.replace(/,/g, '')) * MAN_R}
+
               track="bg-teal-500" thumb="bg-teal-600"
 
               onChange={(v) => onChange({ ...inputs, isaMonthly: v })} />
@@ -656,6 +800,10 @@ function LivePensionSlider({
               value={isaR} min={0.5} max={15} step={0.5}
 
               display={(v) => `${v.toFixed(1)}%`}
+
+              parse={(s) => parseFloat(s)}
+
+              decimalPlaces={1}
 
               track="bg-teal-400" thumb="bg-teal-500"
 
@@ -689,6 +837,8 @@ function LivePensionSlider({
 
               display={(v) => `${Math.floor(v / MAN_R)}만 원`}
 
+              parse={(s) => parseFloat(s.replace(/,/g, '')) * MAN_R}
+
               track="bg-amber-500" thumb="bg-amber-600"
 
               onChange={(v) => onChange({ ...inputs, monthlyPensionSavings: v })} />
@@ -698,6 +848,10 @@ function LivePensionSlider({
               value={pensionSavingsR} min={0.5} max={15} step={0.5}
 
               display={(v) => `${v.toFixed(1)}%`}
+
+              parse={(s) => parseFloat(s)}
+
+              decimalPlaces={1}
 
               track="bg-amber-400" thumb="bg-amber-500"
 
