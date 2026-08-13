@@ -466,6 +466,7 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
 
   const ACTIVE_END_AGE = activeEndAge ?? 78;
   const INACTIVE_EXPENSE_RATIO = 0.75;
+  const INACTIVE_TAPER_YEARS = 4; // 활동기 종료 후 이 기간에 걸쳐 생활비를 75% 수준까지 점진적으로 낮춤(하루아침 컷 방지)
   const MEDICAL_START_AGE = 80;
   const MEDICAL_COST = medicalCostEnabled ? (monthlyMedicalCost ?? 400000) : 0;
   const yearsToRetirement = Math.max(0, retirementAge - currentAge);
@@ -738,10 +739,15 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
     if (isActivePhase) {
       baseMonthlyLiving = inflationAdjustedMonthlyExpense * Math.pow(1 + INFLATION, yearsIntoRetirement);
     } else {
+      // 활동기 종료 즉시 75%로 뚝 떨어지면(계단식) 고정 연금·연금화 소득이 갑자기
+      // 줄어든 생활비를 넘어서면서 자산이 감소하다 순간적으로 늘어나는 부자연스러운
+      // 그래프가 나올 수 있어, INACTIVE_TAPER_YEARS에 걸쳐 점진적으로 낮춥니다.
       const yearsIntoInactive = age - ACTIVE_END_AGE;
+      const taperProgress = Math.min(1, yearsIntoInactive / INACTIVE_TAPER_YEARS);
+      const ratio = 1 - taperProgress * (1 - INACTIVE_EXPENSE_RATIO);
       const expAtTransition = inflationAdjustedMonthlyExpense
         * Math.pow(1 + INFLATION, ACTIVE_END_AGE - retirementAge);
-      baseMonthlyLiving = expAtTransition * INACTIVE_EXPENSE_RATIO
+      baseMonthlyLiving = expAtTransition * ratio
         * Math.pow(1 + INFLATION, yearsIntoInactive);
     }
 
