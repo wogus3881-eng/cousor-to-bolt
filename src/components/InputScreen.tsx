@@ -1182,30 +1182,20 @@ export default function InputScreen({
 
               <BucketCard theme={BANK_THEME} amount={v.monthlyBank} rate={v.bankRate} onAmountChange={set('monthlyBank')} onRateChange={set('bankRate')} />
               <BucketCard theme={STOCK_THEME} amount={v.monthlyStock} rate={v.stockRate} onAmountChange={set('monthlyStock')} onRateChange={set('stockRate')} />
+
+              {/* ── 보험 그룹: 원화 저축성 보험 · 원화 단기납 종신보험 · 달러 종신보험 ── */}
+              <div className="flex items-center gap-2 px-1 pt-2">
+                <span className="text-base">🛡️</span>
+                <p className="text-sm font-bold text-navy-800">보험</p>
+              </div>
+
               <BucketCard theme={INS_THEME} amount={v.monthlyInsurance} rate={v.insuranceRate} onAmountChange={set('monthlyInsurance')} onRateChange={set('insuranceRate')} paymentYears={v.insurancePaymentYears ?? 10} onPaymentYearsChange={set('insurancePaymentYears')} elapsedMonths={v.insuranceElapsedMonths ?? 0} onElapsedMonthsChange={set('insuranceElapsedMonths')} />
 
-              {/* 만기 환급금 재투자 전략 - BucketCard 외부 */}
+              {/* 저축성 연금보험은 성격상 만기환급금을 종신연금으로 유지하는 게 기본 — 선택 버튼 없이 고정 */}
               {(v.monthlyInsurance ?? 0) > 0 && (
                 <div className="bg-white rounded-xl border border-navy-100 p-3 -mt-1">
-                  <p className="text-[10px] font-bold text-navy-800 mb-2">만기 환급금 활용 전략</p>
-                  <div className="flex gap-1.5">
-                    {([
-                      { key: 'keep' as const, label: '종신연금 유지', desc: '평생 월 지급' },
-                      { key: 'stock' as const, label: '증권 재투자', desc: `${(v.stockRate ?? 5).toFixed(1)}% 운용` },
-                      { key: 'bank' as const, label: '은행 이체', desc: '2.5% 안전' },
-                    ]).map(opt => (
-                      <button key={opt.key}
-                        type="button"
-                        onClick={() => setV(prev => ({ ...prev, insuranceMaturityReinvest: opt.key }))}
-                        className={`flex-1 py-2 rounded-lg text-[9px] font-bold transition-colors text-center
-                          ${(v.insuranceMaturityReinvest ?? 'keep') === opt.key
-                            ? 'bg-navy-800 text-white'
-                            : 'bg-slate-50 text-navy-600 border border-slate-200'}`}>
-                        <p>{opt.label}</p>
-                        <p className="font-normal opacity-70 mt-0.5">{opt.desc}</p>
-                      </button>
-                    ))}
-                  </div>
+                  <p className="text-[10px] font-bold text-navy-800">만기환급금 종신연금 유지 · 평생 월 지급</p>
+                  <p className="text-[10px] text-navy-400 mt-0.5">저축성 연금보험은 만기 후 종신연금으로 수령하는 구조라 재투자 선택지가 없어요.</p>
                 </div>
               )}
 
@@ -1273,6 +1263,94 @@ export default function InputScreen({
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* 달러 종신보험 월납입 */}
+              <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">💵</span>
+                  <div>
+                    <p className="text-sm font-bold text-navy-800">달러 종신보험</p>
+                    <p className="text-[10px] text-navy-400">환율 헷지 + 비과세</p>
+                  </div>
+                </div>
+                <div className="bg-white rounded-xl p-3 border border-blue-100">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-xs text-navy-600 font-medium">월 납입액</p>
+                    <span className="text-lg font-bold text-navy-900">${(v.usdInsuranceMonthlyUSD ?? 0).toLocaleString()} USD</span>
+                  </div>
+                  <p className="text-[10px] text-blue-500 mb-2">≈ {Math.floor((v.usdInsuranceMonthlyUSD ?? 0) * (v.currentExchangeRate ?? 1350) / MAN).toLocaleString()}만원/월</p>
+                  <div className="relative h-1.5">
+                    <div className="absolute inset-0 rounded-full bg-navy-100" />
+                    <div className="absolute h-full rounded-full bg-blue-400 transition-all"
+                      style={{ width: `${Math.min(100, ((v.usdInsuranceMonthlyUSD ?? 0) / 1000) * 100)}%` }} />
+                    <input type="range" min={0} max={1000} step={10} value={v.usdInsuranceMonthlyUSD ?? 0}
+                      onChange={e => setV(prev => ({ ...prev, usdInsuranceMonthlyUSD: Number(e.target.value) }))}
+                      className="absolute inset-0 w-full opacity-0 cursor-pointer" />
+                    <div className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-blue-400 border-2 border-white shadow-md pointer-events-none"
+                      style={{ left: `calc(${Math.min(100, ((v.usdInsuranceMonthlyUSD ?? 0) / 1000) * 100)}% - 8px)` }} />
+                  </div>
+                  <div className="flex justify-between mt-1">
+                    <span className="text-[10px] text-navy-300">$0</span>
+                    <span className="text-[10px] text-navy-300">$1,000</span>
+                  </div>
+                </div>
+                <DualInput label="총 납입 기간"
+                  value={v.usdInsurancePaymentMonths ?? 120} min={1} max={360} step={1} unit="개월"
+                  display={val => `${val}개월 (${Math.floor(val/12)}년 ${val%12}개월)`}
+                  parse={s => parseInt(s.replace(/[^0-9]/g, ''))}
+                  trackColor="bg-blue-400"
+                  onChange={val => setV(prev => ({ ...prev, usdInsurancePaymentMonths: val }))}
+                />
+                <DualInput label="이미 납입한 기간"
+                  value={Math.min(v.usdInsuranceElapsedMonths ?? 0, v.usdInsurancePaymentMonths ?? 120)}
+                  min={0} max={v.usdInsurancePaymentMonths ?? 120} step={1} unit="개월"
+                  display={val => `${val}개월 (${Math.floor(val/12)}년 ${val%12}개월)`}
+                  parse={s => parseInt(s.replace(/[^0-9]/g, ''))}
+                  trackColor="bg-blue-400"
+                  onChange={val => setV(prev => ({ ...prev, usdInsuranceElapsedMonths: val }))}
+                  tooltip="이미 몇 개월 납입해오셨는지 입력하면, 그 기간 동안 공시이율로 쌓인 현재가치를 자동으로 계산해서 반영해요. 남은 기간만 앞으로 더 납입하는 걸로 시뮬레이션합니다."
+                />
+                <DualInput label="공시이율"
+                  value={v.usdInsuranceRate ?? 4.0} min={1.0} max={8.0} step={0.1} unit="%"
+                  display={val => val.toFixed(1)} parse={parseFloat}
+                  trackColor="bg-blue-400" decimalPlaces={1}
+                  onChange={val => setV(prev => ({ ...prev, usdInsuranceRate: val }))}
+                />
+                <div className="bg-white rounded-xl p-3 border border-blue-100 flex flex-col gap-2">
+                  <p className="text-[10px] font-bold text-blue-800">환율 설정</p>
+                  <DualInput label="현재 환율"
+                    value={v.currentExchangeRate ?? 1350} min={1000} max={2000} step={10} unit="원/달러"
+                    display={val => val.toLocaleString()} parse={s => parseFloat(s.replace(/,/g, ''))}
+                    trackColor="bg-blue-400"
+                    onChange={val => setV(prev => ({ ...prev, currentExchangeRate: val }))}
+                  />
+                  <DualInput label="만기 예상 환율"
+                    value={v.usdInsuranceMaturityExchangeRate ?? 1400} min={1000} max={2500} step={10} unit="원/달러"
+                    display={val => val.toLocaleString()} parse={s => parseFloat(s.replace(/,/g, ''))}
+                    trackColor="bg-blue-600"
+                    onChange={val => setV(prev => ({ ...prev, usdInsuranceMaturityExchangeRate: val }))}
+                  />
+                </div>
+                <div className="bg-white rounded-xl border border-blue-100 p-3">
+                  <p className="text-[10px] font-bold text-navy-800 mb-2">만기 환급금 활용</p>
+                  <div className="flex gap-2">
+                    {(['stock', 'bank', 'keep'] as const).map(opt => (
+                      <button key={opt}
+                        onClick={() => setV(prev => ({ ...prev, usdInsuranceMaturityReinvest: opt }))}
+                        className={`flex-1 text-[10px] py-1.5 rounded-lg font-bold transition-colors
+                          ${(v.usdInsuranceMaturityReinvest ?? 'stock') === opt ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700 border border-blue-200'}`}>
+                        {opt === 'stock' ? '증권 재투자' : opt === 'bank' ? '은행 이체' : '보험 유지'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* ── 연금·절세계좌 그룹: 퇴직연금 · ISA · 연금저축펀드 ── */}
+              <div className="flex items-center gap-2 px-1 pt-2">
+                <span className="text-base">🏦</span>
+                <p className="text-sm font-bold text-navy-800">연금·절세계좌</p>
               </div>
 
               {features.pension401kBucket && !isSelfEmployed && (
@@ -1366,88 +1444,6 @@ export default function InputScreen({
                   display={val => val.toFixed(1)} parse={parseFloat}
                   trackColor="bg-yellow-400" decimalPlaces={1} onChange={set('pensionSavingsRate')}
                 />
-              </div>
-
-              {/* 달러 종신보험 월납입 */}
-              <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 flex flex-col gap-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-base">💵</span>
-                  <div>
-                    <p className="text-sm font-bold text-navy-800">달러 종신보험</p>
-                    <p className="text-[10px] text-navy-400">환율 헷지 + 비과세</p>
-                  </div>
-                </div>
-                <div className="bg-white rounded-xl p-3 border border-blue-100">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-xs text-navy-600 font-medium">월 납입액</p>
-                    <span className="text-lg font-bold text-navy-900">${(v.usdInsuranceMonthlyUSD ?? 0).toLocaleString()} USD</span>
-                  </div>
-                  <p className="text-[10px] text-blue-500 mb-2">≈ {Math.floor((v.usdInsuranceMonthlyUSD ?? 0) * (v.currentExchangeRate ?? 1350) / MAN).toLocaleString()}만원/월</p>
-                  <div className="relative h-1.5">
-                    <div className="absolute inset-0 rounded-full bg-navy-100" />
-                    <div className="absolute h-full rounded-full bg-blue-400 transition-all"
-                      style={{ width: `${Math.min(100, ((v.usdInsuranceMonthlyUSD ?? 0) / 1000) * 100)}%` }} />
-                    <input type="range" min={0} max={1000} step={10} value={v.usdInsuranceMonthlyUSD ?? 0}
-                      onChange={e => setV(prev => ({ ...prev, usdInsuranceMonthlyUSD: Number(e.target.value) }))}
-                      className="absolute inset-0 w-full opacity-0 cursor-pointer" />
-                    <div className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-blue-400 border-2 border-white shadow-md pointer-events-none"
-                      style={{ left: `calc(${Math.min(100, ((v.usdInsuranceMonthlyUSD ?? 0) / 1000) * 100)}% - 8px)` }} />
-                  </div>
-                  <div className="flex justify-between mt-1">
-                    <span className="text-[10px] text-navy-300">$0</span>
-                    <span className="text-[10px] text-navy-300">$1,000</span>
-                  </div>
-                </div>
-                <DualInput label="총 납입 기간"
-                  value={v.usdInsurancePaymentMonths ?? 120} min={1} max={360} step={1} unit="개월"
-                  display={val => `${val}개월 (${Math.floor(val/12)}년 ${val%12}개월)`}
-                  parse={s => parseInt(s.replace(/[^0-9]/g, ''))}
-                  trackColor="bg-blue-400"
-                  onChange={val => setV(prev => ({ ...prev, usdInsurancePaymentMonths: val }))}
-                />
-                <DualInput label="이미 납입한 기간"
-                  value={Math.min(v.usdInsuranceElapsedMonths ?? 0, v.usdInsurancePaymentMonths ?? 120)}
-                  min={0} max={v.usdInsurancePaymentMonths ?? 120} step={1} unit="개월"
-                  display={val => `${val}개월 (${Math.floor(val/12)}년 ${val%12}개월)`}
-                  parse={s => parseInt(s.replace(/[^0-9]/g, ''))}
-                  trackColor="bg-blue-400"
-                  onChange={val => setV(prev => ({ ...prev, usdInsuranceElapsedMonths: val }))}
-                  tooltip="이미 몇 개월 납입해오셨는지 입력하면, 그 기간 동안 공시이율로 쌓인 현재가치를 자동으로 계산해서 반영해요. 남은 기간만 앞으로 더 납입하는 걸로 시뮬레이션합니다."
-                />
-                <DualInput label="공시이율"
-                  value={v.usdInsuranceRate ?? 4.0} min={1.0} max={8.0} step={0.1} unit="%"
-                  display={val => val.toFixed(1)} parse={parseFloat}
-                  trackColor="bg-blue-400" decimalPlaces={1}
-                  onChange={val => setV(prev => ({ ...prev, usdInsuranceRate: val }))}
-                />
-                <div className="bg-white rounded-xl p-3 border border-blue-100 flex flex-col gap-2">
-                  <p className="text-[10px] font-bold text-blue-800">환율 설정</p>
-                  <DualInput label="현재 환율"
-                    value={v.currentExchangeRate ?? 1350} min={1000} max={2000} step={10} unit="원/달러"
-                    display={val => val.toLocaleString()} parse={s => parseFloat(s.replace(/,/g, ''))}
-                    trackColor="bg-blue-400"
-                    onChange={val => setV(prev => ({ ...prev, currentExchangeRate: val }))}
-                  />
-                  <DualInput label="만기 예상 환율"
-                    value={v.usdInsuranceMaturityExchangeRate ?? 1400} min={1000} max={2500} step={10} unit="원/달러"
-                    display={val => val.toLocaleString()} parse={s => parseFloat(s.replace(/,/g, ''))}
-                    trackColor="bg-blue-600"
-                    onChange={val => setV(prev => ({ ...prev, usdInsuranceMaturityExchangeRate: val }))}
-                  />
-                </div>
-                <div className="bg-white rounded-xl border border-blue-100 p-3">
-                  <p className="text-[10px] font-bold text-navy-800 mb-2">만기 환급금 활용</p>
-                  <div className="flex gap-2">
-                    {(['stock', 'bank', 'keep'] as const).map(opt => (
-                      <button key={opt}
-                        onClick={() => setV(prev => ({ ...prev, usdInsuranceMaturityReinvest: opt }))}
-                        className={`flex-1 text-[10px] py-1.5 rounded-lg font-bold transition-colors
-                          ${(v.usdInsuranceMaturityReinvest ?? 'stock') === opt ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700 border border-blue-200'}`}>
-                        {opt === 'stock' ? '증권 재투자' : opt === 'bank' ? '은행 이체' : '보험 유지'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
               </div>
 
               <div className="rounded-2xl bg-gold-50 border border-gold-200 p-4 flex gap-2.5">
