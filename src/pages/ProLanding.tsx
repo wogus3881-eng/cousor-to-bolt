@@ -217,11 +217,11 @@ function ReviewTab() {
 const FAQS = [
   {
     q: 'Trial(체험판)은 정말 무료인가요?',
-    a: '네, 완전 무료예요. 카드 등록도 필요 없고 카카오 로그인만 하면 바로 시작할 수 있어요. 단, 시뮬레이션은 5회까지, 리포트 PDF 저장은 Basic 이상부터 가능해요.',
+    a: '네, 완전 무료예요. 카드 등록도 필요 없고 카카오 로그인만 하면 바로 시작할 수 있어요. 가입 후 14일 동안 시뮬레이션 횟수 제한 없이 써보실 수 있고, 리포트 PDF 저장은 Basic 이상부터 가능해요.',
   },
   {
     q: 'Trial은 언제까지 쓸 수 있나요?',
-    a: '가입 후 14일 동안, 총 5회의 시뮬레이션을 이용할 수 있어요. 기간이나 횟수가 지나면 Basic 또는 Pro로 업그레이드해야 계속 이용할 수 있어요.',
+    a: '가입 후 14일 동안 시뮬레이션 횟수 제한 없이 이용할 수 있어요. 14일이 지나면 Basic 또는 Pro로 업그레이드해야 계속 이용할 수 있어요.',
   },
   {
     q: '계산 결과는 얼마나 정확한가요?',
@@ -419,7 +419,7 @@ type CellValue = boolean | string;
 const FEATURE_ROWS: { label: string; trial: CellValue; basic: CellValue; pro: CellValue }[] = [
   { label: '기본 은퇴 진단 (자산 고갈 시점 · 국민연금 분석)', trial: true, basic: true, pro: true },
   { label: '계좌별 자산 정밀 입력', trial: true, basic: true, pro: true },
-  { label: '시뮬레이션 횟수', trial: '5회 (1회성)', basic: '월 30회', pro: '무제한' },
+  { label: '시뮬레이션 횟수', trial: '무제한 (14일)', basic: '월 30회', pro: '무제한' },
   { label: '고객용 링크 · 내 리드 자동 수집', trial: false, basic: false, pro: true },
   { label: 'PDF 리포트 저장', trial: false, basic: '월 5회 (워터마크)', pro: '무제한' },
   { label: '워터마크 없는 리포트', trial: false, basic: false, pro: true },
@@ -444,7 +444,7 @@ function Cell({ value }: { value: CellValue }) {
 }
 
 const PRICE_PLANS = [
-  { key: 'trial', name: 'Trial', monthly: '무료', yearly: null, note: '14일 · 5회 한정' },
+  { key: 'trial', name: 'Trial', monthly: '무료', yearly: null, note: '14일간 무제한' },
   { key: 'basic', name: 'Basic', monthly: '29,000원', yearly: '290,000원', note: '연 결제 시 2개월 무료' },
   { key: 'pro', name: 'Pro', monthly: '49,000원', yearly: '490,000원', note: '연 결제 시 2개월 무료', highlight: true },
 ] as const;

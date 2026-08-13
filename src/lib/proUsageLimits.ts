@@ -78,25 +78,24 @@ function writeTrialState(state: TrialUsageState): void {
   localStorage.setItem(TRIAL_STORAGE_KEY, JSON.stringify(state));
 }
 
-export function isTrialExpired(): boolean {
+/** 첫 시뮬레이션 이후 남은 체험 일수. 아직 한 번도 시뮬레이션하지 않았으면 전체 기간이 그대로 남아있는 것으로 계산합니다. */
+export function trialDaysRemaining(): number {
   const state = readTrialState();
-  if (state.simulations === 0) return false;
+  if (state.simulations === 0) return PRO_TRIAL_LIMITS.validDays;
   const elapsedDays = (Date.now() - new Date(state.firstUsedAt).getTime()) / (1000 * 60 * 60 * 24);
-  return elapsedDays > PRO_TRIAL_LIMITS.validDays;
+  return Math.max(0, Math.ceil(PRO_TRIAL_LIMITS.validDays - elapsedDays));
+}
+
+export function isTrialExpired(): boolean {
+  return trialDaysRemaining() <= 0;
 }
 
 export function getTrialUsage() {
   const state = readTrialState();
   return {
     simulations: state.simulations,
-    prints: 0,
-    simLimit: PRO_TRIAL_LIMITS.simulationsTotal,
-    printLimit: 0,
+    daysRemaining: trialDaysRemaining(),
   };
-}
-
-export function canRunTrialSimulation(): boolean {
-  return readTrialState().simulations < PRO_TRIAL_LIMITS.simulationsTotal && !isTrialExpired();
 }
 
 export function recordTrialSimulation(): void {

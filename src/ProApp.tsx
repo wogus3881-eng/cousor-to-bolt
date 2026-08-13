@@ -12,7 +12,6 @@ import { DEFAULT_FIXED_COSTS, type FixedCosts } from './lib/savedClients';
 import type { ActiveClient } from './components/SavedClientsPanel';
 import {
   canRunBasicSimulation,
-  canRunTrialSimulation,
   getBasicUsage,
   isTrialExpired,
   recordBasicSimulation,
@@ -65,10 +64,6 @@ function ProAppContent({ tier }: Props) {
     if (tier === 'trial') {
       if (isTrialExpired()) {
         setLimitMessage(`체험판 이용 기간(${PRO_TRIAL_LIMITS.validDays}일)이 종료되었어요. Basic 이상으로 업그레이드해 주세요.`);
-        return;
-      }
-      if (!canRunTrialSimulation()) {
-        setLimitMessage(`체험판 시뮬레이션 한도(${PRO_TRIAL_LIMITS.simulationsTotal}회)를 모두 사용했어요. Basic 이상으로 업그레이드하면 계속 쓸 수 있어요.`);
         return;
       }
       setLimitMessage(null);

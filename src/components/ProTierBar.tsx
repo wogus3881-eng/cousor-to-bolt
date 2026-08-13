@@ -25,7 +25,12 @@ export default function ProTierBar({ tier }: Props) {
         <p className="truncate text-[11px] text-navy-500">{meta.description}</p>
       </div>
       <div className="flex shrink-0 items-center gap-2">
-        {usage && (
+        {usage && 'daysRemaining' in usage && (
+          <span className="hidden text-[10px] text-navy-400 sm:inline">
+            시뮬 {usage.simulations}회 · 체험 {usage.daysRemaining}일 남음
+          </span>
+        )}
+        {usage && 'simLimit' in usage && (
           <span className="hidden text-[10px] text-navy-400 sm:inline">
             시뮬 {usage.simulations}/{usage.simLimit}
             {usage.printLimit > 0 ? ` · 리포트 ${usage.prints}/${usage.printLimit}` : ''}

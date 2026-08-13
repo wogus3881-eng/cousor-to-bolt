@@ -27,7 +27,7 @@ export const PRO_TIER_META: Record<
   trial: {
     label: 'Pro Trial',
     shortLabel: 'Trial',
-    description: '무료 체험 · 핵심 진단만 · 횟수 한정',
+    description: '무료 체험 · 핵심 진단만 · 14일간 무제한',
     path: '/pro/trial',
   },
   basic: {
@@ -49,9 +49,8 @@ export const PRO_BASIC_LIMITS = {
   printsPerMonth: 5,
 } as const;
 
-/** Trial은 매달 리셋되는 Basic과 달리, 가입 후 기간·총 횟수로 한 번만 한도가 소진됩니다. */
+/** Trial은 횟수 제한 없이, 첫 시뮬레이션 이후 validDays 기간이 지나면 만료됩니다. */
 export const PRO_TRIAL_LIMITS = {
-  simulationsTotal: 5,
   validDays: 14,
 } as const;
 
