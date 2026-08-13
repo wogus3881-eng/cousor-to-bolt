@@ -293,6 +293,12 @@ function LivePensionSlider({
 
     monthlyInsurance, insuranceRate,
 
+    monthlyPension401k, pension401kRate,
+
+    isaMonthly, isaRate,
+
+    monthlyPensionSavings, pensionSavingsRate,
+
   } = inputs;
 
 
@@ -302,6 +308,12 @@ function LivePensionSlider({
   const stockR = stockRate ?? DEFAULT_STOCK_RATE;
 
   const insR = insuranceRate ?? DEFAULT_INS_RATE;
+
+  const pension401kR = pension401kRate ?? 3.0;
+
+  const isaR = isaRate ?? stockR;
+
+  const pensionSavingsR = pensionSavingsRate ?? DEFAULT_STOCK_RATE;
 
 
 
@@ -564,6 +576,132 @@ function LivePensionSlider({
               </div>
 
             )}
+
+          </div>
+
+        </div>
+
+
+
+        {/* ── IRP(퇴직연금) 버킷 ── */}
+
+        <div className="rounded-xl border border-indigo-200 overflow-hidden">
+
+          <div className="bg-indigo-600 px-3 py-2 flex items-center gap-1.5">
+
+            <Landmark size={12} className="text-white" />
+
+            <span className="text-[11px] font-bold text-white">IRP (퇴직연금)</span>
+
+            <span className="ml-auto text-[9px] bg-indigo-400 text-white px-1.5 py-0.5 rounded-full">저율과세</span>
+
+          </div>
+
+          <div className="px-3 py-3 flex flex-col gap-3">
+
+            <CompactSlider label="매월 적립액"
+
+              value={monthlyPension401k ?? 0} min={0} max={MAN_R * 150} step={MAN_R * 5}
+
+              display={(v) => `${Math.floor(v / MAN_R)}만 원`}
+
+              track="bg-indigo-500" thumb="bg-indigo-600"
+
+              onChange={(v) => onChange({ ...inputs, monthlyPension401k: v })} />
+
+            <CompactSlider label="수익률 (연)"
+
+              value={pension401kR} min={0.5} max={15} step={0.5}
+
+              display={(v) => `${v.toFixed(1)}%`}
+
+              track="bg-indigo-400" thumb="bg-indigo-500"
+
+              onChange={(v) => onChange({ ...inputs, pension401kRate: v })} />
+
+          </div>
+
+        </div>
+
+
+
+        {/* ── ISA 버킷 ── */}
+
+        <div className="rounded-xl border border-teal-200 overflow-hidden">
+
+          <div className="bg-teal-600 px-3 py-2 flex items-center gap-1.5">
+
+            <PiggyBank size={12} className="text-white" />
+
+            <span className="text-[11px] font-bold text-white">ISA</span>
+
+            <span className="ml-auto text-[9px] bg-teal-400 text-white px-1.5 py-0.5 rounded-full">비과세 한도</span>
+
+          </div>
+
+          <div className="px-3 py-3 flex flex-col gap-3">
+
+            <CompactSlider label="매월 적립액"
+
+              value={isaMonthly ?? 0} min={0} max={MAN_R * 200} step={MAN_R * 5}
+
+              display={(v) => `${Math.floor(v / MAN_R)}만 원`}
+
+              track="bg-teal-500" thumb="bg-teal-600"
+
+              onChange={(v) => onChange({ ...inputs, isaMonthly: v })} />
+
+            <CompactSlider label="수익률 (연)"
+
+              value={isaR} min={0.5} max={15} step={0.5}
+
+              display={(v) => `${v.toFixed(1)}%`}
+
+              track="bg-teal-400" thumb="bg-teal-500"
+
+              onChange={(v) => onChange({ ...inputs, isaRate: v })} />
+
+          </div>
+
+        </div>
+
+
+
+        {/* ── 연금저축펀드 버킷 ── */}
+
+        <div className="rounded-xl border border-amber-200 overflow-hidden">
+
+          <div className="bg-amber-600 px-3 py-2 flex items-center gap-1.5">
+
+            <CalendarDays size={12} className="text-white" />
+
+            <span className="text-[11px] font-bold text-white">연금저축펀드</span>
+
+            <span className="ml-auto text-[9px] bg-amber-400 text-white px-1.5 py-0.5 rounded-full">저율과세</span>
+
+          </div>
+
+          <div className="px-3 py-3 flex flex-col gap-3">
+
+            <CompactSlider label="매월 적립액"
+
+              value={monthlyPensionSavings ?? 0} min={0} max={MAN_R * 150} step={MAN_R * 5}
+
+              display={(v) => `${Math.floor(v / MAN_R)}만 원`}
+
+              track="bg-amber-500" thumb="bg-amber-600"
+
+              onChange={(v) => onChange({ ...inputs, monthlyPensionSavings: v })} />
+
+            <CompactSlider label="수익률 (연)"
+
+              value={pensionSavingsR} min={0.5} max={15} step={0.5}
+
+              display={(v) => `${v.toFixed(1)}%`}
+
+              track="bg-amber-400" thumb="bg-amber-500"
+
+              onChange={(v) => onChange({ ...inputs, pensionSavingsRate: v })} />
 
           </div>
 
