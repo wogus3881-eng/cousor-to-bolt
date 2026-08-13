@@ -58,6 +58,14 @@ export interface SimulatorInputs {
   savingsIsa?: number;
   /** 현재 월 보장성 보험료 합계 */
   monthlyProtectionInsurance?: number;
+
+  // 원화 단기납 종신보험 (기존 보험·비과세 연금 버킷과 별개로 독립 운용)
+  monthlyInsurance2?: number;
+  insuranceRate2?: number;
+  insurancePaymentYears2?: number; // 개월
+  insuranceElapsedMonths2?: number; // 개월
+  savingsInsurance2?: number;
+  insurance2MaturityReinvest?: 'stock' | 'bank' | 'keep';
 }
 
 export interface YearRow {
@@ -91,6 +99,8 @@ export interface SimulationResult {
   retirementBalanceBank: number;
   retirementBalanceStock: number;
   retirementBalanceInsurance: number;
+  retirementBalanceInsurance2: number; // 원화 단기납 종신보험 (2번째 버킷) 만기 시점 평가액
+  insurancePaymentEndAge2: number;     // 2번째 보험 납입 종료 나이
   inflationAdjustedMonthlyExpense: number;
   pensionAtRetirement: number;
   pensionNetAtRetirement: number;
@@ -120,6 +130,9 @@ export interface SimulationResult {
   pensionBreakevenAge: number;
   isaRetirementBalance: number;
   isaTaxSaved: number;
+  retirementBalancePensionSavings: number;
+  pensionSavingsAnnuityMonthly: number;
+  pensionSavingsTotalTax: number;
   medicalRisk: {
     monthlyCostAfter80: number;
     cancerRiskCost: number;
@@ -202,27 +215,33 @@ function fv(pv: number, rate: number, years: number): number {
 }
 
 /** 월 적립을 매달 복리로 굴리되, 누적 납입액(시작 잔액 포함)이 totalCap에 도달하면
- *  그 이후로는 신규 납입 없이 잔액만 계속 복리로 굴러갑니다. (예: ISA 총 납입한도) */
+ *  그 이후로는 신규 납입 없이 잔액만 계속 복리로 굴러갑니다. (예: ISA 총 납입한도)
+ *  한도 초과분은 overflowRate로 별도 계좌(증권)에서 계속 굴러가는 것으로 계산합니다. */
 function projectCappedAnnuity(
   startBalance: number,
   monthly: number,
   annualRate: number,
   years: number,
   totalCap: number,
-): { balance: number; contributed: number } {
+  overflowRate: number = annualRate,
+): { balance: number; contributed: number; overflowBalance: number } {
   const monthlyRate = annualRate / 12;
+  const overflowMonthlyRate = overflowRate / 12;
   const totalMonths = Math.round(Math.max(0, years) * 12);
   let balance = startBalance;
   let cumulativeIn = startBalance;
   let contributed = 0;
+  let overflowBalance = 0;
   for (let m = 0; m < totalMonths; m++) {
     const room = Math.max(0, totalCap - cumulativeIn);
     const deposit = Math.min(Math.max(0, monthly), room);
+    const overflow = Math.max(0, monthly) - deposit;
     balance = balance * (1 + monthlyRate) + deposit;
+    overflowBalance = overflowBalance * (1 + overflowMonthlyRate) + overflow;
     cumulativeIn += deposit;
     contributed += deposit;
   }
-  return { balance, contributed };
+  return { balance, contributed, overflowBalance };
 }
 
 function applyTaxOnReturn(balance: number, rate: number): { netBalance: number; taxPaid: number } {
@@ -330,6 +349,12 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
     employmentType: inputs.employmentType ?? 'employee',
     pensionBaseIncome: inputs.pensionBaseIncome ?? DEFAULT_PENSION_BASE_INCOME,
     businessAsset: inputs.businessAsset ?? 0,
+    monthlyInsurance2: inputs.monthlyInsurance2 ?? 0,
+    insuranceRate2: inputs.insuranceRate2 ?? DEFAULT_INS_RATE,
+    insurancePaymentYears2: inputs.insurancePaymentYears2 ?? 84, // 7년 단기납 기본값
+    insuranceElapsedMonths2: inputs.insuranceElapsedMonths2 ?? 0,
+    savingsInsurance2: inputs.savingsInsurance2 ?? 0,
+    insurance2MaturityReinvest: inputs.insurance2MaturityReinvest ?? 'keep',
   };
 
   const employmentType = norm.employmentType ?? 'employee';
@@ -361,6 +386,8 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
   const bankR = bankRatePct / 100;
   const stockR = stockRatePct / 100;
   const insR = insRatePct / 100;
+  const ins2RatePct = norm.insuranceRate2 ?? DEFAULT_INS_RATE;
+  const ins2R = ins2RatePct / 100;
   const pension401kR = pension401kRatePct / 100;
   const isaR = isaRatePct / 100;
 
@@ -415,11 +442,29 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
   const insBalanceAtPaymentEnd = fv(savingsInsurance, insR, insPayYears)
     + fvAnnuity(monthlyInsurance, insR, insPayYears);
   const yearsCompoundAfterPayment = yearsToRetirement - insPayYears;
-  const retirementBalanceInsurance = fv(insBalanceAtPaymentEnd, insR, yearsCompoundAfterPayment);
+  const retirementBalanceInsurance1 = fv(insBalanceAtPaymentEnd, insR, yearsCompoundAfterPayment);
 
   // 원화보험 만기 재투자 분기
-  const insMaturityToBank = insMaturityReinvest === 'bank' ? retirementBalanceInsurance : 0;
-  const insMaturityToStock = insMaturityReinvest === 'stock' ? retirementBalanceInsurance : 0;
+  const insMaturityToBank = insMaturityReinvest === 'bank' ? retirementBalanceInsurance1 : 0;
+  const insMaturityToStock = insMaturityReinvest === 'stock' ? retirementBalanceInsurance1 : 0;
+
+  // 원화 단기납 종신보험 (독립된 두 번째 원화 보험 버킷, 비과세 동일 적용)
+  const monthlyInsurance2 = norm.monthlyInsurance2 ?? 0;
+  const savingsInsurance2 = norm.savingsInsurance2 ?? 0;
+  const ins2ElapsedMonths = Math.min(Math.max(0, norm.insuranceElapsedMonths2 ?? 0), norm.insurancePaymentYears2 ?? 84);
+  const ins2RemainingMonths = (norm.insurancePaymentYears2 ?? 84) - ins2ElapsedMonths;
+  const ins2PayYears = Math.min(ins2RemainingMonths / 12, yearsToRetirement);
+  const ins2BalanceAtPaymentEnd = fv(savingsInsurance2, ins2R, ins2PayYears)
+    + fvAnnuity(monthlyInsurance2, ins2R, ins2PayYears);
+  const ins2YearsCompoundAfterPayment = yearsToRetirement - ins2PayYears;
+  const retirementBalanceInsurance2 = fv(ins2BalanceAtPaymentEnd, ins2R, ins2YearsCompoundAfterPayment);
+  const insurance2MaturityReinvest = norm.insurance2MaturityReinvest ?? 'keep';
+  const ins2MaturityToBank = insurance2MaturityReinvest === 'bank' ? retirementBalanceInsurance2 : 0;
+  const ins2MaturityToStock = insurance2MaturityReinvest === 'stock' ? retirementBalanceInsurance2 : 0;
+  const ins2MaturityToIns = insurance2MaturityReinvest === 'keep' ? retirementBalanceInsurance2 : 0;
+
+  // 첫 번째(일반) + 두 번째(단기납) 원화 보험 중 '유지' 선택분을 합쳐 하나의 비과세 보험 버킷으로 관리
+  const retirementBalanceInsurance = retirementBalanceInsurance1 + ins2MaturityToIns;
 
   // 퇴직급여 처리
   const severancePay = norm.severancePay ?? 0;
@@ -430,31 +475,36 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
   const severanceToIRP = severanceReinvest === 'irp' ? severancePay : 0;
   const severanceToBank = severanceReinvest === 'lump' ? severancePay * (1 - SEVERANCE_TAX_RATE) : 0;
 
-  // 은행/증권 은퇴자산 (보험 만기 재투자 포함)
+  // ISA는 정해진 납입 기간이 없어 총 납입한도(1억원)에 도달할 때까지 계속 납입하는 걸로 계산.
+  // 한도 초과분은 그 시점부터 증권 계좌로 자동 이체되어 증권 수익률로 굴러가는 것으로 반영.
+  const isaProjection = projectCappedAnnuity(savingsIsa, isaMonthly, isaR, yearsToRetirement, ISA_TOTAL_LIMIT, stockR);
+  const isaRetirementBalance = isaProjection.balance;
+  const isaContributions = isaProjection.contributed;
+  const isaInterest = Math.max(0, isaRetirementBalance - savingsIsa - isaContributions);
+  // ISA는 보유 중엔 비과세, 은퇴(인출) 시점에 비과세 한도 초과분에 대해 9.9% 분리과세를 한 번만 적용
+  const isaTax = Math.max(0, isaInterest - ISA_TAX_FREE_GAIN_LIMIT) * ISA_TAX_RATE;
+  const isaRetirementBalanceNet = isaRetirementBalance - isaTax;
+  const regularAccountTax = isaInterest * FINANCIAL_INCOME_TAX;
+  const isaTaxSaved = Math.max(0, regularAccountTax - isaTax);
+
+  // 은행/증권 은퇴자산 (보험 만기 재투자 포함, ISA 세후 잔액 + 한도 초과 이체분 포함)
   const retirementBalanceBank = fv(savingsBank, bankR, yearsToRetirement)
     + fvAnnuity(monthlyBank, bankR, yearsToRetirement)
-    + usdToBank + insMaturityToBank + severanceToBank;
+    + usdToBank + insMaturityToBank + ins2MaturityToBank + severanceToBank;
   const retirementBalanceStock = fv(savingsStock, stockR, yearsToRetirement)
     + fvAnnuity(monthlyStock, stockR, yearsToRetirement)
-    + usdToStock + insMaturityToStock
-    + fv(savingsPensionSavings, pensionSavingsR, yearsToRetirement)
+    + usdToStock + insMaturityToStock + ins2MaturityToStock
+    + isaRetirementBalanceNet + isaProjection.overflowBalance;
+  // 연금저축펀드: IRP/401k와 동일하게 별도 버킷에서 축적 후 연금 수령 시 저율(3.3~5.5%) 연금소득세 적용
+  const retirementBalancePensionSavings = fv(savingsPensionSavings, pensionSavingsR, yearsToRetirement)
     + fvAnnuity(monthlyPensionSavings, pensionSavingsR, yearsToRetirement);
   // 납입 종료 나이 (은퇴 전)
   const insurancePaymentEndAge = currentAge + insPayYears;
+  const insurancePaymentEndAge2 = currentAge + ins2PayYears;
 
   const pension401kPayYears = Math.min(pension401kPaymentYears, yearsToRetirement);
   const retirementBalancePension401k = fv(savingsPension401k + severanceToIRP, pension401kR, yearsToRetirement)
     + fvAnnuity(effectiveMonthlyPension401k, pension401kR, pension401kPayYears);
-
-  // ISA는 정해진 납입 기간이 없어 총 납입한도(1억원)에 도달할 때까지 계속 납입하는 걸로 계산
-  const isaProjection = projectCappedAnnuity(savingsIsa, isaMonthly, isaR, yearsToRetirement, ISA_TOTAL_LIMIT);
-  const isaRetirementBalance = isaProjection.balance;
-  const isaContributions = isaProjection.contributed;
-  const isaInterest = Math.max(0, isaRetirementBalance - savingsIsa - isaContributions);
-  const isaTax = Math.max(0, isaInterest - ISA_TAX_FREE_GAIN_LIMIT) * ISA_TAX_RATE;
-  const regularAccountTax = isaInterest * FINANCIAL_INCOME_TAX;
-  const isaTaxSaved = Math.max(0, regularAccountTax - isaTax);
-
 
   const retirementBalance = retirementBalanceBank + retirementBalanceStock + retirementBalanceInsurance + businessAsset;
 
@@ -496,6 +546,8 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
 
   const insAnnuityMonthly = insMaturityReinvest === 'keep' ? calcAnnuityMonthly(retirementBalanceInsurance, insRatePct, retirementAge) : 0;
   const pension401kAnnuityMonthly = calcAnnuityMonthly(retirementBalancePension401k, pension401kRatePct, retirementAge);
+  const pensionSavingsRatePct = (norm.pensionSavingsRate ?? DEFAULT_STOCK_RATE);
+  const pensionSavingsAnnuityMonthly = calcAnnuityMonthly(retirementBalancePensionSavings, pensionSavingsRatePct, retirementAge);
   const pensionBreakevenAge = calcPensionBreakevenAge(
     pensionAtRetirement,
     pensionStartAge,
@@ -547,6 +599,7 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
   let bStock = retirementBalanceStock;
   let bIns = retirementBalanceInsurance;
   let b401k = retirementBalancePension401k;
+  let bPensionSavings = retirementBalancePensionSavings;
   let balanceGross = retirementBalanceGrossOnly;
   let balanceInsOnly = retirementBalanceInsOnly;
 
@@ -555,6 +608,7 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
   let dignityEndAgeInsOnly: number | null = null;
   let totalTaxBurden = 0;
   let pension401kTotalTax = 0;
+  let pensionSavingsTotalTax = 0;
   let isPostDepletion = false;
 
   // 축적기 행 추가 (currentAge ~ retirementAge-1)
@@ -624,6 +678,7 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
     const posStock = Math.max(0, bStock);
     const posIns = Math.max(0, bIns);
     const pos401k = Math.max(0, b401k);
+    const posPensionSavings = Math.max(0, bPensionSavings);
 
     // ── 배당 인컴 모델 ──────────────────────────────────────────────────────
     // 증권 자산은 연 5%(배당 3% + 자본성장 2%) 수익률 배당 자산으로 전환 운용
@@ -637,8 +692,14 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
     pension401kTotalTax += yearly401kTax;
     const yearly401kNet = yearly401kGross - yearly401kTax;
 
+    // 연금저축펀드: IRP/401k와 동일한 저율(3.3~5.5%) 연금소득세 구조로 수령
+    const yearlyPensionSavingsGross = pensionSavingsAnnuityMonthly > 0 ? pensionSavingsAnnuityMonthly * 12 : 0;
+    const yearlyPensionSavingsTax = calcPension401kWithdrawalTax(yearlyPensionSavingsGross);
+    pensionSavingsTotalTax += yearlyPensionSavingsTax;
+    const yearlyPensionSavingsNet = yearlyPensionSavingsGross - yearlyPensionSavingsTax;
+
     // 수령 우선순위: ①배당 ②국민연금 ③퇴직연금 ④부족분 원금 인출
-    const incomeBeforePrincipal = yearlyDividend + yearlyPensionNet + yearly401kNet;
+    const incomeBeforePrincipal = yearlyDividend + yearlyPensionNet + yearly401kNet + yearlyPensionSavingsNet;
     const principalNeeded = Math.max(0, yearlyExpense - incomeBeforePrincipal);
     const surplusForReinvest = Math.max(0, incomeBeforePrincipal - yearlyExpense);
 
@@ -685,8 +746,9 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
     void rowBankTax;
 
     b401k = pos401k * (1 + pension401kR) - yearly401kGross;
+    bPensionSavings = posPensionSavings * (1 + pensionSavingsR) - yearlyPensionSavingsGross;
 
-    const combinedBalance = bBank + bStock + bIns + b401k;
+    const combinedBalance = bBank + bStock + bIns + b401k + bPensionSavings;
 
     // 비교선 1: 전액 과세
     const { netBalance: newGross, taxPaid: grossTaxPaid } = applyTaxOnReturn(Math.max(0, balanceGross), stockR);
@@ -791,6 +853,8 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
     retirementBalanceBank,
     retirementBalanceStock,
     retirementBalanceInsurance,
+    retirementBalanceInsurance2,
+    insurancePaymentEndAge2,
     inflationAdjustedMonthlyExpense,
     pensionAtRetirement,
     pensionNetAtRetirement,
@@ -819,6 +883,9 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
     pensionBreakevenAge,
     isaRetirementBalance,
     isaTaxSaved,
+    retirementBalancePensionSavings,
+    pensionSavingsAnnuityMonthly,
+    pensionSavingsTotalTax,
     medicalRisk: {
       monthlyCostAfter80: 800000,
       cancerRiskCost: 40000000,

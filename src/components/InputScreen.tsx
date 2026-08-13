@@ -692,6 +692,12 @@ const DEFAULT_INPUTS: SimulatorInputs = {
   employmentType: 'employee',
   pensionBaseIncome: MAN * 100,
   businessAsset: 0,
+  monthlyInsurance2: 0,
+  insuranceRate2: DEFAULT_INS_RATE,
+  insurancePaymentYears2: 84,
+  insuranceElapsedMonths2: 0,
+  savingsInsurance2: 0,
+  insurance2MaturityReinvest: 'keep' as const,
 };
 
 function calcDefaultPensionYears(currentAge: number) {
@@ -720,6 +726,7 @@ export default function InputScreen({
       }).catch(() => {});
   }, []);
   const [pensionAutoSet, setPensionAutoSet] = useState(!initialInputs);
+  const [pension401kAutoSet, setPension401kAutoSet] = useState(!initialInputs);
   const [bucketOpen, setBucketOpen] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [fixedCosts, setFixedCosts] = useState<FixedCosts>(() => initialFixedCosts ?? DEFAULT_FIXED_COSTS);
@@ -737,6 +744,7 @@ export default function InputScreen({
     if (initialInputs === undefined) return;
     setV(initialInputs);
     setPensionAutoSet(false);
+    setPension401kAutoSet(false);
   }, [initialInputs]);
 
   useEffect(() => {
@@ -745,13 +753,19 @@ export default function InputScreen({
     }
   }, [v.currentAge, pensionAutoSet]);
 
+  useEffect(() => {
+    if (pension401kAutoSet && v.employmentType !== 'self-employed') {
+      setV(prev => ({ ...prev, monthlyPension401k: Math.round(prev.annualSalary * 0.083 / 12 / 1000) * 1000 }));
+    }
+  }, [v.annualSalary, v.employmentType, pension401kAutoSet]);
+
   function set<K extends keyof SimulatorInputs>(key: K) {
     return (val: number) => setV(prev => ({ ...prev, [key]: val }));
   }
 
   const totalMonthly = v.monthlyBank + v.monthlyStock + v.monthlyInsurance;
   const totalFixedCosts = fixedCosts.housing + fixedCosts.telecom + fixedCosts.loan + fixedCosts.car + fixedCosts.living + fixedCosts.other;
-  const totalCurrentContrib = totalMonthly + (v.monthlyPension401k ?? 0) + (v.isaMonthly ?? 0) + (v.monthlyPensionSavings ?? 0) + (v.monthlyProtectionInsurance ?? 0) + (v.usdInsuranceMonthlyUSD ?? 0) * (v.currentExchangeRate ?? 1350);
+  const totalCurrentContrib = totalMonthly + (v.monthlyPension401k ?? 0) + (v.isaMonthly ?? 0) + (v.monthlyPensionSavings ?? 0) + (v.monthlyProtectionInsurance ?? 0) + (v.usdInsuranceMonthlyUSD ?? 0) * (v.currentExchangeRate ?? 1350) + (v.monthlyInsurance2 ?? 0);
   const monthlyIncomeApprox = Math.round((v.annualSalary ?? 0) / 12);
   const availableFunds = monthlyIncomeApprox - totalFixedCosts - totalCurrentContrib;
   const pension401kPayYearsDefault = Math.max(1, Math.min(40, v.retirementAge - v.currentAge));
@@ -1195,6 +1209,72 @@ export default function InputScreen({
                 </div>
               )}
 
+              {/* 원화 단기납 종신보험 (기존 보험·비과세 연금 버킷과 별개, 두 번째 원화 보험 버킷) */}
+              <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">📄</span>
+                  <div>
+                    <p className="text-sm font-bold text-navy-800">원화 단기납 종신보험</p>
+                    <p className="text-[10px] text-navy-400">짧게 내고 오래 굴리는 별도 보험 · 비과세</p>
+                  </div>
+                </div>
+                <DualInput label="월 납입액"
+                  value={v.monthlyInsurance2 ?? 0} min={0} max={MAN * 300} step={MAN * 5} unit="만 원"
+                  display={val => Math.floor(val / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
+                  trackColor="bg-rose-400" onChange={set('monthlyInsurance2')}
+                  tooltip="기존 '보험·비과세 연금' 버킷과 완전히 독립된 두 번째 원화 보험이에요. 두 상품을 동시에 보유한 경우에 사용하세요."
+                />
+                <DualInput label="공시이율"
+                  value={v.insuranceRate2 ?? 3.5} min={1.0} max={8.0} step={0.1} unit="%"
+                  display={val => val.toFixed(1)} parse={parseFloat}
+                  trackColor="bg-rose-400" decimalPlaces={1} onChange={set('insuranceRate2')}
+                />
+                <DualInput label="총 납입 기간"
+                  value={v.insurancePaymentYears2 ?? 84} min={12} max={240} step={12} unit="개월"
+                  display={val => `${val}개월 (${Math.floor(val/12)}년)`}
+                  parse={s => parseInt(s.replace(/[^0-9]/g, ''))}
+                  trackColor="bg-rose-400"
+                  onChange={set('insurancePaymentYears2')}
+                  tooltip="단기납 종신보험은 보통 5~10년 납입이에요. 기본값은 7년(84개월)입니다."
+                />
+                <DualInput label="이미 납입한 기간"
+                  value={Math.min(v.insuranceElapsedMonths2 ?? 0, v.insurancePaymentYears2 ?? 84)}
+                  min={0} max={v.insurancePaymentYears2 ?? 84} step={1} unit="개월"
+                  display={val => `${val}개월`}
+                  parse={s => parseInt(s.replace(/[^0-9]/g, ''))}
+                  trackColor="bg-rose-400"
+                  onChange={set('insuranceElapsedMonths2')}
+                />
+                <DualInput label="현재 해지환급금"
+                  value={v.savingsInsurance2 ?? 0} min={0} max={MAN * 10000} step={MAN * 100} unit="만 원"
+                  display={val => Math.floor(val / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
+                  trackColor="bg-rose-400" onChange={set('savingsInsurance2')}
+                />
+                {(v.monthlyInsurance2 ?? 0) > 0 && (
+                  <div className="bg-white rounded-xl border border-rose-100 p-3">
+                    <p className="text-[10px] font-bold text-navy-800 mb-2">만기 환급금 활용 전략</p>
+                    <div className="flex gap-1.5">
+                      {([
+                        { key: 'keep' as const, label: '종신연금 유지', desc: '평생 월 지급' },
+                        { key: 'stock' as const, label: '증권 재투자', desc: `${(v.stockRate ?? 5).toFixed(1)}% 운용` },
+                        { key: 'bank' as const, label: '은행 이체', desc: '2.5% 안전' },
+                      ]).map(opt => (
+                        <button key={opt.key}
+                          type="button"
+                          onClick={() => setV(prev => ({ ...prev, insurance2MaturityReinvest: opt.key }))}
+                          className={`flex-1 py-2 rounded-lg text-[9px] font-bold transition-colors text-center
+                            ${(v.insurance2MaturityReinvest ?? 'keep') === opt.key
+                              ? 'bg-navy-800 text-white'
+                              : 'bg-slate-50 text-navy-600 border border-slate-200'}`}>
+                          <p>{opt.label}</p>
+                          <p className="font-normal opacity-70 mt-0.5">{opt.desc}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {features.pension401kBucket && !isSelfEmployed && (
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-2 px-1 pt-1">
@@ -1203,13 +1283,14 @@ export default function InputScreen({
                   </div>
                   <DualInput
                     label="월 납입액"
+                    sublabel={pension401kAutoSet ? '연봉의 8.3% 자동 계산됨(회사 DC 부담금) · 개인 IRP 추가납입은 직접 늘려주세요' : '직접 입력'}
                     value={v.monthlyPension401k ?? 0}
                     min={0} max={MAN * 200} step={MAN * 10} unit="만 원"
                     display={val => Math.floor(val / MAN).toLocaleString()}
                     parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
                     trackColor="bg-indigo-500"
-                    onChange={set('monthlyPension401k')}
-                    tooltip="회사 부담금과 개인 추가납입 합산 금액이에요. DC형은 월 급여의 약 8.3%입니다."
+                    onChange={val => { setPension401kAutoSet(false); setV(prev => ({ ...prev, monthlyPension401k: val })); }}
+                    tooltip="회사 DC 부담금(급여의 약 8.3%)이 자동으로 채워져요. 개인이 IRP를 추가로 가입해 더 납입한다면 이 금액을 직접 늘려서 합산 금액으로 입력하세요."
                   />
                   <DualInput
                     label="운용 수익률"

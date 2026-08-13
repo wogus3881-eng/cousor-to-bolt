@@ -15,20 +15,26 @@ export function computeLiteReadiness(result: SimulationResult): LiteReadiness {
   const retire = inputs.retirementAge;
   const span = Math.max(1, 100 - retire);
 
-  if (dignityEndAge === null) {
-    return {
-      score: 100,
-      band: 'ok',
-      label: '양호',
-      subline:
-        '현재 입력 기준으로는 100세까지 큰 부족이 없어 보여요. 실제 세금·수익률·의료비는 상담에서 함께 확인해 보세요.',
-    };
-  }
+  let score: number;
+  let subline: string;
 
-  const surviveYears = dignityEndAge - retire;
-  const ratio = Math.max(0, Math.min(1, surviveYears / span));
-  const curved = Math.pow(ratio, 1.25);
-  const score = Math.round(Math.max(22, Math.min(72, 28 + 54 * curved)));
+  if (dignityEndAge === null) {
+    // 100세까지 자산이 마르지 않으면 100점
+    score = 100;
+    subline =
+      '현재 입력 기준으로는 100세까지 큰 부족이 없어 보여요. 실제 세금·수익률·의료비는 상담에서 함께 확인해 보세요.';
+  } else {
+    // 자산이 바닥나는 나이가 늦을수록 22~99점 구간에서 연속적으로 올라간다.
+    const surviveYears = dignityEndAge - retire;
+    const ratio = Math.max(0, Math.min(1, surviveYears / span));
+    const curved = Math.pow(ratio, 1.25);
+    score = Math.round(Math.max(22, Math.min(99, 28 + 71 * curved)));
+    const shortfallYears = span - surviveYears;
+    subline =
+      score < 42
+        ? `은퇴 후 약 ${dignityEndAge}세 전후로 여유가 줄어들 수 있어요. 지금 구조를 점검해 볼 시점이에요.`
+        : `100세 기준으로 약 ${shortfallYears}년 구간에서 추가 준비가 도움이 될 수 있어요.`;
+  }
 
   let band: LiteReadinessBand;
   let label: string;
@@ -38,16 +44,13 @@ export function computeLiteReadiness(result: SimulationResult): LiteReadiness {
   } else if (score < 58) {
     band = 'warn';
     label = '주의';
-  } else {
+  } else if (score < 80) {
     band = 'warn';
     label = '관찰';
+  } else {
+    band = 'ok';
+    label = '양호';
   }
-
-  const shortfallYears = span - surviveYears;
-  const subline =
-    band === 'risk'
-      ? `은퇴 후 약 ${dignityEndAge}세 전후로 여유가 줄어들 수 있어요. 지금 구조를 점검해 볼 시점이에요.`
-      : `100세 기준으로 약 ${shortfallYears}년 구간에서 추가 준비가 도움이 될 수 있어요.`;
 
   return { score, band, label, subline };
 }
