@@ -34,6 +34,8 @@ export interface SimulatorInputs {
   usdInsurancePaymentMonths?: number;
   usdInsuranceElapsedMonths?: number;
   usdInsuranceRate?: number;
+  /** 10년 시점 환급률(%). 상품마다 다름(125~131% 등). 공시이율 복리 대신 이 값으로 만기가치를 계산 */
+  usdInsuranceSurrenderRate?: number;
   currentExchangeRate?: number;
   usdInsuranceMaturityExchangeRate?: number;
   usdInsuranceMaturityReinvest?: 'stock' | 'bank' | 'keep';
@@ -66,6 +68,8 @@ export interface SimulatorInputs {
   insuranceElapsedMonths2?: number; // 개월
   savingsInsurance2?: number;
   insurance2MaturityReinvest?: 'stock' | 'bank' | 'keep';
+  /** 10년 시점 환급률(%). 상품마다 다름(125~131% 등). 공시이율 복리 대신 이 값으로 만기가치를 계산 */
+  insuranceSurrenderRate2?: number;
 }
 
 export interface YearRow {
@@ -335,6 +339,7 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
     usdInsurancePaymentMonths: inputs.usdInsurancePaymentMonths ?? 120,
     usdInsuranceElapsedMonths: inputs.usdInsuranceElapsedMonths ?? 0,
     usdInsuranceRate: inputs.usdInsuranceRate ?? 4.0,
+    usdInsuranceSurrenderRate: inputs.usdInsuranceSurrenderRate ?? 125,
     currentExchangeRate: inputs.currentExchangeRate ?? 1350,
     usdInsuranceMaturityExchangeRate: inputs.usdInsuranceMaturityExchangeRate ?? 1400,
     usdInsuranceMaturityReinvest: inputs.usdInsuranceMaturityReinvest ?? 'stock',
@@ -355,6 +360,7 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
     insuranceElapsedMonths2: inputs.insuranceElapsedMonths2 ?? 0,
     savingsInsurance2: inputs.savingsInsurance2 ?? 0,
     insurance2MaturityReinvest: inputs.insurance2MaturityReinvest ?? 'keep',
+    insuranceSurrenderRate2: inputs.insuranceSurrenderRate2 ?? 125,
   };
 
   const employmentType = norm.employmentType ?? 'employee';
@@ -386,8 +392,6 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
   const bankR = bankRatePct / 100;
   const stockR = stockRatePct / 100;
   const insR = insRatePct / 100;
-  const ins2RatePct = norm.insuranceRate2 ?? DEFAULT_INS_RATE;
-  const ins2R = ins2RatePct / 100;
   const pension401kR = pension401kRatePct / 100;
   const isaR = isaRatePct / 100;
 
@@ -412,20 +416,20 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
   const savingsPensionSavings = norm.savingsPensionSavings ?? 0;
   const monthlyPensionSavings = norm.monthlyPensionSavings ?? 0;
   const pensionSavingsR = (norm.pensionSavingsRate ?? DEFAULT_STOCK_RATE) / 100;
-  const currentExRate = norm.currentExchangeRate ?? 1350;
   const maturityExRate = norm.usdInsuranceMaturityExchangeRate ?? 1400;
-  const usdMonthlyKRW = (norm.usdInsuranceMonthlyUSD ?? 0) * currentExRate;
+  const usdMonthlyUSD = norm.usdInsuranceMonthlyUSD ?? 0;
   const usdTotalPaymentMonths = norm.usdInsurancePaymentMonths ?? 120;
   const usdElapsedMonths = Math.min(Math.max(0, norm.usdInsuranceElapsedMonths ?? 0), usdTotalPaymentMonths);
-  const usdRemainingMonths = usdTotalPaymentMonths - usdElapsedMonths;
-  const usdPayYears = Math.min(usdRemainingMonths / 12, yearsToRetirement);
-  const usdRate = (norm.usdInsuranceRate ?? 4.0) / 100;
   const usdReinvest = norm.usdInsuranceMaturityReinvest ?? 'stock';
-  // 이미 납입한 기간 동안 공시이율로 쌓인 현재가치 (현재 환율 기준)
-  const usdCurrentKRW = fvAnnuity(usdMonthlyKRW, usdRate, usdElapsedMonths / 12);
-  const usdInsAtPayEnd = fvAnnuity(usdMonthlyKRW, usdRate, usdPayYears);
-  const usdInsCompoundYears = Math.max(0, yearsToRetirement - usdPayYears);
-  const usdInsRetirementKRW = (usdCurrentKRW + fv(usdInsAtPayEnd, usdRate, usdInsCompoundYears)) * (maturityExRate / currentExRate);
+  const usdSurrenderRatePct = norm.usdInsuranceSurrenderRate ?? 125;
+  // 단기납 종신보험은 공시이율 복리보다 '10년 시점 환급률'이 실제 가치를 지배함(상품별로 125~131% 등 제각각).
+  // 정책 개시(10년) 이후 은퇴하면 총 납입원금 × 환급률로, 그 전에 은퇴하면 그때까지 낸 원금만 반영.
+  const usdPolicyAgeAtRetirementMonths = usdElapsedMonths + yearsToRetirement * 12;
+  const usdTotalPremiumsUSD = usdMonthlyUSD * usdTotalPaymentMonths;
+  const usdValueAtRetirementUSD = usdPolicyAgeAtRetirementMonths >= 120
+    ? usdTotalPremiumsUSD * (usdSurrenderRatePct / 100)
+    : usdMonthlyUSD * Math.min(usdTotalPaymentMonths, usdPolicyAgeAtRetirementMonths);
+  const usdInsRetirementKRW = usdValueAtRetirementUSD * maturityExRate;
   const usdToStock = usdReinvest === 'stock' ? usdInsRetirementKRW : 0;
   const usdToBank = usdReinvest === 'bank' ? usdInsRetirementKRW : 0;
 
@@ -449,15 +453,18 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
   const insMaturityToStock = insMaturityReinvest === 'stock' ? retirementBalanceInsurance1 : 0;
 
   // 원화 단기납 종신보험 (독립된 두 번째 원화 보험 버킷, 비과세 동일 적용)
+  // 공시이율 복리보다 '10년 시점 환급률'이 실제 가치를 지배함(상품별로 125~131% 등 제각각).
+  // 정책 개시(10년) 이후 은퇴하면 총 납입원금 × 환급률로, 그 전에 은퇴하면 그때까지 낸 원금만 반영.
   const monthlyInsurance2 = norm.monthlyInsurance2 ?? 0;
   const savingsInsurance2 = norm.savingsInsurance2 ?? 0;
-  const ins2ElapsedMonths = Math.min(Math.max(0, norm.insuranceElapsedMonths2 ?? 0), norm.insurancePaymentYears2 ?? 84);
-  const ins2RemainingMonths = (norm.insurancePaymentYears2 ?? 84) - ins2ElapsedMonths;
-  const ins2PayYears = Math.min(ins2RemainingMonths / 12, yearsToRetirement);
-  const ins2BalanceAtPaymentEnd = fv(savingsInsurance2, ins2R, ins2PayYears)
-    + fvAnnuity(monthlyInsurance2, ins2R, ins2PayYears);
-  const ins2YearsCompoundAfterPayment = yearsToRetirement - ins2PayYears;
-  const retirementBalanceInsurance2 = fv(ins2BalanceAtPaymentEnd, ins2R, ins2YearsCompoundAfterPayment);
+  const ins2PaymentMonths = norm.insurancePaymentYears2 ?? 84;
+  const ins2ElapsedMonths = Math.min(Math.max(0, norm.insuranceElapsedMonths2 ?? 0), ins2PaymentMonths);
+  const ins2SurrenderRatePct = norm.insuranceSurrenderRate2 ?? 125;
+  const ins2PolicyAgeAtRetirementMonths = ins2ElapsedMonths + yearsToRetirement * 12;
+  const ins2TotalPremiums = savingsInsurance2 + monthlyInsurance2 * ins2PaymentMonths;
+  const retirementBalanceInsurance2 = ins2PolicyAgeAtRetirementMonths >= 120
+    ? ins2TotalPremiums * (ins2SurrenderRatePct / 100)
+    : savingsInsurance2 + monthlyInsurance2 * Math.min(ins2PaymentMonths, ins2PolicyAgeAtRetirementMonths);
   const insurance2MaturityReinvest = norm.insurance2MaturityReinvest ?? 'keep';
   const ins2MaturityToBank = insurance2MaturityReinvest === 'bank' ? retirementBalanceInsurance2 : 0;
   const ins2MaturityToStock = insurance2MaturityReinvest === 'stock' ? retirementBalanceInsurance2 : 0;
@@ -500,7 +507,7 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
     + fvAnnuity(monthlyPensionSavings, pensionSavingsR, yearsToRetirement);
   // 납입 종료 나이 (은퇴 전)
   const insurancePaymentEndAge = currentAge + insPayYears;
-  const insurancePaymentEndAge2 = currentAge + ins2PayYears;
+  const insurancePaymentEndAge2 = currentAge + Math.min((ins2PaymentMonths - ins2ElapsedMonths) / 12, yearsToRetirement);
 
   const pension401kPayYears = Math.min(pension401kPaymentYears, yearsToRetirement);
   const retirementBalancePension401k = fv(savingsPension401k + severanceToIRP, pension401kR, yearsToRetirement)

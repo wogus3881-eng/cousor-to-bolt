@@ -671,6 +671,7 @@ const DEFAULT_INPUTS: SimulatorInputs = {
   usdInsurancePaymentMonths: 120,
   usdInsuranceElapsedMonths: 0,
   usdInsuranceRate: 4.0,
+  usdInsuranceSurrenderRate: 125,
   currentExchangeRate: 1350,
   usdInsuranceMaturityExchangeRate: 1400,
   usdInsuranceMaturityReinvest: 'stock' as const,
@@ -698,6 +699,7 @@ const DEFAULT_INPUTS: SimulatorInputs = {
   insuranceElapsedMonths2: 0,
   savingsInsurance2: 0,
   insurance2MaturityReinvest: 'keep' as const,
+  insuranceSurrenderRate2: 125,
 };
 
 function calcDefaultPensionYears(currentAge: number) {
@@ -1214,10 +1216,11 @@ export default function InputScreen({
                   trackColor="bg-rose-400" onChange={set('monthlyInsurance2')}
                   tooltip="기존 '보험·비과세 연금' 버킷과 완전히 독립된 두 번째 원화 보험이에요. 두 상품을 동시에 보유한 경우에 사용하세요."
                 />
-                <DualInput label="공시이율"
-                  value={v.insuranceRate2 ?? 3.5} min={1.0} max={8.0} step={0.1} unit="%"
-                  display={val => val.toFixed(1)} parse={parseFloat}
-                  trackColor="bg-rose-400" decimalPlaces={1} onChange={set('insuranceRate2')}
+                <DualInput label="10년 시점 환급률"
+                  value={v.insuranceSurrenderRate2 ?? 125} min={100} max={160} step={1} unit="%"
+                  display={val => val.toFixed(0)} parse={parseFloat}
+                  trackColor="bg-rose-400" onChange={set('insuranceSurrenderRate2')}
+                  tooltip="상품마다 다른 값이에요(보통 125~131% 수준). 가입설계서의 '10년 시점 해지환급률'을 확인해서 입력하세요. 은퇴가 가입 후 10년 이전이면 이 환급률 대신 그때까지 낸 원금만 반영돼요."
                 />
                 <DualInput label="총 납입 기간"
                   value={v.insurancePaymentYears2 ?? 84} min={12} max={240} step={12} unit="개월"
@@ -1309,13 +1312,14 @@ export default function InputScreen({
                   parse={s => parseInt(s.replace(/[^0-9]/g, ''))}
                   trackColor="bg-blue-400"
                   onChange={val => setV(prev => ({ ...prev, usdInsuranceElapsedMonths: val }))}
-                  tooltip="이미 몇 개월 납입해오셨는지 입력하면, 그 기간 동안 공시이율로 쌓인 현재가치를 자동으로 계산해서 반영해요. 남은 기간만 앞으로 더 납입하는 걸로 시뮬레이션합니다."
+                  tooltip="이미 몇 개월 납입해오셨는지 입력하면, 그 기간을 정책 경과기간에 반영해서 10년 시점 환급률 적용 여부를 계산해요."
                 />
-                <DualInput label="공시이율"
-                  value={v.usdInsuranceRate ?? 4.0} min={1.0} max={8.0} step={0.1} unit="%"
-                  display={val => val.toFixed(1)} parse={parseFloat}
-                  trackColor="bg-blue-400" decimalPlaces={1}
-                  onChange={val => setV(prev => ({ ...prev, usdInsuranceRate: val }))}
+                <DualInput label="10년 시점 환급률"
+                  value={v.usdInsuranceSurrenderRate ?? 125} min={100} max={160} step={1} unit="%"
+                  display={val => val.toFixed(0)} parse={parseFloat}
+                  trackColor="bg-blue-400"
+                  onChange={val => setV(prev => ({ ...prev, usdInsuranceSurrenderRate: val }))}
+                  tooltip="상품마다 다른 값이에요(보통 125~131% 수준). 가입설계서의 '10년 시점 해지환급률'을 확인해서 입력하세요. 은퇴가 가입 후 10년 이전이면 이 환급률 대신 그때까지 낸 원금만 반영돼요."
                 />
                 <div className="bg-white rounded-xl p-3 border border-blue-100 flex flex-col gap-2">
                   <p className="text-[10px] font-bold text-blue-800">환율 설정</p>
