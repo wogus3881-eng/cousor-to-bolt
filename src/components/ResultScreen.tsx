@@ -1154,6 +1154,10 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pr
 
       보험연금: inputs.monthlyInsurance > 0 ? Math.round(r.insuranceAnnuity) : 0,
 
+      IRP연금: retirementBalancePension401k > 0 ? Math.round(r.pension401kAnnuity) : 0,
+
+      연금저축연금: retirementBalancePensionSavings > 0 ? Math.round(r.pensionSavingsAnnuity) : 0,
+
     }));
 
 
@@ -2305,6 +2309,14 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pr
                   <stop offset="5%" stopColor="#fdc017" stopOpacity={0.35} />
                   <stop offset="95%" stopColor="#fdc017" stopOpacity={0} />
                 </linearGradient>
+                <linearGradient id="irpAnnuityGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="psAnnuityGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#a855f7" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#a855f7" stopOpacity={0} />
+                </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="age" tick={{ fontSize: compactChart ? 9 : 10, fill: SLATE }} tickLine={false} axisLine={false}
@@ -2337,6 +2349,16 @@ export default function ResultScreen({ result: initialResult, onBack, tier = 'pr
               {inputs.monthlyInsurance > 0 && (
                 <Area type="monotone" dataKey="보험연금" stroke="#fdc017" strokeWidth={3}
                   fill="url(#insAnnuityGrad)" dot={false} name="보험 종신연금 (평생)" />
+              )}
+              {/* 수입: IRP 연금화 수령액 */}
+              {retirementBalancePension401k > 0 && (
+                <Area type="monotone" dataKey="IRP연금" stroke="#6366f1" strokeWidth={2}
+                  fill="url(#irpAnnuityGrad)" dot={false} name="IRP 연금 (평생)" />
+              )}
+              {/* 수입: 연금저축펀드 연금화 수령액 */}
+              {retirementBalancePensionSavings > 0 && (
+                <Area type="monotone" dataKey="연금저축연금" stroke="#a855f7" strokeWidth={2}
+                  fill="url(#psAnnuityGrad)" dot={false} name="연금저축 연금 (평생)" />
               )}
             </AreaChart>
           </ResponsiveContainer>

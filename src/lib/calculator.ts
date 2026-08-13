@@ -100,6 +100,8 @@ export interface YearRow {
   deficit: number;
   isInsurancePaymentPhase: boolean;
   insuranceAnnuity: number;
+  pension401kAnnuity: number;   // IRP 연금화 월 수령액 (은퇴~100세 동일)
+  pensionSavingsAnnuity: number; // 연금저축펀드 연금화 월 수령액 (은퇴~100세 동일)
   isPostDepletion: boolean;
 }
 
@@ -726,6 +728,8 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
       deficit: 0,
       isInsurancePaymentPhase: acc.age < insurancePaymentEndAge,
       insuranceAnnuity: 0,
+      pension401kAnnuity: 0,
+      pensionSavingsAnnuity: 0,
       isPostDepletion: false,
     });
   }
@@ -887,6 +891,8 @@ export function simulate(inputs: SimulatorInputs, _skipSavingsSearch = false): S
       deficit: combinedBalance < 0 ? Math.abs(combinedBalance) : 0,
       isInsurancePaymentPhase: age < insurancePaymentEndAge,
       insuranceAnnuity: currentInsAnnuity,
+      pension401kAnnuity: pension401kAnnuityMonthly,
+      pensionSavingsAnnuity: pensionSavingsAnnuityMonthly,
       isPostDepletion: isPostDepletion && age > retirementAge,
     });
   }
