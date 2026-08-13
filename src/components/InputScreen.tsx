@@ -1088,6 +1088,12 @@ export default function InputScreen({
             display={v => Math.floor(v / MAN).toLocaleString()} parse={s => parseFloat(s.replace(/,/g, '')) * MAN}
             trackColor="bg-navy-500" onChange={set('monthlyExpense')}
           />
+          <div className="mt-2 rounded-xl bg-navy-50 border border-navy-100 px-3 py-2.5">
+            <p className="text-[10px] text-navy-600 leading-relaxed">
+              <strong>참고｜서울 기준 적정 노후생활비</strong> — 1인 약 225만 원(전국 대비 배율 추정) · 부부 337만 원
+            </p>
+            <p className="text-[10px] text-navy-400 mt-0.5">국민연금연구원 국민노후보장패널조사 제10차 부가조사(2024)</p>
+          </div>
         </div>
         </>
         )}
