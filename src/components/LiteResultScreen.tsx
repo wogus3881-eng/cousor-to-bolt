@@ -83,7 +83,7 @@ export default function LiteResultScreen({ result, onBack, hideConsultation = fa
         <div id="lite-result-capture" className="flex flex-col gap-3">
           <LiteResultDashboard result={result} variant={dashboardVariant} onUnlockClick={scrollToConsult} />
 
-          {weakPension && (
+          {weakPension && dashboardVariant === 'full' && (
             <div className="flex gap-2.5 rounded-2xl border border-amber-100 bg-amber-50/90 p-3.5">
               <AlertTriangle size={18} className="mt-0.5 shrink-0 text-amber-500" />
               <p className="text-[12px] leading-relaxed text-amber-900">
