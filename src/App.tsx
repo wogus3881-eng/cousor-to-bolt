@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import LiteFlow from './LiteFlow';
 import LiteFlowV2 from './LiteFlowV2';
+import LiteFlowV3 from './LiteFlowV3';
 import ProApp from './ProApp';
 import BlockedPage from './pages/BlockedPage';
 import ProLanding from './pages/ProLanding';
@@ -43,6 +44,8 @@ export default function App() {
         <Route path="/v1" element={<LiteFlow />} />
         <Route path="/v2" element={<LiteFlowV2 />} />
         <Route path="/self" element={<LiteFlowV2 hideConsultation />} />
+        <Route path="/v3" element={<LiteFlowV3 />} />
+        <Route path="/self3" element={<LiteFlowV3 hideConsultation />} />
         <Route path="/lite" element={<Navigate to="/v2" replace />} />
         <Route path="/blocked" element={<BlockedPage />} />
         <Route path="/terms" element={<TermsPage />} />
