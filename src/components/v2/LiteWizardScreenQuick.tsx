@@ -25,6 +25,13 @@ const INCOME_BRACKETS = [
   { label: '8,000만원 이상', valueMan: 10000 },
 ] as const;
 
+const EXPENSE_BRACKETS = [
+  { valueMan: 300, label: '300만원 · 기본적인 생활', caption: '생활비 위주, 큰 씀씀이 없이' },
+  { valueMan: 400, label: '400만원 · 여유로운 생활', caption: '외식·취미 여유 있게' },
+  { valueMan: 500, label: '500만원 · 풍족한 생활', caption: '여행·자기관리 챙기며' },
+  { valueMan: 700, label: '700만원+ · 프리미엄 생활', caption: '골프·해외여행 자유롭게' },
+] as const;
+
 type StepId = 'welcome' | 'monthlyExpense' | 'currentAge' | 'annualSalary' | 'currentSavings' | 'monthlySaving';
 
 const STEPS: { id: StepId; title: string; subtitle?: string }[] = [
@@ -36,7 +43,7 @@ const STEPS: { id: StepId; title: string; subtitle?: string }[] = [
   {
     id: 'monthlyExpense',
     title: '은퇴 후, 한 달에 얼마씩 쓰고 싶으세요?',
-    subtitle: '지금 기준 돈의 크기로 입력해 주세요.',
+    subtitle: '원하는 생활 수준에 가까운 항목을 골라 주세요. (지금 기준 돈의 크기예요)',
   },
   {
     id: 'currentAge',
@@ -84,6 +91,33 @@ function ChoiceButton({
   );
 }
 
+function ChoiceCard({
+  selected,
+  onClick,
+  label,
+  caption,
+}: {
+  selected: boolean;
+  onClick: () => void;
+  label: string;
+  caption: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`w-full rounded-xl border-2 px-4 py-3 text-left transition ${
+        selected
+          ? 'border-toss-blue bg-blue-50'
+          : 'border-toss-line bg-toss-canvas hover:border-toss-blue/30'
+      }`}
+    >
+      <p className={`text-[14px] font-semibold ${selected ? 'text-toss-blue' : 'text-toss-ink'}`}>{label}</p>
+      <p className="mt-0.5 text-[12px] text-toss-sub">{caption}</p>
+    </button>
+  );
+}
+
 const initialValues: LiteInputValues = {
   currentAge: 45,
   retirementAge: FIXED_RETIREMENT_AGE,
@@ -110,7 +144,7 @@ export default function LiteWizardScreenQuick({ onSubmit }: Props) {
   function canAdvance(): boolean {
     switch (currentStep.id) {
       case 'monthlyExpense':
-        return values.monthlyExpenseMan >= 50;
+        return EXPENSE_BRACKETS.some((b) => b.valueMan === values.monthlyExpenseMan);
       case 'currentAge':
         return AGE_BRACKETS.some((b) => b.age === values.currentAge);
       case 'annualSalary':
@@ -148,15 +182,17 @@ export default function LiteWizardScreenQuick({ onSubmit }: Props) {
 
       case 'monthlyExpense':
         return (
-          <LiteWizardField
-            label="은퇴 후 희망 월 생활비"
-            value={values.monthlyExpenseMan}
-            onChange={set('monthlyExpenseMan')}
-            min={50}
-            max={1000}
-            step={10}
-            suffix="만 원"
-          />
+          <div className="flex flex-col gap-2.5">
+            {EXPENSE_BRACKETS.map((b) => (
+              <ChoiceCard
+                key={b.valueMan}
+                selected={values.monthlyExpenseMan === b.valueMan}
+                onClick={() => set('monthlyExpenseMan')(b.valueMan)}
+                label={b.label}
+                caption={b.caption}
+              />
+            ))}
+          </div>
         );
 
       case 'currentAge':
