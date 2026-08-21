@@ -1,5 +1,16 @@
 import { useState } from 'react';
-import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Clock,
+  Landmark,
+  MousePointerClick,
+  PiggyBank,
+  TrendingUp,
+  User,
+  Wallet,
+} from 'lucide-react';
 import type { LiteInputValues } from '../../lib/liteToSimulator';
 import { LiteLegalDisclaimerCompact } from '../LiteLegalDisclaimer';
 import { LITE_COLUMN_CLASS } from '../liteLayout';
@@ -30,6 +41,14 @@ const EXPENSE_BRACKETS = [
   { valueMan: 400, label: '400만원 · 여유로운 생활', caption: '외식·취미 여유 있게' },
   { valueMan: 500, label: '500만원 · 풍족한 생활', caption: '여행·자기관리 챙기며' },
   { valueMan: 700, label: '700만원+ · 프리미엄 생활', caption: '골프·해외여행 자유롭게' },
+] as const;
+
+const WELCOME_STEPS = [
+  { label: '희망 생활비', icon: Wallet },
+  { label: '나이대', icon: User },
+  { label: '연 소득', icon: TrendingUp },
+  { label: '준비 자산', icon: PiggyBank },
+  { label: '월 저축', icon: Landmark },
 ] as const;
 
 type StepId = 'welcome' | 'monthlyExpense' | 'currentAge' | 'annualSalary' | 'currentSavings' | 'monthlySaving';
@@ -172,11 +191,30 @@ export default function LiteWizardScreenQuick({ onSubmit }: Props) {
     switch (id) {
       case 'welcome':
         return (
-          <div className="space-y-3 text-[13px] leading-relaxed text-toss-sub">
-            <p>
+          <div className="flex flex-col gap-5">
+            <p className="text-[13px] leading-relaxed text-toss-sub">
               한 화면에 <strong className="text-toss-ink">질문 하나씩</strong>만 나와요. 대부분 클릭만 하면 돼요.
             </p>
-            <p className="text-[11px]">약 1분이면 끝나요.</p>
+
+            <div className="grid grid-cols-5 gap-1.5">
+              {WELCOME_STEPS.map((s) => (
+                <div key={s.label} className="flex flex-col items-center gap-1.5">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-toss-blue/10 text-toss-blue">
+                    <s.icon size={18} strokeWidth={2.25} />
+                  </div>
+                  <span className="text-center text-[9px] font-medium leading-tight text-toss-sub">{s.label}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-1.5">
+              <span className="inline-flex items-center gap-1 rounded-full bg-toss-canvas px-2.5 py-1 text-[10px] font-semibold text-toss-ink ring-1 ring-black/[0.04]">
+                <Clock size={12} strokeWidth={2.5} />약 1분
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-toss-canvas px-2.5 py-1 text-[10px] font-semibold text-toss-ink ring-1 ring-black/[0.04]">
+                <MousePointerClick size={12} strokeWidth={2.5} />대부분 클릭
+              </span>
+            </div>
           </div>
         );
 
