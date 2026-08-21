@@ -12,9 +12,11 @@ interface Props {
   result: SimulationResult;
   onBack: () => void;
   hideConsultation?: boolean;
+  /** true면 상담 신청 전까지 상세 분석(4~8번 영역)을 잠금 처리합니다 */
+  enableGate?: boolean;
 }
 
-export default function LiteResultScreen({ result, onBack, hideConsultation = false }: Props) {
+export default function LiteResultScreen({ result, onBack, hideConsultation = false, enableGate = false }: Props) {
   const { inputs, dignityEndAge, weakPension } = result;
 
   const isSafe = dignityEndAge === null;
@@ -25,6 +27,11 @@ export default function LiteResultScreen({ result, onBack, hideConsultation = fa
 
   const consultRef = useRef<HTMLDivElement>(null);
   const [showJumpButton, setShowJumpButton] = useState(!hideConsultation);
+  const [unlocked, setUnlocked] = useState(false);
+
+  // hideConsultation이면 상담폼 자체가 없어 게이트가 무의미하므로 항상 전체 공개
+  const gateActive = enableGate && !hideConsultation;
+  const dashboardVariant = gateActive && !unlocked ? 'teaser' : 'full';
 
   useEffect(() => {
     if (hideConsultation || !consultRef.current) return;
@@ -74,7 +81,7 @@ export default function LiteResultScreen({ result, onBack, hideConsultation = fa
 
       <div className={`${LITE_COLUMN_CLASS} flex flex-1 flex-col gap-3 px-3 py-4`}>
         <div id="lite-result-capture" className="flex flex-col gap-3">
-          <LiteResultDashboard result={result} />
+          <LiteResultDashboard result={result} variant={dashboardVariant} onUnlockClick={scrollToConsult} />
 
           {weakPension && (
             <div className="flex gap-2.5 rounded-2xl border border-amber-100 bg-amber-50/90 p-3.5">
@@ -85,22 +92,24 @@ export default function LiteResultScreen({ result, onBack, hideConsultation = fa
             </div>
           )}
 
-          <LiteResultCharts result={result} />
+          <LiteResultCharts result={result} variant={dashboardVariant} />
 
-          <div className="space-y-1.5 rounded-2xl border border-toss-line bg-white px-3.5 py-2.5 text-[10px] leading-relaxed text-toss-sub">
-            <p>
-              <strong className="text-toss-ink">간편 진단 가정:</strong> 월 저축 합계 중 개인연금(연금저축·IRP 등) 월
-              납입분(있을 경우 실제 입력값, 없으면 전체의 {Math.round(LITE_BUCKET_RATIO.insurance * 100)}%)을 먼저 뗀 뒤,
-              나머지를 입력하신 나이({inputs.currentAge}세)에 맞춰 은행 {bankPct}% : 증권 {stockPct}% 비율로
-              나누었습니다(나이대가 높을수록 은행 비중을 높이는 방식). 개인연금·보험 적립 부분은 시뮬레이터의 연금/보험 버킷에
-              반영됩니다. 활동 종료 나이·의료비 등은 표준값을 사용했습니다.
-            </p>
-            <p>
-              은행 연 {DEFAULT_BANK_RATE}%, 개인연금/보험연금 연 {DEFAULT_INS_RATE}%, 증권은 장기 투자형 가정 연{' '}
-              {DEFAULT_STOCK_RATE}%로 단순 계산했으며, 실제 상품·시장 수익률과 다를 수 있어요.
-            </p>
-            <p>준비 점수·그래프는 참고용 휴리스틱이며, 세부 비교는 무료 상담 시 함께 확인할 수 있어요.</p>
-          </div>
+          {dashboardVariant === 'full' && (
+            <div className="space-y-1.5 rounded-2xl border border-toss-line bg-white px-3.5 py-2.5 text-[10px] leading-relaxed text-toss-sub">
+              <p>
+                <strong className="text-toss-ink">간편 진단 가정:</strong> 월 저축 합계 중 개인연금(연금저축·IRP 등) 월
+                납입분(있을 경우 실제 입력값, 없으면 전체의 {Math.round(LITE_BUCKET_RATIO.insurance * 100)}%)을 먼저 뗀 뒤,
+                나머지를 입력하신 나이({inputs.currentAge}세)에 맞춰 은행 {bankPct}% : 증권 {stockPct}% 비율로
+                나누었습니다(나이대가 높을수록 은행 비중을 높이는 방식). 개인연금·보험 적립 부분은 시뮬레이터의 연금/보험 버킷에
+                반영됩니다. 활동 종료 나이·의료비 등은 표준값을 사용했습니다.
+              </p>
+              <p>
+                은행 연 {DEFAULT_BANK_RATE}%, 개인연금/보험연금 연 {DEFAULT_INS_RATE}%, 증권은 장기 투자형 가정 연{' '}
+                {DEFAULT_STOCK_RATE}%로 단순 계산했으며, 실제 상품·시장 수익률과 다를 수 있어요.
+              </p>
+              <p>준비 점수·그래프는 참고용 휴리스틱이며, 세부 비교는 무료 상담 시 함께 확인할 수 있어요.</p>
+            </div>
+          )}
 
           <LiteLegalDisclaimer />
         </div>
@@ -114,7 +123,7 @@ export default function LiteResultScreen({ result, onBack, hideConsultation = fa
               위 진단 숫자를 바탕으로, 빈칸만 채워 주세요. 부담 없이 가능한 범위부터 상담해 드려요.
             </p>
           </div>
-          <ConsultationForm inputs={inputs} />
+          <ConsultationForm inputs={inputs} onSubmitSuccess={() => setUnlocked(true)} />
         </div>
       )}
 

@@ -44,7 +44,7 @@ export default function LiteFlowV3({ hideConsultation = false }: Props) {
   if (phase === 'result' && result) {
     return (
       <div className="flex min-h-screen flex-col bg-toss-canvas select-none">
-        <LiteResultScreen result={result} onBack={handleBackToInput} hideConsultation={hideConsultation} />
+        <LiteResultScreen result={result} onBack={handleBackToInput} hideConsultation={hideConsultation} enableGate />
         <footer className="mt-auto border-t border-toss-line bg-white py-8 text-center">
           <div className={`${LITE_COLUMN_CLASS} px-3`}>
             <p className="text-[10px] font-medium text-toss-sub">

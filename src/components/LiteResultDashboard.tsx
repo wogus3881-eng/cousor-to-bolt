@@ -1,4 +1,4 @@
-import { Sparkles, TrendingUp } from 'lucide-react';
+import { Lock, Sparkles, TrendingUp } from 'lucide-react';
 import type { SimulationResult } from '../lib/calculator';
 import { formatKRW } from '../lib/calculator';
 import {
@@ -9,6 +9,44 @@ import {
 
 interface Props {
   result: SimulationResult;
+  /** 'teaser'면 핵심 진단(히어로+통계 2개)까지만 보여주고 나머지는 잠금 카드로 대체 */
+  variant?: 'teaser' | 'full';
+  onUnlockClick?: () => void;
+}
+
+function TeaserGateCard({ onUnlockClick }: { onUnlockClick?: () => void }) {
+  return (
+    <div className="relative overflow-hidden rounded-[18px] border border-toss-line bg-white shadow-sm ring-1 ring-black/[0.04]">
+      <div className="space-y-3 p-3.5 opacity-70">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="h-16 rounded-2xl bg-slate-100" />
+          <div className="h-16 rounded-2xl bg-slate-100" />
+        </div>
+        <div className="space-y-2 py-1">
+          <div className="h-2.5 w-full rounded-full bg-slate-100" />
+          <div className="h-2.5 w-4/5 rounded-full bg-slate-100" />
+          <div className="h-2.5 w-3/5 rounded-full bg-slate-100" />
+        </div>
+        <div className="h-20 rounded-2xl bg-slate-100" />
+      </div>
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-white/85 px-6 text-center backdrop-blur-[2px]">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-toss-blue/10">
+          <Lock size={18} className="text-toss-blue" />
+        </div>
+        <p className="text-[13px] font-bold text-toss-ink">상세 분석은 상담 신청 후 볼 수 있어요</p>
+        <p className="text-[11px] leading-relaxed text-toss-sub">
+          예상 자산·월별 현금흐름·맞춤 코멘트까지 무료로 확인하세요
+        </p>
+        <button
+          type="button"
+          onClick={onUnlockClick}
+          className="rounded-2xl bg-toss-blue px-5 py-3 text-[13px] font-bold text-white shadow-lg shadow-toss-blue/25 transition hover:bg-toss-bluePress active:scale-[0.99]"
+        >
+          상담 신청하고 자세히 보기
+        </button>
+      </div>
+    </div>
+  );
 }
 
 function bandHeroClass(band: LiteReadinessBand) {
@@ -103,7 +141,8 @@ function buildAdvisorCopy(result: SimulationResult, band: LiteReadinessBand): st
   return parts.join(' ');
 }
 
-export default function LiteResultDashboard({ result }: Props) {
+export default function LiteResultDashboard({ result, variant = 'full', onUnlockClick }: Props) {
+  const isTeaser = variant === 'teaser';
   const readiness = computeLiteReadiness(result);
   const flow = computeRetirementIncomeFlow(result);
   const { retirementBalance, dignityEndAge, extraNeeded } = result;
@@ -159,44 +198,51 @@ export default function LiteResultDashboard({ result }: Props) {
           <p className="text-[10px] font-medium text-toss-sub">품격 유지 한계</p>
           <p className="mt-1 text-[15px] font-bold text-emerald-700 tabular-nums">{limitLabel}</p>
         </div>
-        <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-black/[0.04]">
-          <p className="text-[10px] font-medium text-toss-sub">은퇴 시점 예상 자산</p>
-          <p className="mt-1 text-[15px] font-bold text-toss-blue tabular-nums">{formatKRW(retirementBalance)}</p>
-        </div>
-        <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-black/[0.04]">
-          <p className="text-[10px] font-medium text-toss-sub">은퇴 직후 월 부족분</p>
-          <p className={`mt-1 text-[15px] font-bold tabular-nums ${monthlyGap > 0 ? 'text-orange-600' : 'text-toss-ink'}`}>
-            {formatKRW(monthlyGap)}
-          </p>
-        </div>
       </section>
 
-      <section className="rounded-[18px] border border-toss-line bg-white p-3.5 shadow-sm ring-1 ring-black/[0.03]">
-        <div className="flex items-center gap-2 border-l-[3px] border-toss-blue pl-2">
-          <p className="text-[13px] font-bold text-toss-ink">은퇴 직후 월 현금흐름 구조</p>
-        </div>
-        <p className="mt-1.5 pl-2 text-[11px] leading-relaxed text-toss-sub">
-          필요 생활비(물가 반영)를 100%로 두고, 국민연금·보험·자산에서 메울 부분을 나눈 참고도예요.
-        </p>
-        <div className="mt-3 space-y-3">
-          <FlowRow label="필요 생활비" amount={flow.need} need={flow.need} barClass="bg-slate-400" />
-          <FlowRow label="국민연금(추정)" amount={flow.pension} need={flow.need} barClass="bg-toss-blue" />
-          <FlowRow label="보험·연금 수령" amount={flow.insurance} need={flow.need} barClass="bg-violet-500" />
-          <FlowRow label="자산에서 메울 부분" amount={flow.fromAssets} need={flow.need} barClass="bg-orange-500" />
-        </div>
-      </section>
+      {isTeaser ? (
+        <TeaserGateCard onUnlockClick={onUnlockClick} />
+      ) : (
+        <>
+          <section className="grid grid-cols-2 gap-2">
+            <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-black/[0.04]">
+              <p className="text-[10px] font-medium text-toss-sub">은퇴 시점 예상 자산</p>
+              <p className="mt-1 text-[15px] font-bold text-toss-blue tabular-nums">{formatKRW(retirementBalance)}</p>
+            </div>
+            <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-black/[0.04]">
+              <p className="text-[10px] font-medium text-toss-sub">은퇴 직후 월 부족분</p>
+              <p className={`mt-1 text-[15px] font-bold tabular-nums ${monthlyGap > 0 ? 'text-orange-600' : 'text-toss-ink'}`}>
+                {formatKRW(monthlyGap)}
+              </p>
+            </div>
+          </section>
 
-      <section className="rounded-[18px] border border-navy-800/20 bg-gradient-to-br from-navy-900 to-navy-950 p-4 text-white shadow-lg">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
-            <Sparkles size={16} className="text-amber-200" />
-          </div>
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-amber-200/90">진단 코멘트</p>
-            <p className="text-[13px] font-bold">다음 단계 가이드</p>
-          </div>
-        </div>
-        <p className="mt-3 text-[12px] leading-relaxed text-navy-100/95">{buildAdvisorCopy(result, readiness.band)}</p>
+          <section className="rounded-[18px] border border-toss-line bg-white p-3.5 shadow-sm ring-1 ring-black/[0.03]">
+            <div className="flex items-center gap-2 border-l-[3px] border-toss-blue pl-2">
+              <p className="text-[13px] font-bold text-toss-ink">은퇴 직후 월 현금흐름 구조</p>
+            </div>
+            <p className="mt-1.5 pl-2 text-[11px] leading-relaxed text-toss-sub">
+              필요 생활비(물가 반영)를 100%로 두고, 국민연금·보험·자산에서 메울 부분을 나눈 참고도예요.
+            </p>
+            <div className="mt-3 space-y-3">
+              <FlowRow label="필요 생활비" amount={flow.need} need={flow.need} barClass="bg-slate-400" />
+              <FlowRow label="국민연금(추정)" amount={flow.pension} need={flow.need} barClass="bg-toss-blue" />
+              <FlowRow label="보험·연금 수령" amount={flow.insurance} need={flow.need} barClass="bg-violet-500" />
+              <FlowRow label="자산에서 메울 부분" amount={flow.fromAssets} need={flow.need} barClass="bg-orange-500" />
+            </div>
+          </section>
+
+          <section className="rounded-[18px] border border-navy-800/20 bg-gradient-to-br from-navy-900 to-navy-950 p-4 text-white shadow-lg">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
+                <Sparkles size={16} className="text-amber-200" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-amber-200/90">진단 코멘트</p>
+                <p className="text-[13px] font-bold">다음 단계 가이드</p>
+              </div>
+            </div>
+            <p className="mt-3 text-[12px] leading-relaxed text-navy-100/95">{buildAdvisorCopy(result, readiness.band)}</p>
         <div className="mt-3 flex items-start gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
           <TrendingUp size={14} className="mt-0.5 shrink-0 text-amber-300" />
           <p className="text-[11px] leading-relaxed text-navy-100/90">
@@ -205,6 +251,8 @@ export default function LiteResultDashboard({ result }: Props) {
           </p>
         </div>
       </section>
+        </>
+      )}
     </div>
   );
 }

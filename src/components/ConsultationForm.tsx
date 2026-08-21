@@ -7,6 +7,7 @@ import type { SimulatorInputs } from '../lib/calculator';
 
 interface Props {
   inputs: SimulatorInputs;
+  onSubmitSuccess?: () => void;
 }
 
 const TIME_OPTIONS = [
@@ -52,7 +53,7 @@ function parseYearBasedAgeFromBirthDate(raw: string): number | null {
 /**
  * @copyright 2026 Designed & Developed by 이기적인 은퇴설계
  */
-export default function ConsultationForm({ inputs }: Props) {
+export default function ConsultationForm({ inputs, onSubmitSuccess }: Props) {
   const agentParam = useAgentId();
   const agentConfig = useMemo(() => resolveAgentConfig(agentParam), [agentParam]);
 
@@ -108,8 +109,8 @@ export default function ConsultationForm({ inputs }: Props) {
       return;
     }
 
-    if (!name.trim() || !phone.trim() || !birthDate.trim() || preferredTimes.length === 0 || !location.trim()) {
-      setError('모든 항목을 입력해주세요. 상담 가능한 시간대는 1개 이상 선택해 주세요.');
+    if (!name.trim() || !phone.trim() || !birthDate.trim() || !location.trim()) {
+      setError('모든 항목을 입력해주세요.');
       return;
     }
 
@@ -215,6 +216,7 @@ export default function ConsultationForm({ inputs }: Props) {
 
     if (sheetSuccess) {
       setShowSuccess(true);
+      onSubmitSuccess?.();
       setName('');
       setPhone('');
       setBirthDate('');
@@ -303,7 +305,7 @@ export default function ConsultationForm({ inputs }: Props) {
           </div>
 
           <div>
-            <label className="mb-1 block text-[11px] font-bold uppercase text-slate-500">상담 희망 시간</label>
+            <label className="mb-1 block text-[11px] font-bold uppercase text-slate-500">상담 희망 시간 (선택)</label>
             <p className="mb-2 text-[10px] text-toss-sub">가능한 시간대를 모두 선택해 주세요 (복수 선택)</p>
             <div className="grid grid-cols-2 gap-2">
               {TIME_OPTIONS.map((t) => {

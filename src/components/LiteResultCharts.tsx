@@ -15,6 +15,8 @@ import { formatKRW } from '../lib/calculator';
 
 interface Props {
   result: SimulationResult;
+  /** 'teaser'면 렌더링하지 않음 (게이트 뒤 콘텐츠) */
+  variant?: 'teaser' | 'full';
 }
 
 /** 만 원 단위로 반올림 (차트 툴팁용) */
@@ -24,9 +26,11 @@ function formatManWon(n: number) {
   return `${man.toLocaleString()}만 원`;
 }
 
-export default function LiteResultCharts({ result }: Props) {
+export default function LiteResultCharts({ result, variant = 'full' }: Props) {
   const { yearRows, inputs, inflationAdjustedMonthlyExpense, pensionAtRetirement, insAnnuityMonthly, lifeExpectancy } =
     result;
+
+  if (variant === 'teaser') return null;
   const start = inputs.currentAge;
   const end = lifeExpectancy;
 
