@@ -110,8 +110,6 @@ export default function LiteResultScreen({ result, onBack, hideConsultation = fa
               <p>준비 점수·그래프는 참고용 휴리스틱이며, 세부 비교는 무료 상담 시 함께 확인할 수 있어요.</p>
             </div>
           )}
-
-          <LiteLegalDisclaimer />
         </div>
       </div>
 
@@ -126,6 +124,10 @@ export default function LiteResultScreen({ result, onBack, hideConsultation = fa
           <ConsultationForm inputs={inputs} onSubmitSuccess={() => setUnlocked(true)} />
         </div>
       )}
+
+      <div className={`${LITE_COLUMN_CLASS} px-3 pb-6`}>
+        <LiteLegalDisclaimer />
+      </div>
 
       {showJumpButton && (
         <button

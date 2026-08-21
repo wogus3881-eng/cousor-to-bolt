@@ -107,8 +107,8 @@ export default function ConsultationForm({ inputs, onSubmitSuccess }: Props) {
       return;
     }
 
-    if (!agreedCollect || !agreedThirdParty) {
-      setError('개인정보 수집·이용 및 제3자 제공에 모두 동의해주세요.');
+    if (!agreedCollect) {
+      setError('개인정보 수집 및 이용에 동의해주세요.');
       return;
     }
 
@@ -313,7 +313,7 @@ export default function ConsultationForm({ inputs, onSubmitSuccess }: Props) {
                 className="mt-1 h-4 w-4 rounded border-toss-line text-toss-blue accent-toss-blue"
               />
               <label htmlFor="agree-third-party" className="cursor-pointer text-[11px] leading-snug text-slate-500">
-                (필수) 개인정보 제3자 제공에 동의합니다.
+                (선택) 개인정보 제3자 제공에 동의합니다.
               </label>
             </div>
 
